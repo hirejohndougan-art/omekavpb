@@ -1,0 +1,44 @@
+<?php
+/**
+ * Filters for the results, with the filters in use.
+ *
+ * @var bool $show
+ * @var array $groups  [{label, options: [{id, label, count, active, url}]}]
+ * @var array $active  [{label, url}] the filters in use; each link removes one
+ * @var string|null $clearUrl
+ * @var string $blockClass
+ */
+if (!$show) {
+    return;
+}
+$escape = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+?>
+<div class="special-blocks <?php echo $escape($blockClass); ?> vpb-facets">
+<?php if ($active): ?>
+    <div class="vpb-facets-active">
+        <p class="vpb-facets-heading"><?php echo $escape($translate('Filtered by')); ?></p>
+        <ul>
+        <?php foreach ($active as $filter): ?>
+            <li><a href="<?php echo $escape($filter['url']); ?>" aria-label="<?php echo $escape(sprintf($translate('Remove %s'), $filter['label'])); ?>"><?php echo $escape($filter['label']); ?> &times;</a></li>
+        <?php endforeach; ?>
+        </ul>
+        <a class="vpb-facets-clear" href="<?php echo $escape($clearUrl); ?>"><?php echo $escape($translate('Clear all filters')); ?></a>
+    </div>
+<?php endif; ?>
+<?php foreach ($groups as $group): ?>
+    <fieldset class="vpb-facet">
+        <legend><?php echo $escape($group['label']); ?></legend>
+        <ul>
+        <?php foreach ($group['options'] as $option): ?>
+            <li>
+                <a href="<?php echo $escape($option['url']); ?>" aria-pressed="<?php echo $option['active'] ? 'true' : 'false'; ?>">
+                    <span class="vpb-facet-label"><?php echo $escape($option['label']); ?></span>
+                    <span class="vpb-facet-count"><?php echo $escape(number_format($option['count'])); ?></span>
+                </a>
+            </li>
+        <?php endforeach; ?>
+        </ul>
+    </fieldset>
+<?php endforeach; ?>
+</div>

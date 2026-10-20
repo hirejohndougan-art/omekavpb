@@ -2,8 +2,8 @@
 # HTTP checks for the Browse items screen (plan Phase 4, first slice): the Results and
 # Pagination blocks on live "Browse items" and "Browse item sets" templates. Needs a running
 # Omeka S test install with VPB active, a site with slug $SITE, and live templates for Browse
-# items, Browse item sets and Item set on it, each holding Results and Pagination (the Item set
-# template also holds an Item set name and description block). Usage:
+# items (with Filters and Results per page), Browse item sets and Item set on it. Each holds
+# Results and Pagination; the Item set template also holds an Item set name and description block. Usage:
 #   BASE=http://127.0.0.1:8080 SITE=dhs tests/search/browse.sh
 BASE=${BASE:-http://127.0.0.1:8080}
 SITE=${SITE:-dhs}
@@ -41,6 +41,12 @@ if [ -n "$SET_ID" ]; then
     "$(curl -s "$BASE/s/$SITE/item-set/$SET_ID" | grep -o 'vpb-results-count">[0-9,]* [a-z ]*' | head -1 | grep -o '[0-9,]*' | tr -d ',')" \
     "$(page "item_set%5B%5D=$SET_ID" | grep -o 'vpb-results-count">[0-9,]* [a-z ]*' | grep -o '[0-9,]*' | tr -d ',')"
 fi
+
+FILTERS=$(page '' | grep -c 'class="vpb-facet"')
+check "Filters block is drawn on Browse items" "$([ "$FILTERS" -ge 1 ] && echo yes || echo no)" "yes"
+SETS_PRESSED=$(page 'item_set%5B%5D=771' | grep -c 'aria-pressed="true"')
+check "a chosen collection is marked and listed as a filter in use" "$([ "$SETS_PRESSED" -ge 1 ] && page 'item_set%5B%5D=771' | grep -q 'Remove Light set' && echo yes || echo no)" "yes"
+check "Results per page is drawn" "$(page '' | grep -c 'vpb-per-page"')" "1"
 
 echo "browse checks: $pass passed, $fail failed"
 [ "$fail" -eq 0 ]

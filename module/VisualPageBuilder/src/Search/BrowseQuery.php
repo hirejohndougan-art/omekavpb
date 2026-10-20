@@ -107,6 +107,7 @@ class BrowseQuery
                 'suggestion' => $result['suggestion'],
                 'mode' => 'index',
                 'noun' => 'items',
+                'facetOptions' => self::facetLabels($api, Search::facetCounts($conn, $state['q'], false, $synonyms, $state['facets'], $siteId)),
             ];
         } else {
             // The index is missing, empty, or being rebuilt: use Omeka's own search.
@@ -136,10 +137,53 @@ class BrowseQuery
             'pages' => max(1, (int) ceil($answer['total'] / $state['per_page'])),
             'query' => $state['q'],
             'param' => $state['param'],
-            'facets' => $state['facets'],
+            'selected' => $state['facets'],
+            'facetOptions' => [],
         ];
         self::$answers[$key] = $answer;
         return $answer;
+    }
+
+    /**
+     * Turns facet counts into lists per field: {id, label, count}, most items first.
+     *
+     * @param array<string, array<int, int>> $counts [field => [value_id => count]]
+     * @return array<string, array<int, array{id: int, label: string, count: int}>>
+     */
+    public static function facetLabels($api, array $counts): array
+    {
+        $out = [];
+        foreach ($counts as $field => $values) {
+            $out[$field] = [];
+            if ($values === []) {
+                continue;
+            }
+            $labels = self::labelsFor($api, $field, array_keys($values));
+            foreach ($labels as $id => $label) {
+                $out[$field][] = ['id' => $id, 'label' => $label, 'count' => $values[$id]];
+            }
+            usort($out[$field], fn ($a, $b) => $b['count'] <=> $a['count'] ?: strcmp($a['label'], $b['label']));
+        }
+        return $out;
+    }
+
+    /**
+     * Display names for facet values: [id => label]. Field is 'item_set' or 'class'.
+     *
+     * @return array<int, string>
+     */
+    public static function labelsFor($api, string $field, array $ids): array
+    {
+        $ids = array_values(array_unique(array_map('intval', $ids)));
+        if ($ids === []) {
+            return [];
+        }
+        $resource = $field === 'item_set' ? 'item_sets' : 'resource_classes';
+        $labels = [];
+        foreach ($api->search($resource, ['id' => $ids])->getContent() as $found) {
+            $labels[(int) $found->id()] = (string) $found->displayTitle('');
+        }
+        return $labels;
     }
 
     /** Full item representations for the ids, in the order given (visitors see only public items). */

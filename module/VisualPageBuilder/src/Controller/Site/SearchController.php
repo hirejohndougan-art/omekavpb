@@ -3,6 +3,7 @@
 namespace VisualPageBuilder\Controller\Site;
 
 use Laminas\Mvc\Controller\AbstractActionController;
+use VisualPageBuilder\Search\BrowseQuery;
 use VisualPageBuilder\Search\Index;
 use VisualPageBuilder\Search\Search;
 use VisualPageBuilder\Search\Synonyms;
@@ -54,7 +55,7 @@ class SearchController extends AbstractActionController
                 'page' => $page,
                 'per_page' => $perPage,
                 'suggestion' => $result['suggestion'],
-                'facets' => $this->facetLabels($api, $counts),
+                'facets' => BrowseQuery::facetLabels($api, $counts),
                 'items' => $items,
             ]);
         }
@@ -90,30 +91,6 @@ class SearchController extends AbstractActionController
         $response->getHeaders()->addHeaderLine('Content-Type', 'application/json; charset=utf-8');
         $response->setContent(json_encode($data, JSON_UNESCAPED_UNICODE));
         return $response;
-    }
-
-    /**
-     * Turns counts into a list per field: {id, label, count}, most items first.
-     *
-     * @return array<string, array<int, array{id: int, label: string, count: int}>>
-     */
-    private function facetLabels($api, array $counts): array
-    {
-        $resources = ['item_set' => 'item_sets', 'class' => 'resource_classes'];
-        $out = [];
-        foreach ($counts as $field => $values) {
-            $out[$field] = [];
-            if ($values === []) {
-                continue;
-            }
-            $found = $api->search($resources[$field], ['id' => array_keys($values)])->getContent();
-            foreach ($found as $resource) {
-                $id = (int) $resource->id();
-                $out[$field][] = ['id' => $id, 'label' => (string) $resource->displayTitle(''), 'count' => $values[$id]];
-            }
-            usort($out[$field], fn ($a, $b) => $b['count'] <=> $a['count'] ?: strcmp($a['label'], $b['label']));
-        }
-        return $out;
     }
 
     /** @return array<int, array{id: int, title: string}> in the order given. */

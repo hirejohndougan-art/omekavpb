@@ -1,0 +1,18 @@
+<?php
+/**
+ * Results per page: 12, 24, or 48.
+ *
+ * @var array $choices  [{number, url, current}]
+ * @var string $blockClass
+ */
+$escape = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+?>
+<nav class="special-blocks <?php echo $escape($blockClass); ?> vpb-per-page" aria-label="<?php echo $escape($translate('Results per page')); ?>">
+    <span class="vpb-per-page-label"><?php echo $escape($translate('Show')); ?></span>
+    <ul>
+    <?php foreach ($choices as $choice): ?>
+        <li><a href="<?php echo $escape($choice['url']); ?>"<?php echo $choice['current'] ? ' aria-current="true"' : ''; ?>><?php echo $escape($choice['number']); ?></a></li>
+    <?php endforeach; ?>
+    </ul>
+</nav>
