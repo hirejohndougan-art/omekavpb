@@ -37,7 +37,7 @@ class ReindexJob extends AbstractJob
 
     private function rebuild($api, $em, $conn): void
     {
-        foreach ([Index::FACET, Index::TERM, Index::DOC] as $table) {
+        foreach ([Index::WORD, Index::FACET, Index::TERM, Index::DOC] as $table) {
             $conn->executeStatement('DELETE FROM ' . $table);
         }
 

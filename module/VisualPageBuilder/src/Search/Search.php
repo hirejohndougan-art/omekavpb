@@ -192,7 +192,9 @@ class Search
             if (!isset($vocabulary[$stem])) {
                 $better = Typo::suggest($stem, $vocabulary);
                 if ($better !== null) {
-                    $corrected[] = $better;
+                    // Show the word as the catalog spells it, when it's known.
+                    $display = $conn->fetchOne('SELECT display FROM ' . Index::WORD . ' WHERE stem = ?', [$better]);
+                    $corrected[] = $display !== false ? (string) $display : $better;
                     $changed = true;
                     continue;
                 }

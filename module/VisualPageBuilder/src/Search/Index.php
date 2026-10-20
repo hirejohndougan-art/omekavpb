@@ -21,6 +21,8 @@ class Index
     public const DOC = 'vpb_search_doc';
     public const TERM = 'vpb_search_term';
     public const FACET = 'vpb_search_facet';
+    /** One row per stem: the word as first written in the catalog, for "Did you mean". */
+    public const WORD = 'vpb_search_word';
 
     /** Omeka setting that holds the synonyms list (one "term = alternative" per line). */
     public const SYNONYMS_SETTING = 'vpb_search_synonyms';
@@ -55,6 +57,11 @@ class Index
             PRIMARY KEY (term, item_id),
             INDEX vpb_st_item (item_id)
         ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci ENGINE = InnoDB');
+        $conn->executeStatement('CREATE TABLE IF NOT EXISTS ' . self::WORD . ' (
+            stem VARCHAR(100) NOT NULL,
+            display VARCHAR(100) NOT NULL,
+            PRIMARY KEY (stem)
+        ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci ENGINE = InnoDB');
         $conn->executeStatement('CREATE TABLE IF NOT EXISTS ' . self::FACET . ' (
             item_id INT NOT NULL,
             field VARCHAR(40) NOT NULL,
@@ -66,7 +73,7 @@ class Index
 
     public static function dropTables(Connection $conn): void
     {
-        foreach ([self::FACET, self::TERM, self::DOC] as $table) {
+        foreach ([self::WORD, self::FACET, self::TERM, self::DOC] as $table) {
             $conn->executeStatement('DROP TABLE IF EXISTS ' . $table);
         }
     }
@@ -106,6 +113,7 @@ class Index
             foreach (self::words($value) as $word) {
                 $stem = Stemmer::stem($word);
                 $weights[$stem] = max($weights[$stem] ?? 0, $weight);
+                self::rememberWord($conn, $stem, $value, $word);
             }
         }
         foreach ($weights as $term => $weight) {
@@ -119,6 +127,28 @@ class Index
         if ($class) {
             $conn->insert(self::FACET, ['item_id' => $id, 'field' => 'class', 'value_id' => (int) $class->id()]);
         }
+    }
+
+    /**
+     * Keep the word as it is spelled in the catalog ("Dickinson", not "dickinson"),
+     * the first time a stem is seen. Only used to show "Did you mean" suggestions.
+     */
+    private static function rememberWord(Connection $conn, string $stem, string $text, string $lowerWord): void
+    {
+        static $seen = [];
+        if (isset($seen[$stem])) {
+            return;
+        }
+        $seen[$stem] = true;
+        if (preg_match('/(?<![\p{L}\p{N}])' . preg_quote($lowerWord, '/') . '(?![\p{L}\p{N}])/iu', $text, $m)) {
+            $display = mb_substr($m[0], 0, 100);
+        } else {
+            $display = $lowerWord;
+        }
+        $conn->executeStatement(
+            'INSERT IGNORE INTO ' . self::WORD . ' (stem, display) VALUES (?, ?)',
+            [mb_substr($stem, 0, 100), $display]
+        );
     }
 
     public static function removeItem(Connection $conn, int $itemId): void

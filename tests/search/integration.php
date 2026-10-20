@@ -124,7 +124,7 @@ check('1910s does not find the 1920s item', !in_array($street->id(), $r['ids'], 
 // Did you mean.
 $r = $public('Dickenson');
 check('Dickenson finds nothing', $r['total'] === 0, (string) $r['total']);
-check('Dickenson suggests dickinson', $r['suggestion'] === 'dickinson', (string) $r['suggestion']);
+check('Dickenson suggests Dickinson (catalog spelling)', $r['suggestion'] === 'Dickinson', (string) $r['suggestion']);
 $r = $public('zzzzzzzz');
 check('nonsense has no suggestion', $r['suggestion'] === null);
 
