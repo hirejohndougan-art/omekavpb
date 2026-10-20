@@ -40,6 +40,21 @@ $translate = $this->plugin('translate');
         <?php endforeach; ?>
         </p>
         <?php endif; ?>
+        <?php if (!empty($group['dropdown'])): ?>
+        <form method="get" action="<?php echo $escape($group['dropdown']['action']); ?>" class="vpb-facet-select">
+            <?php foreach ($group['dropdown']['hidden'] as $pair): ?>
+            <input type="hidden" name="<?php echo $escape($pair[0]); ?>" value="<?php echo $escape($pair[1]); ?>">
+            <?php endforeach; ?>
+            <label class="vpb-visually-hidden"><?php echo $escape($group['label']); ?></label>
+            <select name="<?php echo $escape($group['dropdown']['name']); ?>">
+                <option value=""><?php echo $escape($translate('Choose…')); ?></option>
+                <?php foreach ($group['dropdown']['choices'] as $choice): ?>
+                <option value="<?php echo (int) $choice['id']; ?>"><?php echo $escape($choice['label']); ?> (<?php echo $escape(number_format($choice['count'])); ?>)</option>
+                <?php endforeach; ?>
+            </select>
+            <button type="submit"><?php echo $escape($translate('Add')); ?></button>
+        </form>
+        <?php endif; ?>
         <ul>
         <?php foreach ($group['options'] as $option): ?>
             <li<?php if (isset($option['depth']) && $option['depth'] > 0): ?> style="padding-left: <?php echo (float) $option['depth'] * 1.1; ?>rem"<?php endif; ?>>

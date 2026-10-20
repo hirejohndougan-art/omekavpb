@@ -311,3 +311,9 @@ img { max-width: 100%; height: auto; }
 .vpb-sort a, .vpb-per-page a { display: inline-block; padding: 0.2rem 0.6rem; border: 1px solid var(--sb-border); border-radius: 999px; color: inherit; text-decoration: none; font-size: 0.9em; }
 .vpb-sort a:hover, .vpb-per-page a:hover { border-color: var(--sb-accent); }
 .vpb-sort a[aria-current="true"], .vpb-per-page a[aria-current="true"] { background: var(--sb-accent); border-color: var(--sb-accent); color: var(--pb-bg, #fff); }
+
+/* Filters as a dropdown (one value added at a time). */
+.vpb-facet-select { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.25rem 0 0.5rem; }
+.vpb-facet-select select { flex: 1 1 10rem; min-width: 0; max-width: 100%; font: inherit; padding: 0.25rem; }
+.vpb-facet-select button { font: inherit; padding: 0.25rem 0.7rem; border: 1px solid currentColor; border-radius: 4px; background: transparent; color: inherit; cursor: pointer; }
+.vpb-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

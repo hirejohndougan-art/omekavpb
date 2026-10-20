@@ -59,6 +59,9 @@ class BrowseFacets extends AbstractSchemaBlock
                 'options' => ['count' => 'Most items first', 'az' => 'A to Z']], // @translate
             ['key' => 'text_shown', 'type' => Schema::TYPE_NUMBER, 'group' => 'Display', 'default' => 10, 'min' => 1, 'max' => 100,
                 'label' => 'Values listed before "Show all"'], // @translate
+            ['key' => 'text_style', 'type' => Schema::TYPE_SELECT, 'group' => 'Display', 'default' => 'list',
+                'label' => 'Subjects, creators and places as',
+                'options' => ['list' => 'A list', 'dropdown' => 'A dropdown (one value at a time)']], // @translate
         ];
     }
 
@@ -108,14 +111,34 @@ class BrowseFacets extends AbstractSchemaBlock
                 $bar = (int) round(100 * $option['count'] / max(1, $largest));
                 $options[] = $option + ['active' => $on, 'url' => self::url($view, $next, $expanded, $letters), 'bar' => $bar];
             }
+            // A dropdown lists every value not yet in use, and adds the chosen one when submitted.
+            $dropdown = null;
+            if ($isText && $show && ($data['text_style'] ?? 'list') === 'dropdown') {
+                $choices = [];
+                foreach ($options_all as $option) {
+                    if (!in_array($option['id'], $selected[$field], true)) {
+                        $choices[] = ['id' => $option['id'], 'label' => $option['label'], 'count' => $option['count']];
+                    }
+                }
+                if ($choices) {
+                    $dropdown = [
+                        'action' => $view->url(null, [], [], true),
+                        'name' => $field . '[]',
+                        'choices' => $choices,
+                        // Everything else stays: the search, sort, filters in use, letters and expanded lists.
+                        'hidden' => self::hiddenFields($view, $selected, $expanded, $letters),
+                    ];
+                }
+                $options = [];
+            }
             // Collections nest: parents come first, children are indented under them.
             if ($field === 'item_set' && $options) {
                 $options = ItemSetTree::arrange($api, $options);
             }
-            if ($show && ($options || $letter !== null)) {
+            if ($show && ($options || $letter !== null || $dropdown)) {
                 // Dates read as bars: each decade's width is its share of the largest decade.
                 $toggle = null;
-                if ($isText && count($options_all) > $textShown) {
+                if ($isText && !$dropdown && count($options_all) > $textShown) {
                     $others = array_values(array_diff($expanded, [$field]));
                     $toggle = $showAll
                         ? ['url' => self::url($view, $selected, $others, $letters), 'label' => $view->translate('Show fewer')]
@@ -123,7 +146,7 @@ class BrowseFacets extends AbstractSchemaBlock
                             'label' => sprintf($view->translate('Show all %s'), number_format(count($options_all)))];
                 }
                 $groups[] = ['label' => $view->translate($label), 'options' => $options, 'bars' => $field === 'decade',
-                    'toggle' => $toggle, 'letters' => $letterLinks];
+                    'toggle' => $toggle, 'letters' => $letterLinks, 'dropdown' => $dropdown];
             }
             foreach (BrowseQuery::labelsFor($api, $field, $selected[$field], $conn) as $id => $name) {
                 $next = $selected;
