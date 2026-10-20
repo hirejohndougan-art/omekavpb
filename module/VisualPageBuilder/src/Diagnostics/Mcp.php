@@ -9,7 +9,7 @@ namespace VisualPageBuilder\Diagnostics;
 class Mcp
 {
     private const PROTOCOL = '2025-06-18';
-    private const SERVER = ['name' => 'visual-page-builder-diagnostics', 'version' => '2.8.0'];
+    private const SERVER = ['name' => 'visual-page-builder-diagnostics', 'version' => '2.9.0'];
 
     /** Tool name => [description, which part of the report it returns]. */
     private const TOOLS = [
@@ -18,6 +18,7 @@ class Mcp
         'vpb_recent_jobs' => ['The last 10 import and index jobs, with status and the start of each log.', 'jobs'],
         'vpb_recent_errors' => ['The last errors in Omeka\'s log, clipped.', 'recent_errors'],
         'vpb_index' => ['Search index counts: items, indexed documents, whether a rebuild is running.', 'index'],
+        'vpb_php_errors' => ['The last PHP errors and fatal errors from PHP\'s own error log, clipped.', 'php_error_log'],
         'vpb_site' => ['Site-wide diagnostics: every Omeka module and its state, every site, the database and PHP versions, PHP extensions, writable folders, upload limits, and counts.', 'site'],
     ];
 

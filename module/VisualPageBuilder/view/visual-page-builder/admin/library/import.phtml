@@ -6,6 +6,11 @@
  * $token, $filename, $delimiter, $columns, $chosen, $rows, $count, $duplicate, $itemSet, $public,
  * $itemSetTitle, $jobId, $pastImports, $items
  */
+// Defaults for the steps that don't set every value (the first step sets none of them).
+$duplicate = $duplicate ?? 'add';
+$itemSet = $itemSet ?? null;
+$itemSets = $itemSets ?? [];
+$public = $public ?? false;
 $escape = $this->plugin('escapeHtml');
 $translate = $this->plugin('translate');
 $fieldLabels = [

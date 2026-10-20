@@ -51,7 +51,8 @@ class Report
         $jobs = $this->jobs($conn);
         $errors = $this->recentErrors();
         $site = $this->site($conn);
-        $warnings = $this->warnings($modules, $tables, $index, $jobs, $errors, $site);
+        $phpErrors = $this->phpErrors();
+        $warnings = $this->warnings($modules, $tables, $index, $jobs, $errors, $site, $phpErrors);
 
         return [
             'generated_at' => gmdate('c'),
@@ -65,6 +66,7 @@ class Report
             'jobs' => $jobs,
             'recent_errors' => $errors,
             'site' => $site,
+            'php_error_log' => $phpErrors,
             'warnings' => $warnings,
         ];
     }
@@ -170,6 +172,35 @@ class Report
     }
 
     /**
+     * The tail of PHP's own error log, where fatal errors go when Omeka's log
+     * never sees them. Only the lines that look like errors are returned.
+     */
+    private function phpErrors(): array
+    {
+        $path = (string) ini_get('error_log');
+        if ($path === '' || !is_file($path) || !is_readable($path)) {
+            return ['configured' => $path !== '', 'readable' => false, 'lines' => []];
+        }
+        $size = filesize($path);
+        $handle = fopen($path, 'rb');
+        if (!$handle) {
+            return ['configured' => true, 'readable' => false, 'lines' => []];
+        }
+        fseek($handle, max(0, $size - self::LOG_READ_BYTES));
+        $chunk = (string) stream_get_contents($handle);
+        fclose($handle);
+        $lines = array_filter(explode("\n", $chunk), function ($line) {
+            return (bool) preg_match('/PHP (Fatal|Warning|Parse error)|Exception|Uncaught|Error:/', $line);
+        });
+        $lines = array_slice(array_values($lines), -self::LOG_LINES_MAX);
+        return [
+            'configured' => true,
+            'readable' => true,
+            'lines' => array_map(fn ($line) => $this->clip($line), $lines),
+        ];
+    }
+
+    /**
      * Site-wide state: every Omeka module and its state, every site, PHP and
      * database versions, PHP extensions the plugin needs, the folders Omeka and
      * the plugin write to, and counts. No credentials and no user details.
@@ -225,7 +256,7 @@ class Report
         ];
     }
 
-    private function warnings(array $modules, array $tables, array $index, array $jobs, array $errors, array $site): array
+    private function warnings(array $modules, array $tables, array $index, array $jobs, array $errors, array $site, array $phpErrors): array
     {
         $warnings = [];
         if (empty($modules['VisualPageBuilder']['active'])) {
@@ -254,6 +285,9 @@ class Report
         }
         if ($errors) {
             $warnings[] = 'Omeka\'s log has recent errors (see recent_errors).';
+        }
+        if ($phpErrors['lines']) {
+            $warnings[] = 'PHP\'s error log has recent problems (see php_error_log).';
         }
         foreach ($site['extensions'] as $name => $loaded) {
             if (!$loaded) {

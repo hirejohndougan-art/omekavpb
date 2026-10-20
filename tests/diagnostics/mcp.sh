@@ -24,7 +24,7 @@ check $(echo "$R" | python3 -c 'import json,sys; d=json.load(sys.stdin)["result"
 check $(rpc '{"jsonrpc":"2.0","method":"notifications/initialized"}' >/tmp/vpb-mcp-n.txt; [ "$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -X POST --data '{"jsonrpc":"2.0","method":"notifications/initialized"}' "$BASE/vpb-diagnostics/mcp")" = 202 ] && echo ok || echo no) "a notification gets 202 with no body"
 
 R=$(rpc '{"jsonrpc":"2.0","id":2,"method":"tools/list"}')
-check $(echo "$R" | python3 -c 'import json,sys; t=json.load(sys.stdin)["result"]["tools"]; names={x["name"] for x in t}; assert {"vpb_report","vpb_warnings","vpb_recent_jobs","vpb_recent_errors","vpb_index"}<=names; assert all(x["annotations"]["readOnlyHint"] for x in t)' 2>/dev/null && echo ok || echo no) "tools/list offers the read-only tools"
+check $(echo "$R" | python3 -c 'import json,sys; t=json.load(sys.stdin)["result"]["tools"]; names={x["name"] for x in t}; assert {"vpb_report","vpb_warnings","vpb_recent_jobs","vpb_recent_errors","vpb_index","vpb_site","vpb_php_errors"}<=names; assert all(x["annotations"]["readOnlyHint"] for x in t)' 2>/dev/null && echo ok || echo no) "tools/list offers the read-only tools"
 
 R=$(rpc '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"vpb_index","arguments":{}}}')
 check $(echo "$R" | python3 -c 'import json,sys; r=json.load(sys.stdin)["result"]; d=json.loads(r["content"][0]["text"]); assert r["isError"] is False and "items" in d and "indexed_documents" in d' 2>/dev/null && echo ok || echo no) "tools/call vpb_index returns the index counts"
