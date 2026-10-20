@@ -302,3 +302,12 @@ img { max-width: 100%; height: auto; }
 .vpb-facet-letters { display: flex; flex-wrap: wrap; gap: 0.25rem; margin: 0.25rem 0 0.5rem; }
 .vpb-facet-letters a { display: inline-block; min-width: 1.9rem; padding: 0.15rem 0.3rem; border: 1px solid currentColor; border-radius: 3px; text-align: center; text-decoration: none; font-size: 0.9em; }
 .vpb-facet-letters a[aria-pressed="true"] { background: #1f4d3f; border-color: #1f4d3f; color: #fff; }
+
+/* Sort and Show (results per page): one row of choices, the current one marked. */
+.vpb-sort, .vpb-per-page { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.6rem; margin: 0.5rem 0; }
+.vpb-sort-label, .vpb-per-page-label { font-size: 0.9em; color: var(--sb-muted); }
+.vpb-sort ul, .vpb-per-page ul { display: flex; flex-wrap: wrap; gap: 0.3rem; margin: 0; padding: 0; list-style: none; }
+.vpb-sort li, .vpb-per-page li { margin: 0; padding: 0; }
+.vpb-sort a, .vpb-per-page a { display: inline-block; padding: 0.2rem 0.6rem; border: 1px solid var(--sb-border); border-radius: 999px; color: inherit; text-decoration: none; font-size: 0.9em; }
+.vpb-sort a:hover, .vpb-per-page a:hover { border-color: var(--sb-accent); }
+.vpb-sort a[aria-current="true"], .vpb-per-page a[aria-current="true"] { background: var(--sb-accent); border-color: var(--sb-accent); color: var(--pb-bg, #fff); }
