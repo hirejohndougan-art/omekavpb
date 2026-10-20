@@ -54,7 +54,7 @@ echo $this->pageTitle($translate('Add an item'), 1, $translate('Items'));
 <div class="vpb-add">
     <div>
     <?php if ($step === 1): ?>
-        <form method="post" enctype="multipart/form-data" class="vpb-add-box vpb-add-form">
+        <form method="post" enctype="multipart/form-data" id="vpb-files" class="vpb-add-box vpb-add-form">
             <input type="hidden" name="<?php echo $escape($csrfName); ?>" value="<?php echo $escape($csrf); ?>">
             <input type="hidden" name="vpb_add_action" value="files">
             <input type="hidden" name="item" value="<?php echo (int) $itemId; ?>">
@@ -63,6 +63,7 @@ echo $this->pageTitle($translate('Add an item'), 1, $translate('Items'));
                 <input type="file" name="upload[]" multiple>
             </label>
             <p class="vpb-add-hint"><?php echo $escape($translate('Choose one or more. The file types allowed are set in Settings.')); ?></p>
+            <p class="vpb-add-hint" id="vpb-upload-status" role="status" aria-live="polite"></p>
             <?php if ($files): ?>
             <p class="vpb-add-hint"><?php echo $escape($translate('Already added:')); ?> <?php echo $escape(implode(', ', $files)); ?></p>
             <?php endif; ?>
@@ -147,6 +148,57 @@ echo $this->pageTitle($translate('Add an item'), 1, $translate('Items'));
     </aside>
 </div>
 <?php endif; ?>
+<script>
+// Background uploads (Phase 7): each chosen file uploads as soon as it is picked, one after
+// another, while the person reads on. Continue waits only if the files are still going.
+// Without JavaScript the form uploads the files when it is submitted, as before.
+(function () {
+  var form = document.getElementById('vpb-files');
+  if (!form || !window.fetch || !window.FormData) { return; }
+  var input = form.querySelector('input[type="file"]');
+  var status = document.getElementById('vpb-upload-status');
+  var pending = null;
+  var say = function (text) { if (status) { status.textContent = text; } };
+  var warn = function (event) { event.preventDefault(); event.returnValue = ''; };
+  input.addEventListener('change', function () {
+    var files = Array.prototype.slice.call(input.files || []);
+    if (!files.length) { return; }
+    var uploaded = 0;
+    var failed = [];
+    window.addEventListener('beforeunload', warn);
+    // A second batch waits for the first, so uploads never run side by side.
+    var start = pending || Promise.resolve();
+    var queue = files.reduce(function (chain, file, index) {
+      return chain.then(function () {
+        say('Uploading ' + (index + 1) + ' of ' + files.length + ': ' + file.name + '\u2026');
+        var data = new FormData(form);
+        data.delete('upload[]');
+        data.append('upload[]', file, file.name);
+        return fetch(location.href, { method: 'POST', body: data, credentials: 'same-origin' })
+          .then(function (response) { if (!response.ok) { throw new Error('upload'); } uploaded++; })
+          .catch(function () { failed.push(file.name); });
+      });
+    }, start);
+    var mine = queue.then(function () {
+      // The files are in, so the form must not send them again.
+      input.value = '';
+      if (pending === mine) { pending = null; window.removeEventListener('beforeunload', warn); }
+      if (failed.length) {
+        say('Not added: ' + failed.join(', ') + '. Choose them again.');
+      } else {
+        say(uploaded === 1 ? '1 file added.' : uploaded + ' files added.');
+      }
+    });
+    pending = mine;
+  });
+  form.addEventListener('submit', function (event) {
+    if (!pending) { return; }
+    event.preventDefault();
+    say('Still uploading. The next step opens when the files are in.');
+    pending.then(function () { form.submit(); });
+  });
+})();
+</script>
 <script>
 // Live preview (Phase 7): the preview follows the Describe form as you type. Without
 // JavaScript the preview still updates on each save.
