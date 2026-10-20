@@ -81,6 +81,12 @@ echo $this->pageTitle(sprintf($translate('Theme Builder: %s'), $site->title()), 
             <input type="hidden" name="template_id" value="<?php echo (int) $t['id']; ?>">
             <button type="submit"><?php echo $escape($translate('Duplicate')); ?></button>
         </form>
+        <form method="post" class="vpb-theme-inline" onsubmit="return confirm('<?php echo $escape(addslashes(sprintf($translate('Delete %s? This cannot be undone.'), $t['name']))); ?>');">
+            <input type="hidden" name="vpb_theme_csrf" value="<?php echo $escape($csrf); ?>">
+            <input type="hidden" name="vpb_action" value="delete">
+            <input type="hidden" name="template_id" value="<?php echo (int) $t['id']; ?>">
+            <button type="submit"><?php echo $escape($translate('Delete')); ?></button>
+        </form>
         <?php if ($i > 0): ?>
         <form method="post" class="vpb-theme-inline">
             <input type="hidden" name="vpb_theme_csrf" value="<?php echo $escape($csrf); ?>">

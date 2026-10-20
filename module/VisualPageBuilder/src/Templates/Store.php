@@ -129,6 +129,12 @@ class Store
      * Set a template live or draft. Going live needs its required blocks;
      * returns the missing ones (empty when the change was made).
      */
+    /** Remove a template page. Its blocks go with it; the screen falls back to the theme's own layout. */
+    public static function delete(ApiManager $api, SitePageRepresentation $page): void
+    {
+        $api->delete('site_pages', $page->id());
+    }
+
     public static function setStatus(ApiManager $api, SitePageRepresentation $page, string $status): array
     {
         $meta = self::meta($page);

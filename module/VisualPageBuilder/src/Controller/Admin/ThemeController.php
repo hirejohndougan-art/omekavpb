@@ -92,6 +92,7 @@ class ThemeController extends AbstractActionController
                 case 'status':
                 case 'move':
                 case 'restore':
+                case 'delete':
                     return $this->changeTemplate($site, $action, $post);
             }
         } catch (\InvalidArgumentException $e) {
@@ -127,7 +128,11 @@ class ThemeController extends AbstractActionController
     {
         $id = (int) ($post['template_id'] ?? 0);
         $template = $this->templateOf($site, $id);
-        if ($action === 'duplicate') {
+        if ($action === 'delete') {
+            $title = $template['page']->title();
+            Store::delete($this->manager(), $template['page']);
+            $this->messenger()->addSuccess(sprintf($this->translate('Deleted "%s".'), $title)); // @translate
+        } elseif ($action === 'duplicate') {
             $copy = Store::duplicate($this->manager(), $site, $template['page']);
             $this->messenger()->addSuccess(sprintf($this->translate('Made "%s". It starts as a draft.'), $copy->title())); // @translate
         } elseif ($action === 'status') {
