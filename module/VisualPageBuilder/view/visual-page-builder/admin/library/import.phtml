@@ -1,0 +1,22 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Import (Phase 8). Runs on CSV Import; without it active, says so.
+ *
+ * @var bool $engineActive
+ * @var string $modulesUrl
+ */
+$escape = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+echo $this->pageTitle($translate('Import'), 1, $translate('Visual Builder'));
+echo $this->partial('visual-page-builder/admin/library/_nav', ['current' => 'admin/visual-page-builder-import']);
+?>
+<?php if (!$engineActive): ?>
+<section class="vpb-import-note" aria-labelledby="vpb-import-off">
+    <h2 id="vpb-import-off"><?php echo $escape($translate('CSV Import is not turned on')); ?></h2>
+    <p><?php echo $escape($translate('The import wizard runs on Omeka’s CSV Import module, which is not active on this installation. Turn it on, then come back here.')); ?></p>
+    <p><a class="button" href="<?php echo $escape($modulesUrl); ?>"><?php echo $escape($translate('Go to the Modules page')); ?></a></p>
+</section>
+<?php else: ?>
+<p><?php echo $escape($translate('Choose a spreadsheet to import. The wizard checks its columns before anything is imported.')); ?></p>
+<?php endif; ?>

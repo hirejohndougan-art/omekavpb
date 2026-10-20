@@ -13,6 +13,7 @@ return [
             'VisualPageBuilder\Controller\Admin\Settings' => Controller\Admin\SettingsController::class,
             'VisualPageBuilder\Controller\Admin\People' => Controller\Admin\PeopleController::class,
             'VisualPageBuilder\Controller\Admin\Library' => Controller\Admin\LibraryController::class,
+            'VisualPageBuilder\Controller\Admin\Import' => Controller\Admin\ImportController::class,
             'VisualPageBuilder\Controller\Admin\Menu' => Controller\Admin\MenuController::class,
             'VisualPageBuilder\Controller\Admin\Region' => Controller\Admin\RegionController::class,
             'VisualPageBuilder\Controller\Admin\Pages' => Controller\Admin\PagesController::class,
@@ -100,6 +101,18 @@ return [
                             'defaults' => [
                                 '__NAMESPACE__' => 'VisualPageBuilder\Controller\Admin',
                                 'controller' => 'Search',
+                                'action' => 'index',
+                            ],
+                        ],
+                    ],
+                    // Import (Phase 8): the spreadsheet wizard, on CSV Import.
+                    'visual-page-builder-import' => [
+                        'type' => \Laminas\Router\Http\Literal::class,
+                        'options' => [
+                            'route' => '/vpb-import',
+                            'defaults' => [
+                                '__NAMESPACE__' => 'VisualPageBuilder\Controller\Admin',
+                                'controller' => 'Import',
                                 'action' => 'index',
                             ],
                         ],
