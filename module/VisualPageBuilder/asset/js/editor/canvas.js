@@ -25,6 +25,16 @@ function blockBody(b) { return VPB.blocks.preview(b); }
 function blockName(b) { return VPB.blocks.name(b); }
 
 function isSel(kind, id) { return !state.preview && state.sel && state.sel.kind === kind && state.sel.id === id; }
+/** Hidden on the device being previewed (layout data vpb_hide). */
+function hiddenAtDev(b) {
+  return !!(b.ld && b.ld.vpb_hide && String(b.ld.vpb_hide).split(',').indexOf(state.dev) >= 0);
+}
+/** The block's padding at the previewed width: its tablet or phone value when set, else its padding. */
+function paddingAtDev(b) {
+  var key = 'vpb_pad_' + state.dev;
+  if (state.dev !== 'desktop' && b.ld && b.ld[key] !== undefined && b.ld[key] !== '') return +b.ld[key];
+  return b.pad;
+}
 function toolBtn(label, icon, fn, cls) {
   var b = h('button', { type: 'button', 'aria-label': label, title: label, class: cls || null });
   b.innerHTML = svg(icon, 15, '#FFFFFF');
@@ -154,7 +164,7 @@ function colEl(s, c, ci) {
   return el;
 }
 function blkEl(b, bi) {
-  var wrap = h('div', { class: 'blk' + (isSel('block', b.id) ? ' selected' : '') + (b.ld && b.ld.vpb_hidden && !state.preview ? ' is-hidden' : ''), 'data-id': b.id, 'data-kind': 'block', 'data-bi': bi });
+  var wrap = h('div', { class: 'blk' + (isSel('block', b.id) ? ' selected' : '') + (b.ld && b.ld.vpb_hidden && !state.preview ? ' is-hidden' : '') + (hiddenAtDev(b) ? ' is-hidden-dev' : ''), 'data-id': b.id, 'data-kind': 'block', 'data-bi': bi });
   if (b.anchor && !state.preview) wrap.appendChild(h('span', { class: 'anchor-tag', title: 'Older link name', text: '#' + VPB.model.slug(b.anchor) }));
   wrap.appendChild(h('span', { class: 'chip', text: blockName(b) }));
   var tools = h('div', { class: 'tools' });
@@ -180,7 +190,8 @@ function blkEl(b, bi) {
   wrap.appendChild(tools);
   var inner = h('div', { class: 'inner' }, [blockBody(b)]);
   var st = '';
-  if (b.pad !== null && b.pad !== undefined) st += 'padding:' + b.pad + 'px;';
+  var pad = paddingAtDev(b);
+  if (pad !== null && pad !== undefined) st += 'padding:' + pad + 'px;';
   if (b.bg) st += 'background:' + b.bg + ';';
   if (VPB.isDark(b.bg)) st += 'color:#fff;';
   st += VPB.bgImageCss(b.img);

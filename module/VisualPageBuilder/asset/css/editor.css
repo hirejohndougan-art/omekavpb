@@ -532,3 +532,6 @@ body.preview #regionTop,body.preview #regionBottom{display:none}
 .tools .dev-hide[aria-pressed="true"]{background:#fff;color:#1f2a24;text-decoration:line-through;opacity:1}
 .tools .req-hide{width:auto;padding:2px 8px;margin:0 4px;border-radius:999px;background:rgba(255,255,255,.18);color:#fff;font-size:11px}
 .blk.is-hidden .inner{opacity:.4}
+/* Hidden on the device being previewed: dimmed while editing, gone in Preview (as on the public page). */
+.blk.is-hidden-dev .inner{opacity:.4}
+body.preview .blk.is-hidden-dev{display:none}
