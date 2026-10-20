@@ -147,8 +147,10 @@ class Module extends AbstractModule
             PageHistory::createTable($services->get('Omeka\Connection'));
         }
         if (version_compare($oldVersion, '2.2.0', '<')) {
-            // The index is filled by a reindex job, started from the search settings.
-            Search\Index::createTables($services->get('Omeka\Connection'));
+            // The index is filled by a reindex job, started from the search settings. The module's
+            // classes are not autoloaded while an upgrade runs, so the file is loaded here.
+            require_once __DIR__ . '/src/Search/Index.php';
+            \VisualPageBuilder\Search\Index::createTables($services->get('Omeka\Connection'));
         }
         // Item history (Phase 9) and drafts (Phase 6). Their tables are created here or on first use.
         require_once __DIR__ . '/src/ItemHistory.php';
