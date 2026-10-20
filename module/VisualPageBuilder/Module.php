@@ -49,6 +49,7 @@ class Module extends AbstractModule
         PageHistory::createTable($services->get('Omeka\Connection'));
         Search\Index::createTables($services->get('Omeka\Connection'));
         ItemHistory::createTable($services->get('Omeka\Connection'));
+        Drafts::createTable($services->get('Omeka\Connection'));
     }
 
     /**
@@ -63,6 +64,8 @@ class Module extends AbstractModule
         PageHistory::dropTable($services->get('Omeka\Connection'));
         require_once __DIR__ . '/src/ItemHistory.php';
         ItemHistory::dropTable($services->get('Omeka\Connection'));
+        require_once __DIR__ . '/src/Drafts.php';
+        Drafts::dropTable($services->get('Omeka\Connection'));
         // The search index goes too. Omeka's own search keeps working without it.
         Search\Index::dropTables($services->get('Omeka\Connection'));
         $dir = OMEKA_PATH . '/files/visual-page-builder';
@@ -85,9 +88,11 @@ class Module extends AbstractModule
             // The index is filled by a reindex job, started from the search settings.
             Search\Index::createTables($services->get('Omeka\Connection'));
         }
-        // Item history (Phase 9). Its table is created here or on first use.
+        // Item history (Phase 9) and drafts (Phase 6). Their tables are created here or on first use.
         require_once __DIR__ . '/src/ItemHistory.php';
         ItemHistory::createTable($services->get('Omeka\Connection'));
+        require_once __DIR__ . '/src/Drafts.php';
+        Drafts::createTable($services->get('Omeka\Connection'));
     }
 
     /** Item history: save the item's values before each change made through the API. */
@@ -100,6 +105,14 @@ class Module extends AbstractModule
             $services->get('Omeka\ApiManager'),
             (int) $event->getParam('request')->getId()
         );
+    }
+
+    /** Drafts: an item deleted through the API is no longer a draft. */
+    public function forgetDraftOnDelete(Event $event): void
+    {
+        require_once __DIR__ . '/src/Drafts.php';
+        $services = $event->getTarget()->getServiceLocator();
+        Drafts::forget($services->get('Omeka\Connection'), (int) $event->getParam('request')->getId());
     }
 
     /** Batch changes: save each item before the batch is applied. */
@@ -192,6 +205,7 @@ class Module extends AbstractModule
         // Item history: a snapshot before each change.
         $sharedEventManager->attach($items, 'api.update.pre', [$this, 'snapshotItemBeforeUpdate']);
         $sharedEventManager->attach($items, 'api.batch_update.pre', [$this, 'snapshotItemsBeforeBatch']);
+        $sharedEventManager->attach($items, 'api.delete.post', [$this, 'forgetDraftOnDelete']);
 
         $sharedEventManager->attach(
             'Omeka\Controller\SiteAdmin\Page',

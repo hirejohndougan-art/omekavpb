@@ -42,8 +42,9 @@ echo $this->pageTitle($translate('Home'), 1, $translate('Visual Builder'));
             <dd><?php echo $escape(number_format($attention['noFile'])); ?></dd>
             <dt><?php echo $escape($translate('Items with no date')); ?></dt>
             <dd><?php echo $escape(number_format($attention['noDate'])); ?></dd>
+            <dt><?php echo $escape($translate('Drafts')); ?></dt>
+            <dd><?php echo $escape(number_format($attention['drafts'])); ?></dd>
         </dl>
-        <p class="vpb-home-muted"><?php echo $escape($translate('Drafts will be listed here once drafts are built.')); ?></p>
     </section>
 
     <section class="vpb-home-card" aria-labelledby="vpb-home-recent">

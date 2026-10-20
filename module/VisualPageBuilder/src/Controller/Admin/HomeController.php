@@ -19,6 +19,7 @@ class HomeController extends AbstractActionController
         $manager = $this->getEvent()->getApplication()->getServiceManager();
         $conn = $manager->get('Omeka\Connection');
         $api = $manager->get('Omeka\ApiManager');
+        require_once __DIR__ . '/../../Drafts.php';
 
         $dateId = (int) $conn->fetchOne(
             'SELECT p.id FROM property p JOIN vocabulary v ON v.id = p.vocabulary_id WHERE v.prefix = ? AND p.local_name = ?',
@@ -34,6 +35,7 @@ class HomeController extends AbstractActionController
         // Needs attention: an item with no file, and an item with no date.
         $attention = [
             'noFile' => (int) $conn->fetchOne('SELECT COUNT(*) FROM item i WHERE NOT EXISTS (SELECT 1 FROM media m WHERE m.item_id = i.id)'),
+            'drafts' => \VisualPageBuilder\Drafts::count($conn),
             'noDate' => (int) $conn->fetchOne(
                 'SELECT COUNT(*) FROM item i WHERE NOT EXISTS (SELECT 1 FROM value v WHERE v.resource_id = i.id AND v.property_id = ? AND v.value <> \'\')',
                 [$dateId]
