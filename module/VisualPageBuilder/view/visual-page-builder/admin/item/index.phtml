@@ -10,6 +10,8 @@
  * @var bool $public
  * @var bool $draft
  * @var array $values  FIELDS keys to text (one value per line)
+ * @var bool $expert  Expert mode: show the codes, the ID and the standard-form link
+ * @var string $standardUrl
  * @var array $labels  per field: label, comment, needed (from the resource template)
  * @var array $sets  [id, title, on]
  * @var array $sites  [id, title, on]
@@ -44,6 +46,7 @@ echo $this->partial('visual-page-builder/admin/library/_nav', ['current' => ''])
 <p>
     <span class="vpb-item-state<?php echo $draft ? ' is-draft' : ''; ?>"><?php echo $escape($draft ? $translate('Draft') : ($public ? $translate('Public') : $translate('Staff only'))); ?></span>
     <a href="<?php echo $escape($this->url('admin/visual-page-builder-items')); ?>"><?php echo $escape($translate('Back to Items')); ?></a>
+    <?php if ($expert): ?> · <a href="<?php echo $escape($standardUrl); ?>"><?php echo $escape($translate('Open in the standard Omeka form')); ?></a> · <span class="vpb-item-hint">ID <?php echo (int) $id; ?></span><?php endif; ?>
 </p>
 
 <nav class="vpb-item-tabs" aria-label="<?php echo $escape($translate('Item sections')); ?>">
@@ -57,12 +60,12 @@ echo $this->partial('visual-page-builder/admin/library/_nav', ['current' => ''])
     <input type="hidden" name="<?php echo $escape($csrfName); ?>" value="<?php echo $escape($csrf); ?>">
     <input type="hidden" name="vpb_action" value="details">
     <input type="hidden" name="tab" value="details">
-    <label><?php echo $escape($labels['title']['label']); ?><input type="text" name="title" value="<?php echo $escape($values['title']); ?>"></label>
-    <label><?php echo $escape($labels['description']['label']); ?><textarea name="description" rows="4"><?php echo $escape($values['description']); ?></textarea></label>
-    <label><?php echo $escape($labels['date']['label']); ?><input type="text" name="date" value="<?php echo $escape($values['date']); ?>"></label>
-    <label><?php echo $escape($labels['creator']['label']); ?><span class="vpb-item-hint"> <?php echo $escape($translate('One per line')); ?></span><textarea name="creator" rows="2"><?php echo $escape($values['creator']); ?></textarea></label>
-    <label><?php echo $escape($labels['subject']['label']); ?><span class="vpb-item-hint"> <?php echo $escape($translate('One per line')); ?></span><textarea name="subject" rows="2"><?php echo $escape($values['subject']); ?></textarea></label>
-    <label><?php echo $escape($labels['place']['label']); ?><span class="vpb-item-hint"> <?php echo $escape($translate('One per line')); ?></span><textarea name="place" rows="2"><?php echo $escape($values['place']); ?></textarea></label>
+    <label><?php echo $escape($labels['title']['label']); ?><?php if ($expert): ?> <code class="vpb-item-hint"><?php echo $escape('dcterms:title'); ?></code><?php endif; ?><input type="text" name="title" value="<?php echo $escape($values['title']); ?>"></label>
+    <label><?php echo $escape($labels['description']['label']); ?><?php if ($expert): ?> <code class="vpb-item-hint"><?php echo $escape('dcterms:description'); ?></code><?php endif; ?><textarea name="description" rows="4"><?php echo $escape($values['description']); ?></textarea></label>
+    <label><?php echo $escape($labels['date']['label']); ?><?php if ($expert): ?> <code class="vpb-item-hint"><?php echo $escape('dcterms:date'); ?></code><?php endif; ?><input type="text" name="date" value="<?php echo $escape($values['date']); ?>"></label>
+    <label><?php echo $escape($labels['creator']['label']); ?><?php if ($expert): ?> <code class="vpb-item-hint"><?php echo $escape('dcterms:creator'); ?></code><?php endif; ?><span class="vpb-item-hint"> <?php echo $escape($translate('One per line')); ?></span><textarea name="creator" rows="2"><?php echo $escape($values['creator']); ?></textarea></label>
+    <label><?php echo $escape($labels['subject']['label']); ?><?php if ($expert): ?> <code class="vpb-item-hint"><?php echo $escape('dcterms:subject'); ?></code><?php endif; ?><span class="vpb-item-hint"> <?php echo $escape($translate('One per line')); ?></span><textarea name="subject" rows="2"><?php echo $escape($values['subject']); ?></textarea></label>
+    <label><?php echo $escape($labels['place']['label']); ?><?php if ($expert): ?> <code class="vpb-item-hint"><?php echo $escape('dcterms:spatial'); ?></code><?php endif; ?><span class="vpb-item-hint"> <?php echo $escape($translate('One per line')); ?></span><textarea name="place" rows="2"><?php echo $escape($values['place']); ?></textarea></label>
     <div><button type="submit"><?php echo $escape($translate('Save details')); ?></button></div>
 </form>
 

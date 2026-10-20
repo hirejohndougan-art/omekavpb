@@ -30,6 +30,16 @@ class HomeController extends AbstractActionController
         'Revision' => 'An earlier version of an item, kept so you can restore it.',
     ];
 
+    /** Switch between Simple and Expert for this person, then go back Home. */
+    public function modeAction()
+    {
+        $manager = $this->getEvent()->getApplication()->getServiceManager();
+        $to = (string) $this->params()->fromQuery('to', '');
+        \VisualPageBuilder\Mode::set($manager, $to === \VisualPageBuilder\Mode::EXPERT ? \VisualPageBuilder\Mode::EXPERT : \VisualPageBuilder\Mode::SIMPLE);
+        $this->messenger()->addSuccess($to === \VisualPageBuilder\Mode::EXPERT ? 'Expert mode is on.' : 'Simple mode is on.'); // @translate
+        return $this->redirect()->toRoute('admin/visual-page-builder-home');
+    }
+
     public function glossaryAction()
     {
         $view = new ViewModel(['terms' => self::GLOSSARY]);

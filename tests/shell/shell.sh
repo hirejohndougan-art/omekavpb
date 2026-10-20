@@ -30,7 +30,10 @@ curl -s -b "$JAR" "$BASE/admin/vpb-items?q=VPBTEST+shell+zebra" | grep -q 'VPBTE
 SIDE=$(curl -s -b "$JAR" "$BASE/admin/vpb-items")
 printf '%s' "$SIDE" | grep -q 'class="vpb-side"' && check ok "the screens have the sidebar" || check no "the screens have the sidebar"
 printf '%s' "$SIDE" | grep -q 'href="[^"]*vpb-items" aria-current="page"' && check ok "the sidebar marks the current screen" || check no "the sidebar marks the current screen"
-printf '%s' "$SIDE" | grep -q 'item list' && check ok "the sidebar links to Omeka's own screens" || check no "the sidebar links to Omeka's own screens"
+curl -s -b "$JAR" -o /dev/null "$BASE/admin/vpb-mode?to=expert"
+SIDE=$(curl -s -b "$JAR" "$BASE/admin/vpb-items")
+printf '%s' "$SIDE" | grep -q 'item list' && check ok "Expert mode links to Omeka's own screens" || check no "Expert mode links to Omeka's own screens"
+curl -s -b "$JAR" -o /dev/null "$BASE/admin/vpb-mode?to=simple"
 
 echo "$pass passed, $fail failed"
 [ "$fail" -eq 0 ]

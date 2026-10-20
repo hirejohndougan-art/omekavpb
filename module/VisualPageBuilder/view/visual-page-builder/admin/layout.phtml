@@ -23,7 +23,7 @@ $resourceNav = (string) $this->navigation('Laminas\Navigation\AdminResource')->m
 $adminNav = (string) $this->navigation('Laminas\Navigation\AdminGlobal')->menu();
 $moduleNav = (string) $this->navigation('Laminas\Navigation\AdminModule')->menu();
 $this->trigger('view.layout');
-$vpbSideStyle = '.vpb-side{list-style:none;margin:0 0 1rem;padding:0}.vpb-side a{display:block;padding:.35rem .6rem;border-radius:4px;color:inherit;text-decoration:none}.vpb-side a:hover{background:#eef3f1}.vpb-side a[aria-current=page]{background:#1f4d3f;color:#fff}.vpb-side-omeka a{font-size:.9rem}';
+$vpbSideStyle = '.vpb-side{list-style:none;margin:0 0 1rem;padding:0}.vpb-side a{display:block;padding:.35rem .6rem;border-radius:4px;color:inherit;text-decoration:none}.vpb-side a:hover{background:#eef3f1}.vpb-side a[aria-current=page]{background:#1f4d3f;color:#fff}.vpb-side-omeka a{font-size:.9rem}.vpb-side-mode{font-size:.85rem;margin:1rem 0 0}';
 ?>
 <?php // Friendly admin layout (Phase 6): the VPB sidebar replaces Omeka's sidebar. Copied from Omeka's layout-admin; keep in step with it. ?>
 <?php echo $this->doctype(); ?>
@@ -100,12 +100,23 @@ foreach ($sideLinks as $route => $label): ?>
                         <li><a href="<?php echo $escape($this->url($route)); ?>"<?php echo $route === $this->vpbCurrent ? ' aria-current="page"' : ''; ?>><?php echo $escape($translate($label)); ?></a></li>
 <?php endforeach; ?>
                     </ul>
+                    <?php if ($this->vpbMode === 'expert'): ?>
                     <h5><?php echo $escape($translate('Omeka')); ?></h5>
                     <ul class="vpb-side vpb-side-omeka">
                         <li><a href="<?php echo $escape($this->url('admin/default', ['controller' => 'site'])); ?>"><?php echo $escape($translate('Sites')); ?></a></li>
+                        <li><a href="<?php echo $escape($this->url('admin/default', ['controller' => 'resource-template'])); ?>"><?php echo $escape($translate('Resource templates')); ?></a></li>
+                        <li><a href="<?php echo $escape($this->url('admin/default', ['controller' => 'vocabulary'])); ?>"><?php echo $escape($translate('Vocabularies')); ?></a></li>
                         <li><a href="<?php echo $escape($this->url('admin/default', ['controller' => 'module'])); ?>"><?php echo $escape($translate('Modules')); ?></a></li>
                         <li><a href="<?php echo $escape($this->url('admin/default', ['controller' => 'item', 'action' => 'browse'])); ?>"><?php echo $escape($translate("Omeka's item list")); ?></a></li>
                     </ul>
+                    <?php endif; ?>
+                    <p class="vpb-side-mode">
+                        <?php if ($this->vpbMode === 'expert'): ?>
+                        <a href="<?php echo $escape($this->url('admin/visual-page-builder-mode', [], ['query' => ['to' => 'simple']], true)); ?>"><?php echo $escape($translate('Switch to Simple')); ?></a>
+                        <?php else: ?>
+                        <a href="<?php echo $escape($this->url('admin/visual-page-builder-mode', [], ['query' => ['to' => 'expert']], true)); ?>"><?php echo $escape($translate('Switch to Expert')); ?></a>
+                        <?php endif; ?>
+                    </p>
                 </nav>
             </header>
             <script>

@@ -39,9 +39,11 @@ class Module extends AbstractModule
             if (!in_array($name, self::FRIENDLY_ROUTES, true)) {
                 return null;
             }
+            require_once __DIR__ . '/src/Mode.php';
             $viewModel = $e->getViewModel();
             $viewModel->setTemplate('visual-page-builder/admin/layout');
             $viewModel->setVariable('vpbCurrent', $name);
+            $viewModel->setVariable('vpbMode', \VisualPageBuilder\Mode::current($e->getApplication()->getServiceManager()));
             return null;
         }, -1000); // after Omeka sets its own layout
     }

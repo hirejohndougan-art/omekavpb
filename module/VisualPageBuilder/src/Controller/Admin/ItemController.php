@@ -78,6 +78,8 @@ class ItemController extends AbstractActionController
             'draft' => Drafts::isDraft($conn, $id),
             'values' => $values,
             'labels' => \VisualPageBuilder\Questions::fieldLabels($api, $manager->get('Omeka\Settings')),
+            'expert' => \VisualPageBuilder\Mode::current($manager) === \VisualPageBuilder\Mode::EXPERT,
+            'standardUrl' => $this->url()->fromRoute('admin/id', ['controller' => 'item', 'action' => 'edit', 'id' => $id], [], true),
             'sets' => $sets,
             'sites' => $sites,
             'files' => $files,

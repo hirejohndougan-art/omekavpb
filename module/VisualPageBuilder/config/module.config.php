@@ -110,6 +110,18 @@ return [
                             ],
                         ],
                     ],
+                    // Simple or Expert mode (Phase 9): /vpb-mode?to=simple or expert.
+                    'visual-page-builder-mode' => [
+                        'type' => \Laminas\Router\Http\Literal::class,
+                        'options' => [
+                            'route' => '/vpb-mode',
+                            'defaults' => [
+                                '__NAMESPACE__' => 'VisualPageBuilder\\Controller\\Admin',
+                                'controller' => 'Home',
+                                'action' => 'mode',
+                            ],
+                        ],
+                    ],
                     // Edit questions (Phase 7): labels, help text and Needed for the item questions.
                     'visual-page-builder-questions' => [
                         'type' => \Laminas\Router\Http\Literal::class,
