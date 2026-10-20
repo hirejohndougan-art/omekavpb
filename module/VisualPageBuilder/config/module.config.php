@@ -373,7 +373,7 @@ return [
         'AdminModule' => [
             [
                 'label' => 'Visual Builder', // @translate
-                'route' => 'admin/visual-page-builder-pages',
+                'route' => 'admin/visual-page-builder-home',
                 'resource' => 'VisualPageBuilder\Controller\Admin\Pages',
             ],
         ],

@@ -55,6 +55,7 @@ class Module extends AbstractModule
     private const FRIENDLY_ROUTES = [
         'admin/visual-page-builder-home',
         'admin/visual-page-builder-items',
+        'admin/visual-page-builder-pages',
         'admin/visual-page-builder-item',
         'admin/visual-page-builder-files',
         'admin/visual-page-builder-item-sets',
