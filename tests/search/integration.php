@@ -158,6 +158,13 @@ check('place facet narrows to the item with that place', $place > 0 && $r['total
 check('text facet labels come from the value table', Index::valueLabels($conn, 'subject', [$railroad]) === [$railroad => 'Railroad']);
 check('a text value is not offered under another field', Index::valueLabels($conn, 'place', [$railroad]) === []);
 
+// Yes/no facet: has a description. The depot has one; the interior photo doesn't.
+$counts = Search::facetCounts($conn, 'depot', false, $syn, [], null);
+check('the yes/no facet counts items with a description', ($counts['has_description'][1] ?? 0) === 1, (string) ($counts['has_description'][1] ?? 'none'));
+$r = $public('depot', ['has_description' => [1]]);
+check('the yes/no facet narrows to items with a description', $r['total'] === 1 && $r['ids'] === [$depot->id()], (string) $r['total']);
+check('the yes/no facet is labelled', \VisualPageBuilder\Search\BrowseQuery::labelsFor($api, 'has_description', [1]) === [1 => 'Has a description']);
+
 // Clean up.
 foreach ([$depot, $interior, $staff, $oral] as $item) {
     $api->delete('items', $item->id());

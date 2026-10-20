@@ -28,7 +28,7 @@ class Index
      * Facet fields: item set and resource class (ids), decade (the decade's first year),
      * has images (1), and the text fields (see TEXT_FIELDS).
      */
-    public const FACET_FIELDS = ['item_set', 'class', 'decade', 'has_images', 'subject', 'creator', 'place'];
+    public const FACET_FIELDS = ['item_set', 'class', 'decade', 'has_images', 'has_description', 'subject', 'creator', 'place'];
 
     /** Text facet fields: the property each one reads. Their values are stored as ids in FACET_VALUE. */
     public const TEXT_FIELDS = [
@@ -169,6 +169,13 @@ class Index
         foreach ($item->media() as $media) {
             if (strpos((string) $media->mediaType(), 'image/') === 0) {
                 $conn->insert(self::FACET, ['item_id' => $id, 'field' => 'has_images', 'value_id' => 1]);
+                break;
+            }
+        }
+        // Yes/no: the item has a description (any non-blank dcterms:description).
+        foreach ($item->value('dcterms:description', ['all' => true, 'default' => []]) as $value) {
+            if (self::textLabel((string) $value) !== null) {
+                $conn->insert(self::FACET, ['item_id' => $id, 'field' => 'has_description', 'value_id' => 1]);
                 break;
             }
         }

@@ -30,6 +30,7 @@ class BrowseFacets extends AbstractSchemaBlock
         'place' => 'Place',
         'decade' => 'Date',
         'has_images' => 'Images',
+        'has_description' => 'Description',
     ]; // @translate
 
     /** Text fields list this many values (most items first) plus any chosen ones; the rest need "Show more", not built yet. */
