@@ -242,7 +242,8 @@ class BrowseQuery
         $resource = $field === 'item_set' ? 'item_sets' : 'resource_classes';
         $labels = [];
         foreach ($api->search($resource, ['id' => $ids])->getContent() as $found) {
-            $labels[(int) $found->id()] = (string) $found->displayTitle('');
+            // Item sets have a title; resource classes (Type) have a translated label.
+            $labels[(int) $found->id()] = $field === 'item_set' ? (string) $found->displayTitle('') : (string) $found->label();
         }
         return $labels;
     }
