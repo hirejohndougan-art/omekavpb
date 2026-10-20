@@ -1,0 +1,42 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Timeline. Across: a sideways-scrolling row with arrow buttons
+ * (special-blocks/js/timeline.js; also scrolls by keyboard or touch).
+ * Down the page: a vertical line with entries on alternating sides.
+ *
+ * @var array $data
+ * @var array $entries [['year', 'when', 'title', 'text', 'thumb', 'url'], …] in order
+ * @var string $trackId
+ */
+$escape = $this->plugin('escapeHtml');
+if (!$entries) {
+    return;
+}
+$this->headScript()->appendFile($this->assetUrl('special-blocks/js/timeline.js', 'VisualPageBuilder'), 'text/javascript', ['defer' => 'defer']);
+$lastYear = null;
+?>
+<div class="special-blocks special-blocks-timeline special-blocks-timeline-<?php echo $escape($data['layout']); ?> special-blocks-tl-<?php echo $escape($data['size']); ?>">
+<?php echo $this->partial('common/special-blocks/heading', ['heading' => $data['heading']]); ?>
+<div class="special-blocks-tl-track" id="<?php echo $escape($trackId); ?>" tabindex="0" role="region" aria-label="<?php echo $escape($data['heading'] ?: $this->translate('Timeline')); ?>">
+<ol class="special-blocks-tl-list">
+    <?php foreach ($entries as $e): $newYear = $e['year'] !== $lastYear; $lastYear = $e['year']; ?>
+    <li class="special-blocks-tl-entry<?php echo $newYear ? ' is-new-year' : ''; ?>">
+        <span class="special-blocks-tl-year"<?php echo $newYear ? '' : ' aria-hidden="true"'; ?>><?php echo $escape((string) $e['year']); ?></span>
+        <div class="special-blocks-tl-card">
+            <?php if ($e['thumb'] && $data['show_images']): ?><img src="<?php echo $escape($e['thumb']); ?>" alt="" loading="lazy"><?php endif; ?>
+            <span class="special-blocks-tl-when"><?php echo $escape($e['when']); ?></span>
+            <?php if ($e['url']): ?><a class="special-blocks-tl-title" href="<?php echo $escape($e['url']); ?>"><?php echo $escape($e['title']); ?></a><?php else: ?><span class="special-blocks-tl-title"><?php echo $escape($e['title']); ?></span><?php endif; ?>
+            <?php if ($e['text'] !== '' && $data['show_details']): ?><p><?php echo nl2br($escape($e['text'])); ?></p><?php endif; ?>
+        </div>
+    </li>
+    <?php endforeach; ?>
+</ol>
+</div>
+<?php if ($data['layout'] === 'horizontal'): ?>
+<div class="special-blocks-tl-nav" hidden>
+    <button type="button" class="special-blocks-tl-prev" aria-controls="<?php echo $escape($trackId); ?>"><span aria-hidden="true">&larr;</span> <?php echo $escape($this->translate('Earlier')); ?></button>
+    <button type="button" class="special-blocks-tl-next" aria-controls="<?php echo $escape($trackId); ?>"><?php echo $escape($this->translate('Later')); ?> <span aria-hidden="true">&rarr;</span></button>
+</div>
+<?php endif; ?>
+</div>

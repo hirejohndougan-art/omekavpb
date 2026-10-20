@@ -1,0 +1,412 @@
+VISUAL PAGE BUILDER for Omeka S
+with the Companion Theme for Visual Page Builder
+========================================================================
+
+This download has three things in it:
+
+  VisualPageBuilder                   The module (the page editor, Special
+                                      Blocks, page templates, menu builder).
+                                      Goes in Omeka's "modules" folder.
+
+  visual-page-builder-companion       The Companion Theme (how your public
+                                      site looks). Goes in Omeka's "themes"
+                                      folder.
+
+  HOW TO INSTALL AND USE.txt          This file.
+
+License: GNU General Public License, version 2 or later (GPL-2.0-or-later).
+See the LICENSE file in each folder.
+
+You need Omeka S 4.1 or later. To check, look at the bottom of any page in
+your Omeka admin; it shows the version.
+
+The module works with any theme. The Companion Theme is optional, but it is
+the only theme that shows the menu styles from the menu builder, and it is
+made to show pages exactly the way you build them.
+
+
+------------------------------------------------------------------------
+BEFORE YOU START
+------------------------------------------------------------------------
+
+1. Back up your Omeka database. (Ask your web host if you're not sure how.)
+   Every install or upgrade of any module should start with a backup.
+
+2. Try it on a test copy of your site first if you have one.
+
+3. You'll need a way to upload folders to your web server, such as your
+   host's file manager or an FTP program (FileZilla, WinSCP).
+
+4. Do NOT open the folders and upload only what's inside them. Upload each
+   folder as a whole, keeping its exact name.
+
+
+------------------------------------------------------------------------
+PART 1. INSTALL THE MODULE
+------------------------------------------------------------------------
+
+1. Upload the folder "VisualPageBuilder" into the "modules" folder of your
+   Omeka installation. When you're done, this file must exist:
+
+       modules/VisualPageBuilder/Module.php
+
+   If a "VisualPageBuilder" folder is already there (an older version),
+   delete it first, then upload the new one. Deleting the folder does not
+   delete your pages; they are stored in the database.
+
+2. In your Omeka admin, click "Modules" in the left menu.
+
+3. Find "Visual Page Builder" and click "Install". If you had an older
+   version, the button says "Upgrade" instead; click it.
+
+Upgrading from the old "Society Blocks" module? First, under Modules,
+click "Uninstall" next to Society Blocks (your pages keep their blocks),
+then delete the "SocietyBlocks" folder from "modules", then do the steps
+above. The upgrade moves those blocks over with their settings.
+
+
+------------------------------------------------------------------------
+PART 2. INSTALL THE COMPANION THEME (optional, recommended)
+------------------------------------------------------------------------
+
+1. Upload the folder "visual-page-builder-companion" into the "themes"
+   folder of your Omeka installation. When you're done, this file must
+   exist:
+
+       themes/visual-page-builder-companion/config/theme.ini
+
+   (If you have a folder named "page-builder" in "themes" from an earlier
+   test, you can delete it. That was the same theme under its old name.)
+
+2. In your Omeka admin, go to Sites, open your site, and click "Theme".
+
+3. Choose "Companion Theme for Visual Page Builder" and save.
+
+4. Still under Theme, open the theme's settings (the gear or "Edit theme
+   settings") to set:
+     - your logo (upload it under Assets first),
+     - accent, header, and background colors,
+     - heading and text fonts,
+     - page width,
+     - a search box in the header,
+     - footer text and Facebook, Instagram, and YouTube links,
+     - whether the footer shows your visit info (address and hours).
+
+
+------------------------------------------------------------------------
+PART 3. USING IT
+------------------------------------------------------------------------
+
+EDITING A PAGE VISUALLY
+  Go to Modules > Visual Builder (with more than one site, choose yours).
+  One page shows everything for the site: Edit header, Edit footer, Edit
+  menu, the theme, and the list of pages. Click "Open visual editor" next
+  to a page ("Find a page" helps on big sites). Or go to
+  Sites > your site > Pages, open a page, and click "Open visual editor" at
+  the top. The page opens full screen.
+
+  - Sections hold columns, and columns hold blocks.
+  - Add things from the sidebar on the left: drag them onto the page, or
+    click them to add them after whatever is selected.
+  - Click anything on the page to change its settings in the sidebar.
+  - Drag the bar between two columns to change their widths.
+  - A bar with a + in a box shows above, between, and below sections. Drag
+    a section or block onto it, or click the + and then pick a section or
+    block in the sidebar; it goes right there. Escape cancels.
+  - Type text straight onto the page.
+  - Every block in the sidebar has an (i) button that explains what it does.
+  - Undo and Redo are the curved arrows at the top (Ctrl+Z / Ctrl+Y).
+  - "Preview" hides the editing marks. "Save" saves (or press Ctrl+S).
+  - "Preview on site" shows the unsaved page on your real site, with your
+    theme, header, and footer, at desktop, tablet, or phone width. Nothing
+    is published; visitors can't see it.
+  - Text formatting is in the sidebar when a text block is selected:
+    Style (paragraph, heading 2-4, quote), Font (10 web-safe fonts), Size,
+    Bold, Italic, Underline, Strikethrough, text color, highlight color,
+    Clear formatting, align left / center / right / justify, bulleted and
+    numbered lists, quote, link, remove link, and footnote. Select words
+    on the page, then click; the buttons light up to show what's applied.
+    To add a picture to text, put the cursor there and click "Insert an
+    image" in the sidebar.
+  - Every Special Block has a Title (change it) and "Show the title" (turn
+    it off to hide it) at the top of its settings. Its Background color
+    is further down, under Style.
+  - Section settings > Smaller screens: on tablets, one per row, two per
+    row, or as on desktop; on phones, one or two per row. The Tablet and
+    Phone buttons at the top show the result.
+  - While editing a page, your site's header shows above it and the footer
+    below (faded; that's how the Companion Theme shows them). Click either
+    to edit it. If the page has unsaved changes, you're asked first: Save
+    and continue, Continue without saving, or Cancel. While editing the
+    header or footer, a band for the page leads back to the page you came
+    from, the same way.
+  - "<- Visual Builder" at the top left takes you back to the site's page
+    under Modules (it warns you first if there are unsaved changes).
+  - Drag the sidebar's right edge to make it wider.
+  - Backgrounds: select a section, column, or block and pick one of 18
+    colors under Background, or any color with the custom color picker
+    (works the same for pages, headers, and footers). On dark colors the
+    text turns white by itself.
+  - Background images: under Background image, choose a picture from
+    Assets, then Fill the area / Whole picture, Top / Center / Bottom, and
+    "Darken it so text is readable".
+
+  The sidebar has three tabs:
+  - Blocks: everything you can add, with a "Find a block" search.
+  - Layers: an outline of the page; click a row to select it.
+  - Templates: 30 ready-made pages (home, browse, story, about, contact,
+    events and support). "Use for this page" replaces the page (it asks
+    first); "Add to the end" keeps what's there. Replace the [bracketed]
+    text with your own. "Ready-made sections" offers 10 single sections
+    (text beside a photo, call to action band, quote band, and more) to add
+    anywhere, including where you clicked a +.
+
+SPECIAL BLOCKS
+  The "Special Blocks" group in the sidebar has 47 extra blocks: random and
+  recent items, item of the day, on this day, collection cards and counts,
+  search box, hero banner, then-and-now photo slider, quotes, FAQ
+  sections, buttons, visit info, upcoming events, announcement bar,
+  slideshow, gallery, explore-by-topic tiles, browse by decade, subjects,
+  oral history with transcript, document with transcription, people,
+  partners, fundraising progress, newsletter sign-up, how to cite, and for
+  headers and footers: logo, site title, site menu, social links, and a
+  copyright line. Also: who's who in a photo (numbered markers on people),
+  item table, milestones timeline, did you know?, open now (from your
+  weekly hours), embeds from trusted sites (Google Maps and Forms, YouTube,
+  Vimeo, Internet Archive), share this page, and breadcrumbs.
+  New in 1.1: a Map of places (OpenStreetMap; click the map in the sidebar
+  to drop a pin, then name it and link an item; or turn it into a numbered walking
+  tour) and a Timeline (items in date order plus your own entries).
+  Timeline entries and map places each have a title, a date (timeline) or
+  spot (map), a linked item from the archive, a picture (the item's, one
+  you choose, or none), and details. In the sidebar each entry shows a
+  one-line summary; click it to open and edit it.
+  New in 1.6: the Story map. A map with a timeline under it: visitors press
+  Play and the map moves from stop to stop in date order while a pane tells
+  each stop's story (background photo, text, YouTube/Vimeo or the item's
+  own video, link to the item). Back to the start, Previous, Next, and the
+  timeline stops work by hand. Click the map in the sidebar to add a stop,
+  then give it a name and a date.
+  New in 1.7: the Archive quiz. Multiple-choice questions whose answers
+  visitors find by searching the archive. Each question can have a ready-
+  made "Search the archive" link, a hint, and, after answering, an
+  explanation and a link to the item where the answer is. Score at the end,
+  "Try again" to start over. Answers are checked in the visitor's browser
+  and nothing is stored; it's for fun, not a test.
+  New in 1.8: the Oral history block syncs when the transcript has times.
+  Type times at the start of lines, like [00:12:40] or 12:40, or attach a
+  caption file (.vtt or .srt) to the item and choose "A caption file on
+  the item". Then the line being spoken is highlighted and followed, any
+  line or time can be clicked to jump there, visitors can search inside
+  the interview, video gets captions, and an optional Topic index lists
+  where each subject starts. Note: Omeka doesn't accept .vtt or .srt files
+  by default; add "vtt, srt" to the allowed file extensions and "text/vtt,
+  text/plain, application/x-subrip" to the allowed media types in Omeka's
+  Settings > Security first.
+  New in 1.14.1: change the table of contents from its own settings. Under
+  "Found on this page", each heading and Table link has arrows to indent
+  (make it a subsection) or outdent it, and a grip you can drag sideways
+  (or use the left/right arrow keys on). Indenting a heading changes its
+  style on the page, Heading 2 -> 3 -> 4, like a word processor. Click an
+  entry to rename it in the table of contents, leave it out, or pick its
+  level from a list.
+  New in 1.14: the Table of contents builds itself from your headings,
+  like a word processor. In a text block, set a line's Style to Heading 2
+  (a section), Heading 3 (a subsection), or Heading 4 (a sub-subsection),
+  and the "Table of contents (this page)" block lists it, nested, in page
+  order (optionally numbered 1, 1.1, 2...). Click into a heading and, in
+  its Text formatting panel under Table of contents, untick "Show in the
+  table of contents" to leave it out, or give it a shorter "Name in the
+  table of contents". For a spot with no heading (a map, a gallery), drag
+  in a Table link block and name it: on the site it takes no space; in the
+  editor it's a thin dashed bar you can drag. The Table of contents'
+  settings list everything it found on the page. Every heading also gets
+  its own link (page address + #the-heading-words). The old "Link name"
+  setting is retired: spots that already have one keep it (shown as
+  "Older link name" in their settings) and keep working.
+  New in 1.7: the Archive quiz. Multiple-choice questions whose answers
+  visitors find by searching the archive. Each question can have a ready-
+  made "Search the archive" link, a hint, and, after answering, an
+  explanation and a link to the item where the answer is. Score at the end,
+  "Try again" to start over. Answers are checked in the visitor's browser
+  and nothing is stored; it's for fun, not a test.
+  New in 1.8: the Oral history block syncs when the transcript has times.
+  Type times at the start of lines, like [00:12:40] or 12:40, or attach a
+  caption file (.vtt or .srt) to the item and choose "A caption file on
+  the item". Then the line being spoken is highlighted and followed, any
+  line or time can be clicked to jump there, visitors can search inside
+  the interview, video gets captions, and an optional Topic index lists
+  where each subject starts. Note: Omeka doesn't accept .vtt or .srt files
+  by default; add "vtt, srt" to the allowed file extensions and "text/vtt,
+  text/plain, application/x-subrip" to the allowed media types in Omeka's
+  Settings > Security first.
+  New in 1.9: link names and Jump links. Give any section or block a Link
+  name (its settings, under Style), like visit-us, and link straight to
+  that spot: your page address + #visit-us ("Copy link" copies it). A
+  "Name in Jump links" (the table of contents) sets how it's listed. Headings you type get link
+  names automatically. The Table of contents (jump links) block is an "On this page" list that
+  fills itself in with ONLY the spots you've named (or, if you choose,
+  your headings too), in page order. When making a link in text, the
+  prompt suggests the spots on the page.
+  New in 1.7: the Archive quiz. Multiple-choice questions whose answers are
+  found by searching the archive: each question can have a "Search the
+  archive" link with suggested words, a hint, the item where the answer is,
+  and an explanation shown after answering. Visitors check each answer and
+  see their score at the end. Answers are checked in the visitor's browser
+  and nothing is stored; it's for fun, not a graded test.
+
+  Blocks that show items let you choose where the items come from: this
+  site, sites you pick, or all sites.
+
+VISIT INFO (enter it once)
+  Sites > your site > Settings has a "Visit info" section for hours,
+  address, admission, and contact details. Any Visit info block set to
+  "A site's visit info" shows it, and so does the Companion Theme's footer.
+  Hours go one row per line, like:  Tuesday to Saturday | 10 am to 4 pm
+  Closed dates go one per line, like:  2026-11-26 | Thanksgiving
+  "Open now" blocks read both, so they say whether you're open right now.
+
+WHO'S WHO IN THIS PHOTO
+  Choose the photo, then click on it in the sidebar to drop a numbered
+  marker on each person; drag a marker to move it. Type each name in the
+  Markers list.
+
+EVENTS FROM YOUR CALENDAR
+  An Upcoming events block can show events from Google Calendar or similar.
+  Paste the calendar's public iCal address (ends in .ics) into the block.
+  In Google Calendar: Settings > your calendar > "Public address in iCal
+  format".
+
+HEADER AND FOOTER
+  Modules > Visual Builder > Edit header / Edit footer (or the "Header"
+  and "Footer" buttons in the page editor) opens your site's header or
+  footer in the same visual editor as pages.
+  - Start from a template: the Templates tab offers five headers (logo and
+    menu, centered, two rows with search, with an announcement bar,
+    minimal) and five footers (simple, three columns, newsletter and
+    social, partners strip, large with site map).
+  - Or build your own: the sidebar shows only header and footer elements
+    there (Logo, Site title, Site menu, Search box, Social links, Copyright
+    line, Breadcrumbs, Buttons, Visit info, Open now, and a few more).
+  - Save, and every page of the site shows it.
+  Built headers and footers show with the Companion Theme. Until you build
+  one, the theme uses its own simple header and footer. Other themes keep
+  their own header and footer.
+
+THE THEME BUILDER (new in 2.0)
+  Modules > Visual Builder > your site > Theme Builder.
+  - Templates: one design for one kind of screen (Item, Media, Item set,
+    Browse items, Search results, Page not found, Header, Footer). The most
+    specific template wins: one record, then its resource template, item
+    set, class, and finally all. A template goes live only when its
+    required blocks are in place. (Public screens use live templates once
+    the item screens are connected, in a later release.)
+  - Global styles: the primary, secondary, text, background and link colors,
+    text size, and corners. They apply to every page and template on the site.
+  - A site that upgrades keeps its look: the new settings start at the
+    defaults, which match 1.x.
+
+THE MENU BUILDER
+  Modules > Visual Builder > Edit menu (or the "Menu" button in the page
+  editor).
+  - Add pages, web addresses, "Browse items", and "Collections".
+  - Use the arrows to reorder; "Indent" puts an item under the one above.
+  - Pick one of 19 menu styles; each shows a small picture of your menu
+    in that style. New in 1.16: five vertical styles that run down the side
+    of the page (side menu left or right, a list with everything showing,
+    sub-pages that fly out, links in a panel), and Colors: pick a scheme or
+    set your own menu background, link, highlight, and drop-down colors.
+  - Desktop / Tablet / Phone at the top switch the preview, which shows
+    your site with your changes before you save (with the Companion Theme).
+  - In a header you build, the Site menu block always uses this page's
+    style and colors.
+  - The original 15: five have your logo
+    centered with the menu underneath (plain, in a color band, newspaper
+    masthead, with dividers, small capitals); others include drop-downs,
+    large panels, side menu, logo in the middle, logo left with menu right,
+    rounded buttons, tabs, two rows, and a single Menu button.
+  - Click Save.
+  The menu itself works with any theme. The style only shows with the
+  Companion Theme.
+
+
+------------------------------------------------------------------------
+GOOD TO KNOW
+------------------------------------------------------------------------
+
+- Your pages stay normal Omeka pages. If you ever remove the module,
+  regular blocks keep showing (one under another instead of in columns).
+  Special Blocks stop showing until the module is put back; their settings
+  are kept.
+
+- Keep Omeka's "Use HTMLPurifier" setting on (Settings > Security). It
+  cleans the formatted text in some Special Blocks.
+
+- "Today" and "now" (announcements, events, open now, and so on) follow the
+  time zone in Omeka's Settings > General. Make sure it's yours.
+
+- Some themes have special "page templates" (like a Homepage template).
+  Pages saved in the visual editor always use the standard one, so your
+  columns show as you built them.
+
+
+------------------------------------------------------------------------
+IF SOMETHING GOES WRONG
+------------------------------------------------------------------------
+
+The module or theme doesn't appear in Omeka:
+  The folder is probably in the wrong place or has an extra folder inside
+  it. Check that these exact files exist:
+      modules/VisualPageBuilder/Module.php
+      themes/visual-page-builder-companion/config/theme.ini
+
+"This module requires a newer version of Omeka":
+  Upgrade Omeka S to 4.1 or later.
+
+No "Open visual editor" button on a page:
+  Check that the module shows as installed and active under Modules, and
+  that your user account is allowed to edit that site's pages.
+
+Upcoming events don't show calendar events:
+  The calendar address must be public, and your web server must be able to
+  reach it. Events are checked at most once an hour.
+
+Anything else: take a screenshot of what you see and note what you
+clicked just before.
+
+SPECIAL BLOCKS IN GROUPS (new in 1.13)
+  In the sidebar's Blocks tab, the Special Blocks are sorted into groups:
+  From your collection, Telling history, Maps, Recordings and documents,
+  Visiting and events, Getting involved, Finding your way, and Reuse.
+  Click a group's heading to fold it (remembered); searching opens every
+  group with a match. Each block's (i) info says what it works well with.
+
+PAGE TOOLS (new in 1.12)
+  The "Page" button at the top of the editor:
+  - History: a copy of the page is kept every time you save in the visual
+    editor (the newest 50). Load one to bring it back as unsaved changes;
+    Undo takes it back, Save keeps it.
+  - Download layout / Import layout: save the page's layout as a file (a
+    backup, or to use on another Omeka site), and load one back, replacing
+    the page or adding to the end. Items and pictures from another site
+    need choosing again.
+  - Check page: lists common problems (pictures without descriptions,
+    skipped heading levels, links that go nowhere or to a missing spot,
+    "click here" links, empty sections, blocks missing what they need),
+    each with "Show me". It never blocks saving.
+  On the Visual Builder page:
+  - Duplicate (next to each page) makes a private copy and opens it.
+  - Shared sections: build a section once and show it on many pages with
+    the "Shared section" block; change it once and every page updates.
+    Make one from scratch here, or from any section in the editor
+    (section settings > "Make this a shared section").
+  Footnotes: while typing, the footnote button (superscript 1) adds a note
+  where the cursor is. On the page notes are numbered and listed under
+  "Notes" at the end, or wherever you put a Footnotes block.
+  Printing: printed pages drop menus, search boxes, buttons and map
+  controls, print link addresses after links, and avoid splitting blocks.
+
+ABOUT THE CODE
+  Everything in this module and theme was written for them; no outside
+  libraries are bundled. Maps use the module's own map code with map
+  pictures from OpenStreetMap (credited on each map).

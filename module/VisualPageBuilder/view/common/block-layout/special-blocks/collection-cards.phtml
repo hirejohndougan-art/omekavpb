@@ -1,0 +1,37 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Item sets as cards.
+ *
+ * @var array $data
+ * @var array $cards  [['title', 'url', 'thumb', 'description', 'count'?, 'resource'], …]
+ */
+$escape = $this->plugin('escapeHtml');
+if (!$cards) {
+    return;
+}
+$columns = $data['columns'] === 'auto' ? 'auto' : (int) $data['columns'];
+?>
+<div class="special-blocks special-blocks-collection-cards">
+<?php echo $this->partial('common/special-blocks/heading', ['heading' => $data['heading']]); ?>
+<ul class="special-blocks-grid special-blocks-grid-wide" data-columns="<?php echo $escape($columns); ?>">
+    <?php foreach ($cards as $card): ?>
+    <li class="special-blocks-card special-blocks-collection">
+        <?php if ($card['url']): ?><a href="<?php echo $escape($card['url']); ?>"><?php endif; ?>
+        <?php if ($card['thumb']): ?>
+        <img class="special-blocks-thumb special-blocks-thumb-<?php echo $escape($data['thumbnail_type']); ?>" src="<?php echo $escape($card['thumb']); ?>" alt="" loading="lazy">
+        <?php else: ?>
+        <span class="special-blocks-thumb special-blocks-thumb-empty" aria-hidden="true"></span>
+        <?php endif; ?>
+        <?php if ($data['show_title']): ?><span class="special-blocks-card-title"><?php echo $escape($card['title']); ?></span><?php endif; ?>
+        <?php if ($card['url']): ?></a><?php endif; ?>
+        <?php if (isset($card['count'])): ?>
+        <span class="special-blocks-count"><?php echo $escape(sprintf($this->translatePlural('%s item', '%s items', $card['count']), $this->specialBlocksNumber($card['count']))); ?></span>
+        <?php endif; ?>
+        <?php if ($data['show_description'] && $card['description']): ?>
+        <p class="special-blocks-card-description"><?php echo $escape($card['description']); ?></p>
+        <?php endif; ?>
+    </li>
+    <?php endforeach; ?>
+</ul>
+</div>

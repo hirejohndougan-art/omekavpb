@@ -1,0 +1,160 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Visual Builder for one site: header & footer, menu, theme, and pages, on
+ * one page.
+ *
+ * @var \Omeka\Api\Representation\SiteRepresentation $site
+ * @var \Omeka\Api\Representation\SiteRepresentation[] $sites  for the switcher
+ * @var \Omeka\Api\Representation\SitePageRepresentation[] $pages
+ * @var string $q  the "Find a page" search, if any
+ * @var \Omeka\Api\Representation\SitePageRepresentation|null $header
+ * @var \Omeka\Api\Representation\SitePageRepresentation|null $footer
+ * @var int $menuCount
+ * @var string $menuStyle
+ * @var bool $usesCompanion
+ * @var \Omeka\Api\Representation\SitePageRepresentation[] $shared  shared sections
+ * @var string $csrf  for the forms on this page
+ */
+$escape = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+$this->headStyle()->appendStyle('
+.vpb-hub-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:1rem;margin:0 0 1.5rem}
+.vpb-hub-card{border:1px solid #dfdfdf;border-radius:4px;padding:1rem 1.1rem;background:#fff}
+.vpb-hub-card h3{margin:0 0 .3rem;font-size:1.1rem}
+.vpb-hub-card p{margin:0 0 .7rem}
+.vpb-hub-state{font-size:.9rem;color:#676767}
+.vpb-hub-state.is-built{color:#2a7a3b}
+.vpb-hub-switch{display:flex;gap:.5rem;align-items:center;margin:0 0 1rem}
+.vpb-find-page{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin:0 0 1rem}
+.vpb-hub-pages td:first-child a{text-decoration:underline;font-weight:600}
+.vpb-link-button{background:none;border:0;padding:0;color:inherit;text-decoration:underline;cursor:pointer;font:inherit;box-shadow:none}
+');
+echo $this->pageTitle($site->title(), 1, $translate('Visual Builder'));
+$editorUrl = function ($page) use ($site) {
+    return $this->url('admin/visual-page-builder', ['site-slug' => $site->slug(), 'page-id' => $page->id()]);
+};
+$regionState = function ($page) use ($translate) {
+    return $page && $page->blocks()
+        ? '<span class="vpb-hub-state is-built">' . $translate('Built') . '</span>'
+        : '<span class="vpb-hub-state">' . $translate('Not built yet; the theme\'s own is used') . '</span>';
+};
+?>
+<div id="page-actions">
+    <a class="button" href="<?php echo $escape($this->url('admin/visual-page-builder-theme', ['site-slug' => $site->slug()])); ?>"><?php echo $escape($translate('Theme Builder')); ?></a>
+    <a class="button" href="<?php echo $escape($site->siteUrl()); ?>" target="_blank" rel="noopener noreferrer"><?php echo $escape($translate('View site')); ?></a>
+</div>
+
+<?php if (count($sites) > 1): ?>
+<form method="get" class="vpb-hub-switch" action="<?php echo $escape($this->url('admin/visual-page-builder-pages')); ?>">
+    <label for="vpb-site"><?php echo $escape($translate('Site')); ?></label>
+    <select id="vpb-site" name="site">
+        <?php foreach ($sites as $s): ?><option value="<?php echo $escape($s->slug()); ?>"<?php echo $s->id() === $site->id() ? ' selected' : ''; ?>><?php echo $escape($s->title()); ?></option><?php endforeach; ?>
+    </select>
+    <button type="submit"><?php echo $escape($translate('Go')); ?></button>
+</form>
+<?php endif; ?>
+
+<div class="vpb-hub-cards">
+    <section class="vpb-hub-card" aria-labelledby="vpb-hub-header">
+        <h3 id="vpb-hub-header"><?php echo $escape($translate('Header')); ?></h3>
+        <p><?php echo $regionState($header); ?></p>
+        <a class="button" href="<?php echo $escape($this->url('admin/visual-page-builder-region', ['site-slug' => $site->slug(), 'region' => 'header'])); ?>"><?php echo $escape($translate('Edit header')); ?></a>
+    </section>
+    <section class="vpb-hub-card" aria-labelledby="vpb-hub-footer">
+        <h3 id="vpb-hub-footer"><?php echo $escape($translate('Footer')); ?></h3>
+        <p><?php echo $regionState($footer); ?></p>
+        <a class="button" href="<?php echo $escape($this->url('admin/visual-page-builder-region', ['site-slug' => $site->slug(), 'region' => 'footer'])); ?>"><?php echo $escape($translate('Edit footer')); ?></a>
+    </section>
+    <section class="vpb-hub-card" aria-labelledby="vpb-hub-menu">
+        <h3 id="vpb-hub-menu"><?php echo $escape($translate('Menu')); ?></h3>
+        <p><span class="vpb-hub-state"><?php echo $escape(sprintf($translate('%1$s links · %2$s'), $menuCount, $menuStyle)); ?></span></p>
+        <a class="button" href="<?php echo $escape($this->url('admin/visual-page-builder-menu', ['site-slug' => $site->slug(), 'action' => 'edit'])); ?>"><?php echo $escape($translate('Edit menu')); ?></a>
+    </section>
+    <section class="vpb-hub-card" aria-labelledby="vpb-hub-theme">
+        <h3 id="vpb-hub-theme"><?php echo $escape($translate('Theme')); ?></h3>
+        <?php if ($usesCompanion): ?>
+        <p><span class="vpb-hub-state is-built"><?php echo $escape($translate('Companion Theme for Visual Page Builder')); ?></span></p>
+        <?php else: ?>
+        <p><span class="vpb-hub-state"><?php echo $escape(sprintf($translate('%s. Built headers, footers, and menu styles show only with the Companion Theme.'), $site->theme())); ?></span></p>
+        <?php endif; ?>
+        <a class="button" href="<?php echo $escape($site->adminUrl('theme')); ?>"><?php echo $escape($translate('Theme settings')); ?></a>
+    </section>
+</div>
+
+<?php
+// Forms on this page ask before deleting (data-confirm).
+$this->inlineScript()->appendScript('document.addEventListener("submit", function (e) { var m = e.target.getAttribute("data-confirm"); if (m && !window.confirm(m)) e.preventDefault(); });');
+$hidden = '<input type="hidden" name="vpb_hub_csrf" value="' . $escape($csrf) . '">';
+?>
+<h2 id="vpb-shared"><?php echo $escape($translate('Shared sections')); ?></h2>
+<p><?php echo $escape($translate('Build a section once and show it on many pages with the "Shared section" block. Change it here and every page updates.')); ?></p>
+<?php if ($shared): ?>
+<table class="tablesaw vpb-hub-pages" data-tablesaw-mode="stack">
+    <thead><tr><th><?php echo $escape($translate('Shared section')); ?></th><th><?php echo $escape($translate('Last changed')); ?></th><th></th></tr></thead>
+    <tbody>
+    <?php foreach ($shared as $sp): ?>
+    <tr>
+        <td><a href="<?php echo $escape($editorUrl($sp)); ?>"><?php echo $escape($sp->title()); ?></a></td>
+        <td><?php echo $escape($this->i18n()->dateFormat($sp->modified() ?: $sp->created(), 'medium')); ?></td>
+        <td>
+            <a class="button" href="<?php echo $escape($editorUrl($sp)); ?>"><?php echo $escape($translate('Edit')); ?></a>
+            <form method="post" style="display:inline" data-confirm="<?php echo $escape(sprintf($translate('Delete the shared section "%s"? Pages that show it will skip it.'), $sp->title())); ?>">
+                <?php echo $hidden; ?><input type="hidden" name="vpb_action" value="delete_shared"><input type="hidden" name="page_id" value="<?php echo (int) $sp->id(); ?>">
+                <button type="submit" class="o-icon-delete" aria-label="<?php echo $escape(sprintf($translate('Delete %s'), $sp->title())); ?>" title="<?php echo $escape($translate('Delete')); ?>"></button>
+            </form>
+        </td>
+    </tr>
+    <?php endforeach; ?>
+    </tbody>
+</table>
+<?php endif; ?>
+<form method="post" class="vpb-find-page">
+    <?php echo $hidden; ?><input type="hidden" name="vpb_action" value="new_shared">
+    <label for="vpb-new-shared"><?php echo $escape($translate('New shared section')); ?></label>
+    <input type="text" id="vpb-new-shared" name="title" placeholder="<?php echo $escape($translate('e.g. Visit us strip')); ?>" maxlength="190">
+    <button type="submit"><?php echo $escape($translate('Create and edit')); ?></button>
+</form>
+
+<h2><?php echo $escape($translate('Pages')); ?></h2>
+<form method="get" class="vpb-find-page">
+    <label for="vpb-q"><?php echo $escape($translate('Find a page')); ?></label>
+    <input type="search" id="vpb-q" name="q" value="<?php echo $escape($q); ?>" placeholder="<?php echo $escape($translate('Title or address')); ?>">
+    <button type="submit"><?php echo $escape($translate('Find')); ?></button>
+    <?php if ($q !== ''): ?><a href="?"><?php echo $escape($translate('Show all')); ?></a><?php endif; ?>
+    <?php if ($site->userIsAllowed('add-page')): ?>
+    <a class="button" href="<?php echo $escape($site->adminUrl('add-page')); ?>"><?php echo $escape($translate('Add new page')); ?></a>
+    <?php endif; ?>
+</form>
+<?php if (!$pages && $q !== ''): ?>
+<p><?php echo $escape(sprintf($translate('No pages match "%s".'), $q)); ?></p>
+<?php elseif (!$pages): ?>
+<p><?php echo $escape($translate('This site has no pages yet. Use "Add new page" to make one, then open it in the visual editor.')); ?></p>
+<?php else: ?>
+<table class="tablesaw vpb-hub-pages" data-tablesaw-mode="stack">
+    <thead><tr>
+        <th><?php echo $escape($translate('Page')); ?></th>
+        <th><?php echo $escape($translate('Visibility')); ?></th>
+        <th><?php echo $escape($translate('Last changed')); ?></th>
+        <th></th>
+    </tr></thead>
+    <tbody>
+    <?php foreach ($pages as $page): ?>
+    <tr>
+        <td>
+            <a href="<?php echo $escape($editorUrl($page)); ?>"><?php echo $escape($page->title()); ?></a>
+            <br><small>/<?php echo $escape($page->slug()); ?></small>
+        </td>
+        <td><?php echo $escape($page->isPublic() ? $translate('Public') : $translate('Private')); ?></td>
+        <td><?php echo $escape($this->i18n()->dateFormat($page->modified() ?: $page->created(), 'medium')); ?></td>
+        <td>
+            <a class="button" href="<?php echo $escape($editorUrl($page)); ?>"><?php echo $escape($translate('Open visual editor')); ?></a>
+            <a href="<?php echo $escape($page->siteUrl()); ?>" target="_blank" rel="noopener noreferrer"><?php echo $escape($translate('View')); ?></a>
+            &middot; <a href="<?php echo $escape($page->adminUrl('edit')); ?>"><?php echo $escape($translate('Standard editor')); ?></a>
+            &middot; <form method="post" style="display:inline"><?php echo $hidden; ?><input type="hidden" name="vpb_action" value="duplicate"><input type="hidden" name="page_id" value="<?php echo (int) $page->id(); ?>"><button type="submit" class="vpb-link-button"><?php echo $escape($translate('Duplicate')); ?></button></form>
+        </td>
+    </tr>
+    <?php endforeach; ?>
+    </tbody>
+</table>
+<?php endif; ?>

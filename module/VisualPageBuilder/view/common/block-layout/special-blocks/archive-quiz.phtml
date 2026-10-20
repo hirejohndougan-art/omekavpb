@@ -1,0 +1,56 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Archive quiz. special-blocks/js/quiz.js checks answers and shows feedback,
+ * explanations, the answer's item, and the score. Without JavaScript the
+ * questions and search links still work; answers can't be checked.
+ *
+ * @var array $data
+ * @var array $questions [['question', 'choices', 'key', 'salt', 'search', 'searchWords', 'hint', 'explanation', 'itemUrl', 'itemTitle'], …]
+ * @var string $quizId
+ */
+$escape = $this->plugin('escapeHtml');
+if (!$questions) {
+    return;
+}
+$this->headScript()->appendFile($this->assetUrl('special-blocks/js/quiz.js', 'VisualPageBuilder'), 'text/javascript', ['defer' => 'defer']);
+$total = count($questions);
+?>
+<div class="special-blocks special-blocks-quiz" id="<?php echo $escape($quizId); ?>" data-show-score="<?php echo $data['show_score'] ? '1' : '0'; ?>"
+    data-right="<?php echo $escape($this->translate('Right!')); ?>" data-wrong="<?php echo $escape($this->translate('Not quite.')); ?>"
+    data-pick="<?php echo $escape($this->translate('Choose an answer first.')); ?>" data-answer="<?php echo $escape($this->translate('The answer is: %s')); ?>"
+    data-score="<?php echo $escape($this->translate('You got %1$s of %2$s right.')); ?>">
+<?php echo $this->partial('common/special-blocks/heading', ['heading' => $data['heading']]); ?>
+<?php if ($data['intro'] !== ''): ?><p class="special-blocks-quiz-intro"><?php echo nl2br($escape($data['intro'])); ?></p><?php endif; ?>
+<noscript><p class="special-blocks-note"><?php echo $escape($this->translate('Turn on JavaScript to check your answers.')); ?></p></noscript>
+<ol class="special-blocks-quiz-list">
+    <?php foreach ($questions as $i => $q): $qid = $quizId . '-q' . $i; ?>
+    <li class="special-blocks-quiz-question" data-key="<?php echo $escape($q['key']); ?>" data-salt="<?php echo $escape($q['salt']); ?>">
+        <fieldset>
+            <legend><span class="special-blocks-quiz-num"><?php echo $escape(sprintf($this->translate('Question %1$s of %2$s'), $i + 1, $total)); ?></span> <?php echo $escape($q['question']); ?></legend>
+            <?php if ($q['search']): ?>
+            <p class="special-blocks-quiz-search"><a href="<?php echo $escape($q['search']); ?>" target="_blank" rel="noopener"><?php echo $escape(sprintf($this->translate('Search the archive for “%s”'), $q['searchWords'])); ?></a> <span class="special-blocks-note">(<?php echo $escape($this->translate('opens in a new tab')); ?>)</span></p>
+            <?php endif; ?>
+            <?php if ($q['hint'] !== ''): ?>
+            <details class="special-blocks-quiz-hint"><summary><?php echo $escape($this->translate('Hint')); ?></summary><p><?php echo $escape($q['hint']); ?></p></details>
+            <?php endif; ?>
+            <div class="special-blocks-quiz-choices">
+                <?php foreach ($q['choices'] as $c => $choice): ?>
+                <label><input type="radio" name="<?php echo $escape($qid); ?>" value="<?php echo $c + 1; ?>"> <span><?php echo $escape($choice); ?></span></label>
+                <?php endforeach; ?>
+            </div>
+            <button type="button" class="special-blocks-button special-blocks-button-primary special-blocks-quiz-check" hidden><?php echo $escape($this->translate('Check my answer')); ?></button>
+            <div class="special-blocks-quiz-feedback" role="status" aria-live="polite" hidden>
+                <p class="special-blocks-quiz-verdict"></p>
+                <?php if ($q['explanation'] !== ''): ?><p><?php echo nl2br($escape($q['explanation'])); ?></p><?php endif; ?>
+                <?php if ($q['itemUrl']): ?><p><a href="<?php echo $escape($q['itemUrl']); ?>"><?php echo $escape(sprintf($this->translate('See where the answer is: %s'), $q['itemTitle'])); ?></a></p><?php endif; ?>
+            </div>
+        </fieldset>
+    </li>
+    <?php endforeach; ?>
+</ol>
+<div class="special-blocks-quiz-end" hidden>
+    <p class="special-blocks-quiz-score" role="status" aria-live="polite"></p>
+    <button type="button" class="special-blocks-button special-blocks-button-secondary special-blocks-quiz-reset"><?php echo $escape($this->translate('Try again')); ?></button>
+</div>
+</div>

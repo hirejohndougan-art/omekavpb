@@ -1,0 +1,26 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Collapsible sections using <details>. With "only one open at a time", the
+ * sections share a name, which modern browsers use to close the others.
+ *
+ * Section text was cleaned by Omeka's HTML purifier when saved.
+ *
+ * @var array $data
+ * @var string $blockKey  unique per block on the page
+ */
+$escape = $this->plugin('escapeHtml');
+if (!$data['panels']) {
+    return;
+}
+$group = $data['one_at_a_time'] ? 'special-accordion-' . $blockKey : null;
+?>
+<div class="special-blocks special-blocks-accordion">
+<?php echo $this->partial('common/special-blocks/heading', ['heading' => $data['heading']]); ?>
+<?php foreach ($data['panels'] as $i => $panel): ?>
+<details class="special-blocks-panel"<?php echo $group ? ' name="' . $escape($group) . '"' : ''; ?><?php echo $i === 0 && $data['open_first'] ? ' open' : ''; ?>>
+    <summary><?php echo $escape($panel['title']); ?></summary>
+    <div class="special-blocks-panel-body"><?php echo $panel['body']; ?></div>
+</details>
+<?php endforeach; ?>
+</div>

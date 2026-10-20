@@ -1,0 +1,41 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * The main image, or the placeholder for this kind of item (plan decision 12).
+ * Outside a Theme Builder template it draws nothing; in the editor's preview
+ * it shows its sample.
+ *
+ * @var array $data
+ * @var \Omeka\Api\Representation\ItemRepresentation|null $item
+ * @var bool $isPreview
+ * @var string $sample
+ */
+$escape = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+$translate = $this->plugin('translate');
+if (!$item) {
+    if ($isPreview) {
+        echo '<p class="special-blocks-item-sample">' . $escape($sample) . '</p>';
+    }
+    return;
+}
+?>
+<?php
+$alt = $item->displayTitle();
+$size = $data['size'] === 'medium' ? 'medium' : 'large';
+?>
+<div class="special-blocks-item-main-image special-blocks-item-main-image-<?php echo $size; ?>">
+<?php if ($kind === 'image'): ?>
+    <img src="<?php echo $escape($thumb ?: $original); ?>" alt="<?php echo $escape($alt); ?>">
+<?php elseif ($kind === 'audio'): ?>
+    <audio controls preload="none" src="<?php echo $escape($original); ?>"><a href="<?php echo $escape($original); ?>"><?php echo $escape($translate('Listen')); ?></a></audio>
+<?php elseif ($kind === 'pdf'): ?>
+    <a href="<?php echo $escape($original); ?>"><img src="<?php echo $escape($thumb); ?>" alt="<?php echo $escape($alt); ?>"></a>
+<?php elseif ($kind === 'other'): ?>
+    <p class="special-blocks-item-file"><a href="<?php echo $escape($original); ?>"><?php echo $escape($translate('Open the file')); ?></a></p>
+<?php else: ?>
+    <div class="special-blocks-item-placeholder" role="img" aria-label="<?php echo $escape($kindLabel); ?>">
+        <span class="special-blocks-item-placeholder-kind"><?php echo $escape($kindLabel); ?></span>
+    </div>
+<?php endif; ?>
+</div>

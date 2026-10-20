@@ -1,0 +1,87 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Oral history. With timed lines ($cues), the transcript is a list of lines
+ * with time buttons, synced by special-blocks/js/oral-history.js; plus a
+ * search box and a topic index. Without times: plain paragraphs, as before.
+ *
+ * @var array $data
+ * @var \Omeka\Api\Representation\ItemRepresentation|null $item
+ * @var \Omeka\Api\Representation\MediaRepresentation|null $media
+ * @var string $transcript
+ * @var array $cues [['start', 'text'], …]
+ * @var array $topics [['start', 'title', 'summary', 'keywords'], …]
+ * @var string|null $captionUrl a .vtt file on the item, for video captions
+ * @var bool $canSync the recording is an audio or video file
+ * @var string $date
+ * @var string|null $url
+ * @var string $blockClass
+ * @var string $ohId
+ */
+use VisualPageBuilder\Site\BlockLayout\OralHistory;
+
+$escape = $this->plugin('escapeHtml');
+if (!$item) {
+    return;
+}
+$synced = $cues && $canSync;
+if ($synced) {
+    $this->headScript()->appendFile($this->assetUrl('special-blocks/js/oral-history.js', 'VisualPageBuilder'), 'text/javascript', ['defer' => 'defer']);
+}
+?>
+<div class="special-blocks <?php echo $escape($blockClass); ?> special-blocks-transcript-<?php echo $escape($data['layout']); ?><?php echo $synced ? ' special-blocks-oh-synced' : ''; ?>" id="<?php echo $escape($ohId); ?>"
+    data-follow="<?php echo $data['follow'] ? '1' : '0'; ?>" data-captions="<?php echo $data['captions'] ? '1' : '0'; ?>"<?php echo $captionUrl ? ' data-caption-url="' . $escape($captionUrl) . '"' : ''; ?>
+    data-results="<?php echo $escape($this->translate('%s places mention this')); ?>" data-one-result="<?php echo $escape($this->translate('1 place mentions this')); ?>" data-no-results="<?php echo $escape($this->translate('Not mentioned in this interview.')); ?>">
+    <?php if ($data['show_title']): ?>
+    <h2 class="special-blocks-heading"><?php echo $escape($item->displayTitle()); ?><?php if ($date !== ''): ?> <span class="special-blocks-transcript-date"><?php echo $escape($date); ?></span><?php endif; ?></h2>
+    <?php endif; ?>
+    <div class="special-blocks-transcript-row">
+        <div class="special-blocks-transcript-media">
+            <?php if ($media): ?>
+                <?php echo $media->render(); ?>
+            <?php else: ?>
+                <p class="special-blocks-note"><?php echo $escape($this->translate('This item has no file of that kind.')); ?></p>
+            <?php endif; ?>
+            <?php if ($synced && $topics): ?>
+            <nav class="special-blocks-oh-topics" aria-label="<?php echo $escape($this->translate('Topics in this interview')); ?>">
+                <h3><?php echo $escape($this->translate('Topics')); ?></h3>
+                <ol>
+                    <?php foreach ($topics as $t): ?>
+                    <li>
+                        <button type="button" class="special-blocks-oh-seek" data-start="<?php echo $escape((string) $t['start']); ?>"><span class="special-blocks-oh-time"><?php echo $escape(OralHistory::clock($t['start'])); ?></span> <?php echo $escape($t['title']); ?></button>
+                        <?php if ($t['summary'] !== ''): ?><p><?php echo nl2br($escape($t['summary'])); ?></p><?php endif; ?>
+                        <?php if ($t['keywords'] !== ''): ?><p class="special-blocks-oh-keywords"><?php echo $escape($t['keywords']); ?></p><?php endif; ?>
+                    </li>
+                    <?php endforeach; ?>
+                </ol>
+            </nav>
+            <?php endif; ?>
+        </div>
+        <div class="special-blocks-transcript-side">
+            <?php if ($synced): ?>
+            <div class="special-blocks-oh-tools" hidden>
+                <?php if ($data['show_search']): ?>
+                <label class="special-blocks-oh-search"><span><?php echo $escape($this->translate('Search this interview')); ?></span>
+                    <input type="search" placeholder="<?php echo $escape($this->translate('e.g. storm')); ?>"></label>
+                <?php endif; ?>
+                <label class="special-blocks-oh-follow"><input type="checkbox"<?php echo $data['follow'] ? ' checked' : ''; ?>> <?php echo $escape($this->translate('Follow along')); ?></label>
+                <p class="special-blocks-oh-count" role="status" aria-live="polite"></p>
+            </div>
+            <?php endif; ?>
+            <div class="special-blocks-transcript-text special-blocks-transcript-<?php echo $escape($data['transcript_height']); ?>" tabindex="0" role="region" aria-label="<?php echo $escape($this->translate('Transcript')); ?>">
+                <?php if ($synced): ?>
+                    <?php foreach ($cues as $c): ?>
+                    <p class="special-blocks-oh-cue" data-start="<?php echo $escape((string) $c['start']); ?>"><button type="button" class="special-blocks-oh-seek special-blocks-oh-time" data-start="<?php echo $escape((string) $c['start']); ?>" aria-label="<?php echo $escape(sprintf($this->translate('Play from %s'), OralHistory::clock($c['start']))); ?>"><?php echo $escape(OralHistory::clock($c['start'])); ?></button> <span class="special-blocks-oh-text"><?php echo nl2br($escape($c['text'])); ?></span></p>
+                    <?php endforeach; ?>
+                <?php elseif ($cues): ?>
+                    <?php foreach ($cues as $c): ?><p><span class="special-blocks-oh-time"><?php echo $escape(OralHistory::clock($c['start'])); ?></span> <?php echo nl2br($escape($c['text'])); ?></p><?php endforeach; ?>
+                <?php elseif ($transcript !== ''): ?>
+                    <?php foreach (preg_split('/\n\s*\n/', $transcript) as $para): ?><p><?php echo nl2br($escape(trim($para))); ?></p><?php endforeach; ?>
+                <?php else: ?>
+                    <p class="special-blocks-note"><?php echo $escape($this->translate('No transcript yet.')); ?></p>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    <?php if ($url && $data['link_text'] !== ''): ?><p class="special-blocks-more"><a href="<?php echo $escape($url); ?>"><?php echo $escape($data['link_text']); ?></a></p><?php endif; ?>
+</div>

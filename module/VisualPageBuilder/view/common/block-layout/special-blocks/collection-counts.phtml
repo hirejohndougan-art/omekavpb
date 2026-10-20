@@ -1,0 +1,34 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Live counts.
+ *
+ * @var array $data
+ * @var array $counts [['n' => int, 'label' => string], …]
+ */
+$escape = $this->plugin('escapeHtml');
+if (!$counts) {
+    return;
+}
+?>
+<div class="special-blocks special-blocks-collection-counts special-blocks-counts-<?php echo $escape($data['style']); ?>">
+<?php echo $this->partial('common/special-blocks/heading', ['heading' => $data['heading']]); ?>
+<?php if ($data['style'] === 'inline'): ?>
+<p class="special-blocks-counts-line"><?php
+    $parts = [];
+    foreach ($counts as $c) {
+        $parts[] = '<strong>' . $escape($this->specialBlocksNumber($c['n'])) . '</strong> ' . $escape($c['label']);
+    }
+    echo implode(' <span aria-hidden="true">·</span> ', $parts);
+?></p>
+<?php else: ?>
+<dl class="special-blocks-counts">
+    <?php foreach ($counts as $c): ?>
+    <div class="special-blocks-count-box">
+        <dt><?php echo $escape($c['label']); ?></dt>
+        <dd><?php echo $escape($this->specialBlocksNumber($c['n'])); ?></dd>
+    </div>
+    <?php endforeach; ?>
+</dl>
+<?php endif; ?>
+</div>

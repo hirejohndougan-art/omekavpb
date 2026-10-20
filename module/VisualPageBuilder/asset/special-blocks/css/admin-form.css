@@ -1,0 +1,10 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+/* Special Blocks: standard page editor form. */
+.special-blocks-form-group { margin: 1.25em 0 0.5em; padding-top: 0.75em; border-top: 1px solid #dfdfdf; font-size: 1em; }
+.special-blocks-form-group:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+.special-blocks-list { border: 1px solid #dfdfdf; border-radius: 3px; padding: 0.75em; margin: 0.5em 0; }
+.special-blocks-list > legend { font-weight: bold; padding: 0 0.3em; }
+.special-blocks-row { position: relative; border-left: 3px solid #dfdfdf; padding-left: 1.5em; margin-bottom: 1em; }
+.special-blocks-row-number { position: absolute; left: 0.4em; top: 0.2em; font-size: 0.85em; color: #757575; }
+.special-blocks-field[hidden] { display: none; }
+.special-blocks-form-about { margin: 0 0 1em; color: #555; font-style: italic; }

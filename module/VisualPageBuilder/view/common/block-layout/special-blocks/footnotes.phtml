@@ -1,0 +1,15 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Footnotes list.
+ *
+ * @var array $data
+ * @var array $notes
+ * @var bool $isPreview
+ */
+$escape = $this->plugin('escapeHtml');
+if ($isPreview) {
+    echo '<p class="special-blocks-note">' . $escape($this->translate('Footnotes: the page\'s numbered notes appear here.')) . '</p>';
+    return;
+}
+echo '<div class="special-blocks special-blocks-footnotes">' . \VisualPageBuilder\Footnotes::listHtml($notes, (string) $data['heading'], $escape, [$this, 'translate']) . '</div>';

@@ -1,0 +1,23 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Fundraising progress.
+ *
+ * @var array $data
+ * @var int $percent 0–100
+ * @var callable $money int => "$12,400"
+ */
+$escape = $this->plugin('escapeHtml');
+if ($data['goal'] <= 0) {
+    return;
+}
+$label = sprintf($this->translate('%1$s raised of %2$s'), $money((int) $data['raised']), $money((int) $data['goal']));
+?>
+<div class="special-blocks special-blocks-fundraising">
+    <?php if ($data['title'] !== ''): ?><h2 class="special-blocks-heading"><?php echo $escape($data['title']); ?></h2><?php endif; ?>
+    <p class="special-blocks-fundraising-amount"><strong><?php echo $escape($money((int) $data['raised'])); ?></strong> <?php echo $escape(sprintf($this->translate('raised of %s goal'), $money((int) $data['goal']))); ?></p>
+    <div class="special-blocks-progress" role="progressbar" aria-label="<?php echo $escape($label); ?>" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<?php echo (int) $percent; ?>"><span style="width: <?php echo (int) $percent; ?>%"></span></div>
+    <p class="special-blocks-note"><?php echo $escape(sprintf($this->translate('%s%% of the goal'), (int) $percent)); ?><?php if ($data['deadline'] !== ''): ?> · <?php echo $escape(sprintf($this->translate('ends %s'), $this->i18n()->dateFormat(new DateTime($data['deadline'] . ' 12:00'), 'long'))); ?><?php endif; ?></p>
+    <?php if ($data['text'] !== ''): ?><p><?php echo nl2br($escape($data['text'])); ?></p><?php endif; ?>
+    <?php if ($data['button_text'] !== '' && $data['button_url'] !== ''): ?><a class="special-blocks-button special-blocks-button-primary" href="<?php echo $escape($data['button_url']); ?>"><?php echo $escape($data['button_text']); ?></a><?php endif; ?>
+</div>

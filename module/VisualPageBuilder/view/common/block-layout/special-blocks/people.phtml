@@ -1,0 +1,28 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * People cards.
+ *
+ * @var array $data
+ * @var array $people [['name', 'role', 'photo', 'bio', 'email_ok'], …]
+ */
+$escape = $this->plugin('escapeHtml');
+if (!$people) {
+    return;
+}
+$columns = $data['columns'] === 'auto' ? 'auto' : (int) $data['columns'];
+?>
+<div class="special-blocks special-blocks-people special-blocks-photo-<?php echo $escape($data['photo_shape']); ?>">
+<?php echo $this->partial('common/special-blocks/heading', ['heading' => $data['heading']]); ?>
+<ul class="special-blocks-grid special-blocks-grid-wide" data-columns="<?php echo $escape($columns); ?>">
+    <?php foreach ($people as $p): ?>
+    <li class="special-blocks-person">
+        <?php if ($p['photo']): ?><img class="special-blocks-person-photo" src="<?php echo $escape($p['photo']); ?>" alt="" loading="lazy"><?php endif; ?>
+        <h3 class="special-blocks-person-name"><?php echo $escape($p['name']); ?></h3>
+        <?php if ($p['role'] !== ''): ?><p class="special-blocks-person-role"><?php echo $escape($p['role']); ?></p><?php endif; ?>
+        <?php if ($p['bio'] !== ''): ?><p><?php echo nl2br($escape($p['bio'])); ?></p><?php endif; ?>
+        <?php if ($p['email_ok']): ?><p><a href="mailto:<?php echo $escape($p['email_ok']); ?>"><?php echo $escape($p['email_ok']); ?></a></p><?php endif; ?>
+    </li>
+    <?php endforeach; ?>
+</ul>
+</div>

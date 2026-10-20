@@ -1,0 +1,27 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Links to the previous and next item in the set.
+ * Outside a Theme Builder template it draws nothing; in the editor's preview
+ * it shows its sample.
+ *
+ * @var array $data
+ * @var \Omeka\Api\Representation\ItemRepresentation|null $item
+ * @var bool $isPreview
+ * @var string $sample
+ */
+$escape = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+if (!$item) {
+    if ($isPreview) {
+        echo '<p class="special-blocks-item-sample">' . $escape($sample) . '</p>';
+    }
+    return;
+}
+?>
+<?php if ($prev || $next): ?>
+<nav class="special-blocks-item-prev-next" aria-label="<?php echo $escape($translate('Items in this collection')); ?>">
+    <?php if ($prev): ?><a class="special-blocks-item-prev" href="<?php echo $escape($prev['url']); ?>">&larr; <?php echo $escape($prev['title']); ?></a><?php endif; ?>
+    <?php if ($next): ?><a class="special-blocks-item-next" href="<?php echo $escape($next['url']); ?>"><?php echo $escape($next['title']); ?> &rarr;</a><?php endif; ?>
+</nav>
+<?php endif; ?>

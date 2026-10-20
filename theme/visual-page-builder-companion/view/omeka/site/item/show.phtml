@@ -1,0 +1,27 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * The item page. When a live Theme Builder template applies to this item
+ * (Item screen), the template is drawn; otherwise this is Omeka's own item page,
+ * unchanged.
+ */
+$translate = $this->plugin('translate');
+$this->headLink()->appendStylesheet($this->assetUrl('css/resource-page-blocks.css', 'Omeka'));
+$this->htmlElement('body')->appendAttribute('class', 'item resource show');
+$filterLocale = (bool) $this->siteSetting('filter_locale_values');
+$lang = $this->lang();
+$valueLang = $filterLocale ? [$lang, ''] : null;
+
+$templated = $this->getHelperPluginManager()->has('vpbTemplate')
+    ? $this->vpbTemplate($this->currentSite(), $item)
+    : null;
+?>
+<?php $this->trigger('view.show.before'); ?>
+<?php if ($templated !== null): ?>
+<?php echo $templated; ?>
+<?php else: ?>
+<?php echo $this->pageTitle($item->displayTitle(null, $valueLang), 2); ?>
+<h3><?php echo $translate('Item'); ?></h3>
+<?php echo $this->resourcePageBlocks($item)->getBlocks(); ?>
+<?php endif; ?>
+<?php $this->trigger('view.show.after'); ?>

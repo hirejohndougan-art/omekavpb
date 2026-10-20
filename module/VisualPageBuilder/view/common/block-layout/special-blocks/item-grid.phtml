@@ -1,0 +1,44 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Grid of items: Random items, Recently added items, and On this day.
+ * Copy to your theme as view/common/block-layout/special-blocks/item-grid.phtml
+ * to change it, or pick another template in the block's settings.
+ *
+ * @var array $data      the block's saved settings (see the block class schema)
+ * @var array $cards     [['title', 'url', 'thumb', 'description', 'resource'], …]
+ * @var string|null $moreUrl
+ * @var string $emptyText
+ * @var string $blockClass
+ */
+$escape = $this->plugin('escapeHtml');
+if (!$cards && $emptyText === '') {
+    return;
+}
+$columns = $data['columns'] === 'auto' ? 'auto' : (int) $data['columns'];
+?>
+<div class="special-blocks <?php echo $escape($blockClass); ?>">
+<?php echo $this->partial('common/special-blocks/heading', ['heading' => $data['heading']]); ?>
+<?php if (!$cards): ?>
+<p class="special-blocks-empty"><?php echo $escape($emptyText); ?></p>
+<?php else: ?>
+<ul class="special-blocks-grid" data-columns="<?php echo $escape($columns); ?>">
+    <?php foreach ($cards as $card): ?>
+    <li class="special-blocks-card">
+        <?php if ($card['url']): ?><a href="<?php echo $escape($card['url']); ?>"><?php endif; ?>
+        <?php if ($card['thumb']): ?>
+        <img class="special-blocks-thumb special-blocks-thumb-<?php echo $escape($data['thumbnail_type']); ?>" src="<?php echo $escape($card['thumb']); ?>" alt="<?php echo $data['show_title'] ? '' : $escape($card['title']); ?>" loading="lazy">
+        <?php endif; ?>
+        <?php if ($data['show_title']): ?><span class="special-blocks-card-title"><?php echo $escape($card['title']); ?></span><?php endif; ?>
+        <?php if ($card['url']): ?></a><?php endif; ?>
+        <?php if ($data['show_description'] && $card['description']): ?>
+        <p class="special-blocks-card-description"><?php echo $escape($card['description']); ?></p>
+        <?php endif; ?>
+    </li>
+    <?php endforeach; ?>
+</ul>
+<?php endif; ?>
+<?php if ($moreUrl): ?>
+<p class="special-blocks-more"><a href="<?php echo $escape($moreUrl); ?>"><?php echo $escape($data['link_text']); ?></a></p>
+<?php endif; ?>
+</div>

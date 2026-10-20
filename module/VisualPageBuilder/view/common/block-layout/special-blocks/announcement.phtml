@@ -1,0 +1,31 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Announcement bar. Shown only between its dates; closing it is remembered in
+ * the visitor's browser per notice (special-blocks/js/announcement.js).
+ *
+ * @var array $data
+ * @var bool $showing
+ * @var bool $scheduled  true when shown only because this is the editor preview
+ * @var string $dismissKey
+ */
+$escape = $this->plugin('escapeHtml');
+if (!$showing) {
+    return;
+}
+if ($data['dismissible']) {
+    $this->headScript()->appendFile($this->assetUrl('special-blocks/js/announcement.js', 'VisualPageBuilder'), 'text/javascript', ['defer' => 'defer']);
+}
+?>
+<div class="special-blocks special-blocks-announcement special-blocks-announcement-<?php echo $escape($data['style']); ?>" role="<?php echo $data['style'] === 'urgent' ? 'alert' : 'status'; ?>" data-dismiss-key="<?php echo $data['dismissible'] ? $escape($dismissKey) : ''; ?>">
+    <p class="special-blocks-announcement-text">
+        <?php echo nl2br($escape($data['text'])); ?>
+        <?php if ($data['link_text'] !== '' && $data['link_url'] !== ''): ?> <a href="<?php echo $escape($data['link_url']); ?>"><?php echo $escape($data['link_text']); ?></a><?php endif; ?>
+    </p>
+    <?php if ($scheduled): ?>
+    <p class="special-blocks-note"><?php echo $escape(sprintf($this->translate('Not showing on the site today. Shows %1$s to %2$s.'), $data['start_date'] ?: $this->translate('now'), $data['end_date'] ?: $this->translate('no end date'))); ?></p>
+    <?php endif; ?>
+    <?php if ($data['dismissible']): ?>
+    <button type="button" class="special-blocks-announcement-close" aria-label="<?php echo $escape($this->translate('Close this notice')); ?>" hidden>&times;</button>
+    <?php endif; ?>
+</div>

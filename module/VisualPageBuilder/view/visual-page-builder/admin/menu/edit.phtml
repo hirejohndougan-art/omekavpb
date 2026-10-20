@@ -1,0 +1,75 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * The menu builder page (full screen). The builder itself is
+ * asset/menu-builder/menu-builder.js, which reads #vpb-menu-config.
+ *
+ * @var array $config
+ * @var \Omeka\Api\Representation\SiteRepresentation $site
+ */
+$escape = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+$json = json_encode($config, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE);
+?><!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title><?php echo $escape(sprintf($translate('Menu builder: %s'), $site->title())); ?></title>
+<link rel="stylesheet" href="<?php echo $escape($this->assetUrl('css/editor.css', 'VisualPageBuilder')); ?>">
+<link rel="stylesheet" href="<?php echo $escape($this->assetUrl('menu-builder/menu-builder.css', 'VisualPageBuilder')); ?>">
+</head>
+<body class="menu-builder">
+<header class="top">
+  <div class="crumbs">
+    <a class="btn hub-back" href="<?php echo $escape($this->url('admin/visual-page-builder-pages', ['site-slug' => $site->slug()])); ?>"><span aria-hidden="true">&larr;</span> <?php echo $escape($translate('Visual Builder')); ?></a>
+    <span aria-hidden="true">/</span>
+    <span class="page-name"><?php echo $escape($site->title()); ?></span>
+  </div>
+  <div class="seg" id="mbDevices" role="group" aria-label="<?php echo $escape($translate('Preview width')); ?>">
+    <button type="button" data-dev="desktop" aria-pressed="true"><?php echo $escape($translate('Desktop')); ?></button>
+    <button type="button" data-dev="tablet" aria-pressed="false"><?php echo $escape($translate('Tablet')); ?></button>
+    <button type="button" data-dev="phone" aria-pressed="false"><?php echo $escape($translate('Phone')); ?></button>
+  </div>
+  <div class="actions">
+    <span class="status" id="status" role="status" aria-live="polite">No changes</span>
+    <a class="btn" href="<?php echo $escape($site->siteUrl()); ?>" target="_blank" rel="noopener noreferrer"><?php echo $escape($translate('View site')); ?></a>
+    <button type="button" class="btn primary" id="saveBtn"><?php echo $escape($translate('Save')); ?></button>
+  </div>
+</header>
+<main class="mb-wrap">
+  <section class="mb-panel mb-preview-panel" aria-labelledby="mb-preview-title">
+    <div class="mb-preview-head">
+      <h2 id="mb-preview-title"><?php echo $escape($translate('Preview')); ?> <span class="mb-preview-sub" id="mbPreviewSub"></span></h2>
+      <p class="note" id="mbPreviewNote"></p>
+    </div>
+    <div id="mbNotice"></div>
+    <div class="mb-stage" id="mbStage"></div>
+  </section>
+  <div class="mb-main">
+    <div class="mb-col">
+      <section class="mb-panel" aria-labelledby="mb-items-title">
+        <h2 id="mb-items-title"><?php echo $escape($translate('Menu')); ?></h2>
+        <p class="note"><?php echo $escape($translate('Use the arrows to reorder. "Indent" makes a link a sub-item of the one above it.')); ?></p>
+        <div id="mbTree" role="tree" aria-label="<?php echo $escape($translate('Menu items')); ?>"></div>
+        <h3><?php echo $escape($translate('Add to the menu')); ?></h3>
+        <div id="mbAdd"></div>
+      </section>
+      <section class="mb-panel" aria-labelledby="mb-colors-title">
+        <h2 id="mb-colors-title"><?php echo $escape($translate('Colors')); ?></h2>
+        <p class="note"><?php echo $escape($translate('Pick a color scheme, then adjust any color. They apply to every menu style, in the header you build and the theme\'s own.')); ?></p>
+        <div id="mbColors"></div>
+      </section>
+    </div>
+    <section class="mb-panel" aria-labelledby="mb-style-title">
+      <h2 id="mb-style-title"><?php echo $escape($translate('Menu style')); ?></h2>
+      <p class="note" id="mbStylesHint"></p>
+      <div id="mbStyles" class="mb-styles" role="radiogroup" aria-label="<?php echo $escape($translate('Menu style')); ?>"></div>
+    </section>
+  </div>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script type="application/json" id="vpb-menu-config"><?php echo $json; ?></script>
+<script src="<?php echo $escape($this->assetUrl('menu-builder/menu-builder.js', 'VisualPageBuilder')); ?>"></script>
+</body>
+</html>

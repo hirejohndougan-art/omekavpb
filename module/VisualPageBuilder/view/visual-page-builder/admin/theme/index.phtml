@@ -1,0 +1,154 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Theme Builder for one site: its templates by screen, and its Global styles.
+ *
+ * @var \Omeka\Api\Representation\SiteRepresentation $site
+ * @var array $groups  templates by screen key (Store::all, grouped)
+ * @var array $screens  [key, label, required] for each screen
+ * @var string[] $scopes  Resolver levels
+ * @var array $styles  current Global styles values
+ * @var array $styleFields  GlobalStyles::FIELDS
+ * @var bool $usesCompanion
+ * @var string $csrf
+ */
+$escape = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+$this->headStyle()->appendStyle('
+.vpb-theme-screen{margin:0 0 1.5rem;border:1px solid #dfdfdf;border-radius:4px;background:#fff;padding:.9rem 1.1rem}
+.vpb-theme-screen h3{margin:0 0 .2rem;font-size:1.1rem}
+.vpb-theme-need{font-size:.9rem;color:#676767;margin:0 0 .6rem}
+.vpb-theme-row{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;padding:.45rem 0;border-top:1px solid #efefef}
+.vpb-theme-row:first-of-type{border-top:0}
+.vpb-theme-name{flex:1 1 14rem;font-weight:600}
+.vpb-theme-state{font-size:.85rem;padding:.1rem .5rem;border-radius:3px;background:#eee}
+.vpb-theme-state.is-live{background:#dff1e3;color:#1d5a2a}
+.vpb-theme-state.is-draft{background:#f4ecd8;color:#6b4f12}
+.vpb-theme-missing{font-size:.85rem;color:#8a3b12}
+.vpb-theme-inline{display:inline}
+.vpb-theme-inline button{margin:0}
+.vpb-theme-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));gap:.7rem 1rem;align-items:end}
+.vpb-theme-form label{display:block;font-size:.9rem;margin-bottom:.2rem}
+.vpb-theme-form input[type=text],.vpb-theme-form input[type=number],.vpb-theme-form select{width:100%}
+.vpb-theme-note{font-size:.9rem;color:#676767;margin:.4rem 0 .8rem}
+');
+echo $this->pageTitle(sprintf($translate('Theme Builder: %s'), $site->title()), 1, $translate('Visual Builder'));
+?>
+<div id="page-actions">
+    <a class="button" href="<?php echo $escape($this->url('admin/visual-page-builder-pages', ['site-slug' => $site->slug()])); ?>"><?php echo $escape($translate('Back to the Visual Builder')); ?></a>
+</div>
+
+<?php if (!$usesCompanion): ?>
+<p class="vpb-theme-note"><?php echo $escape($translate('This site does not use the Companion Theme yet. Templates and Global styles are saved now and apply once it does.')); ?></p>
+<?php endif; ?>
+
+<h2><?php echo $escape($translate('Templates')); ?></h2>
+<p class="vpb-theme-note"><?php echo $escape($translate('A template designs one screen of the public site. The most specific one wins: one record, then its resource template, item set, class, and finally all. A template goes live only when its required blocks are in place. Visitors see live templates once the item screens are connected.')); ?></p>
+
+<?php foreach ($screens as $screen): $list = $groups[$screen['key']] ?? []; ?>
+<section class="vpb-theme-screen" aria-labelledby="vpb-screen-<?php echo $escape($screen['key']); ?>">
+    <h3 id="vpb-screen-<?php echo $escape($screen['key']); ?>"><?php echo $escape($translate($screen['label'])); ?></h3>
+    <?php if ($screen['required']): ?>
+    <p class="vpb-theme-need"><?php echo $escape($translate('Required blocks:')); ?> <?php echo $escape(implode(', ', array_map(function ($k) { return ucwords(str_replace('-', ' ', $k)); }, $screen['required']))); ?></p>
+    <?php endif; ?>
+    <?php if (!$list): ?>
+    <p class="vpb-theme-note"><?php echo $escape($translate('No templates yet. The theme\'s own layout is used.')); ?></p>
+    <?php endif; ?>
+    <?php foreach ($list as $i => $t): ?>
+    <div class="vpb-theme-row">
+        <span class="vpb-theme-name"><?php echo $escape($t['name']); ?></span>
+        <span class="vpb-theme-state <?php echo $t['status'] === 'live' ? 'is-live' : 'is-draft'; ?>"><?php echo $escape($t['status'] === 'live' ? $translate('Live') : $translate('Draft')); ?></span>
+        <?php if ($t['missing']): ?>
+        <span class="vpb-theme-missing"><?php echo $escape($translate('Missing:')); ?> <?php echo $escape(implode(', ', array_map(function ($k) { return ucwords(str_replace('-', ' ', $k)); }, $t['missing']))); ?></span>
+        <?php endif; ?>
+        <form method="post" class="vpb-theme-inline">
+            <input type="hidden" name="vpb_theme_csrf" value="<?php echo $escape($csrf); ?>">
+            <input type="hidden" name="vpb_action" value="status">
+            <input type="hidden" name="template_id" value="<?php echo (int) $t['id']; ?>">
+            <input type="hidden" name="status" value="<?php echo $t['status'] === 'live' ? 'draft' : 'live'; ?>">
+            <button type="submit"><?php echo $escape($t['status'] === 'live' ? $translate('Back to draft') : $translate('Make live')); ?></button>
+        </form>
+        <a class="button" href="<?php echo $escape($this->url('admin/visual-page-builder', ['site-slug' => $site->slug(), 'page-id' => (int) $t['id'], 'action' => 'edit'])); ?>"><?php echo $escape($translate('Edit')); ?></a>
+        <form method="post" class="vpb-theme-inline">
+            <input type="hidden" name="vpb_theme_csrf" value="<?php echo $escape($csrf); ?>">
+            <input type="hidden" name="vpb_action" value="duplicate">
+            <input type="hidden" name="template_id" value="<?php echo (int) $t['id']; ?>">
+            <button type="submit"><?php echo $escape($translate('Duplicate')); ?></button>
+        </form>
+        <?php if ($i > 0): ?>
+        <form method="post" class="vpb-theme-inline">
+            <input type="hidden" name="vpb_theme_csrf" value="<?php echo $escape($csrf); ?>">
+            <input type="hidden" name="vpb_action" value="move">
+            <input type="hidden" name="template_id" value="<?php echo (int) $t['id']; ?>">
+            <input type="hidden" name="direction" value="up">
+            <button type="submit" aria-label="<?php echo $escape(sprintf($translate('Move %s up'), $t['name'])); ?>">&uarr;</button>
+        </form>
+        <?php endif; ?>
+        <?php if ($i < count($list) - 1): ?>
+        <form method="post" class="vpb-theme-inline">
+            <input type="hidden" name="vpb_theme_csrf" value="<?php echo $escape($csrf); ?>">
+            <input type="hidden" name="vpb_action" value="move">
+            <input type="hidden" name="template_id" value="<?php echo (int) $t['id']; ?>">
+            <input type="hidden" name="direction" value="down">
+            <button type="submit" aria-label="<?php echo $escape(sprintf($translate('Move %s down'), $t['name'])); ?>">&darr;</button>
+        </form>
+        <?php endif; ?>
+    </div>
+    <?php endforeach; ?>
+</section>
+<?php endforeach; ?>
+
+<section class="vpb-theme-screen" aria-labelledby="vpb-add-template">
+    <h3 id="vpb-add-template"><?php echo $escape($translate('Add a template')); ?></h3>
+    <form method="post" class="vpb-theme-form">
+        <input type="hidden" name="vpb_theme_csrf" value="<?php echo $escape($csrf); ?>">
+        <input type="hidden" name="vpb_action" value="add">
+        <div>
+            <label for="vpb-add-screen"><?php echo $escape($translate('Screen')); ?></label>
+            <select id="vpb-add-screen" name="screen">
+                <?php foreach ($screens as $s): ?><option value="<?php echo $escape($s['key']); ?>"><?php echo $escape($translate($s['label'])); ?></option><?php endforeach; ?>
+            </select>
+        </div>
+        <div>
+            <label for="vpb-add-scope"><?php echo $escape($translate('Where it shows')); ?></label>
+            <select id="vpb-add-scope" name="scope">
+                <option value="all"><?php echo $escape($translate('Every one')); ?></option>
+                <option value="record"><?php echo $escape($translate('One chosen record (its id)')); ?></option>
+                <option value="resource-template"><?php echo $escape($translate('A resource template (its id)')); ?></option>
+                <option value="item-set"><?php echo $escape($translate('An item set (its id)')); ?></option>
+                <option value="class"><?php echo $escape($translate('A resource class (its id)')); ?></option>
+            </select>
+        </div>
+        <div>
+            <label for="vpb-add-value"><?php echo $escape($translate('Id (if not every one)')); ?></label>
+            <input type="number" id="vpb-add-value" name="value" min="1" step="1">
+        </div>
+        <div>
+            <label for="vpb-add-name"><?php echo $escape($translate('Name')); ?></label>
+            <input type="text" id="vpb-add-name" name="name" maxlength="190">
+        </div>
+        <div><button type="submit"><?php echo $escape($translate('Add template')); ?></button></div>
+    </form>
+</section>
+
+<h2 id="vpb-global-styles"><?php echo $escape($translate('Global styles')); ?></h2>
+<p class="vpb-theme-note"><?php echo $escape($translate('These apply to every page and template on this site. Changing a color here changes every block that uses it.')); ?></p>
+<form method="post" class="vpb-theme-form" aria-labelledby="vpb-global-styles">
+    <input type="hidden" name="vpb_theme_csrf" value="<?php echo $escape($csrf); ?>">
+    <input type="hidden" name="vpb_action" value="globals">
+    <?php foreach ($styleFields as $name => [$label, $type, $default, $options]): ?>
+    <div>
+        <label for="vpb-style-<?php echo $escape($name); ?>"><?php echo $escape($translate($label)); ?></label>
+        <?php if ($type === 'color' && $name !== 'link_color'): ?>
+        <input type="color" id="vpb-style-<?php echo $escape($name); ?>" name="style[<?php echo $escape($name); ?>]" value="<?php echo $escape($styles[$name]); ?>">
+        <?php elseif ($type === 'color'): ?>
+        <input type="text" id="vpb-style-<?php echo $escape($name); ?>" name="style[<?php echo $escape($name); ?>]" value="<?php echo $escape($styles[$name]); ?>" pattern="(#[0-9a-fA-F]{6})?" placeholder="#0f5e54">
+        <?php else: ?>
+        <select id="vpb-style-<?php echo $escape($name); ?>" name="style[<?php echo $escape($name); ?>]">
+            <?php foreach ($options as $value => $text): ?><option value="<?php echo $escape($value); ?>"<?php echo $styles[$name] === $value ? ' selected' : ''; ?>><?php echo $escape($translate($text)); ?></option><?php endforeach; ?>
+        </select>
+        <?php endif; ?>
+    </div>
+    <?php endforeach; ?>
+    <div><button type="submit"><?php echo $escape($translate('Save global styles')); ?></button></div>
+</form>

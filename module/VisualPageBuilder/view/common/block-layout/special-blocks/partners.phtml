@@ -1,0 +1,25 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Partner and sponsor logos.
+ *
+ * @var array $data
+ * @var array $partners [['name', 'logo', 'url'], …]
+ */
+$escape = $this->plugin('escapeHtml');
+if (!$partners) {
+    return;
+}
+?>
+<div class="special-blocks special-blocks-partners special-blocks-logos-<?php echo $escape($data['logo_height']); ?><?php echo $data['grayscale'] ? ' special-blocks-logos-gray' : ''; ?>">
+<?php echo $this->partial('common/special-blocks/heading', ['heading' => $data['heading']]); ?>
+<ul class="special-blocks-logos">
+    <?php foreach ($partners as $p): ?>
+    <li>
+        <?php if ($p['url'] !== ''): ?><a href="<?php echo $escape($p['url']); ?>"><?php endif; ?>
+        <?php if ($p['logo']): ?><img src="<?php echo $escape($p['logo']); ?>" alt="<?php echo $escape($p['name']); ?>" loading="lazy"><?php else: ?><span class="special-blocks-logo-name"><?php echo $escape($p['name']); ?></span><?php endif; ?>
+        <?php if ($p['url'] !== ''): ?></a><?php endif; ?>
+    </li>
+    <?php endforeach; ?>
+</ul>
+</div>

@@ -1,0 +1,178 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+namespace VisualPageBuilder;
+
+use Laminas\EventManager\Event;
+use Laminas\EventManager\SharedEventManagerInterface;
+use Laminas\Mvc\MvcEvent;
+use Laminas\ServiceManager\ServiceLocatorInterface;
+use Omeka\Module\AbstractModule;
+use VisualPageBuilder\Api\MultiSiteFilter;
+
+class Module extends AbstractModule
+{
+    public function getConfig()
+    {
+        return include __DIR__ . '/config/module.config.php';
+    }
+
+    public function onBootstrap(MvcEvent $event)
+    {
+        parent::onBootstrap($event);
+        // Any logged-in user may reach the editor route (admin routes already
+        // require login). The controller then checks that the user is allowed
+        // to update the specific page, and Omeka's API enforces it again on save.
+        $acl = $this->getServiceLocator()->get('Omeka\Acl');
+        $acl->allow(null, ['VisualPageBuilder\Controller\Admin\Builder', 'VisualPageBuilder\Controller\Admin\Menu', 'VisualPageBuilder\Controller\Admin\Region', 'VisualPageBuilder\Controller\Admin\Pages']);
+    }
+
+    /**
+     * Header and footer pages (see SiteRegions) are shown inside other pages,
+     * never on their own: answer "not found" if someone opens their address.
+     */
+    public function hideRegionPages(MvcEvent $event): void
+    {
+        $routeMatch = $event->getRouteMatch();
+        if ($routeMatch && $routeMatch->getParam('action') === 'show' && (SiteRegions::isRegionSlug($routeMatch->getParam('page-slug')) || SiteRegions::isSharedSlug($routeMatch->getParam('page-slug')))) {
+            throw new \Omeka\Mvc\Exception\NotFoundException('Page not found.');
+        }
+    }
+
+    public function install(ServiceLocatorInterface $services)
+    {
+        $this->renameOldLayouts($services);
+        // The module's classes aren't autoloaded until it's active.
+        require_once __DIR__ . '/src/PageHistory.php';
+        PageHistory::createTable($services->get('Omeka\Connection'));
+    }
+
+    /**
+     * Removes only the module's cache (calendar feeds). Pages, headers,
+     * footers, menus, and site settings are the society's content and are
+     * kept, so reinstalling brings everything back.
+     */
+    public function uninstall(ServiceLocatorInterface $services)
+    {
+        // Page history goes with the module (the pages themselves stay).
+        require_once __DIR__ . '/src/PageHistory.php';
+        PageHistory::dropTable($services->get('Omeka\Connection'));
+        $dir = OMEKA_PATH . '/files/visual-page-builder';
+        foreach (glob($dir . '/calendar-*.json') ?: [] as $file) {
+            @unlink($file);
+        }
+        @rmdir($dir);
+    }
+
+    public function upgrade($oldVersion, $newVersion, ServiceLocatorInterface $services)
+    {
+        if (version_compare($oldVersion, '0.5.0', '<')) {
+            $this->renameOldLayouts($services);
+        }
+        if (version_compare($oldVersion, '1.12.0', '<')) {
+            require_once __DIR__ . '/src/PageHistory.php';
+            PageHistory::createTable($services->get('Omeka\Connection'));
+        }
+    }
+
+    /**
+     * Special Blocks used to be a separate module, "Society Blocks", whose
+     * layouts were named society*. Pages that used them now point at the same
+     * blocks here (special*). Safe to run more than once.
+     */
+    protected function renameOldLayouts(ServiceLocatorInterface $services): void
+    {
+        // During install/upgrade Omeka hasn't loaded this module's classes yet.
+        require_once __DIR__ . '/src/SpecialBlocks.php';
+        $connection = $services->get('Omeka\Connection');
+        foreach (array_keys(SpecialBlocks::LAYOUTS) as $name) {
+            $connection->executeStatement(
+                'UPDATE site_page_block SET layout = ? WHERE layout = ?',
+                [$name, 'society' . substr($name, strlen('special'))]
+            );
+        }
+    }
+
+    public function attachListeners(SharedEventManagerInterface $sharedEventManager)
+    {
+        // A site's header and footer pages can't be opened at their own address.
+        $sharedEventManager->attach('Omeka\Controller\Site\PageController', 'dispatch', [$this, 'hideRegionPages'], 10);
+        // Deleting a page also deletes its leftover "Preview on site" copy.
+        $sharedEventManager->attach('Omeka\Api\Adapter\SitePageAdapter', 'api.delete.pre', [$this, 'notePreviewCopy']);
+        $sharedEventManager->attach('Omeka\Api\Adapter\SitePageAdapter', 'api.delete.post', [$this, 'deletePreviewCopy']);
+
+        // Adds the "Visit info" group to each site's settings (Visit info block).
+        $sharedEventManager->attach('Omeka\Form\SiteSettingsForm', 'form.add_elements', [Form\VisitInfoSettings::class, 'addElements']);
+        $sharedEventManager->attach('Omeka\Form\SiteSettingsForm', 'form.add_input_filters', [Form\VisitInfoSettings::class, 'addInputFilters']);
+
+        // Lets Special Blocks search items and item sets on several sites at once.
+        $filter = new MultiSiteFilter();
+        foreach (['Omeka\Api\Adapter\ItemAdapter', 'Omeka\Api\Adapter\ItemSetAdapter'] as $adapter) {
+            $sharedEventManager->attach($adapter, 'api.search.query', $filter);
+        }
+
+        $sharedEventManager->attach(
+            'Omeka\Controller\SiteAdmin\Page',
+            'view.edit.page_actions',
+            [$this, 'addEditorButton']
+        );
+    }
+
+    /**
+     * Add an "Open visual editor" button next to Save on Omeka's page edit screen.
+     */
+    public function addEditorButton(Event $event)
+    {
+        $view = $event->getTarget();
+        $page = $event->getParam('resource');
+        if (!$page || !$page->userIsAllowed('update')) {
+            return;
+        }
+        $url = $view->url('admin/visual-page-builder', [
+            'site-slug' => $page->site()->slug(),
+            'page-id' => $page->id(),
+            'action' => 'edit',
+        ]);
+        echo sprintf(
+            '<a class="button" href="%s">%s</a>',
+            $view->escapeHtmlAttr($url),
+            $view->escapeHtml($view->translate('Open visual editor'))
+        );
+    }
+
+    /** Preview copies to delete once the page being deleted is gone: [site id, slug]. */
+    protected $previewCopies = [];
+
+    /** Before a page is deleted, note where its "Preview on site" copy would be. */
+    public function notePreviewCopy(Event $event): void
+    {
+        try {
+            $page = $this->getServiceLocator()->get('Omeka\ApiManager')->read('site_pages', $event->getParam('request')->getId())->getContent();
+        } catch (\Exception $e) {
+            return;
+        }
+        if (strpos($page->slug(), SiteRegions::PREVIEW_PREFIX) !== 0) {
+            $this->previewCopies[] = [$page->site()->id(), SiteRegions::PREVIEW_PREFIX . $page->id()];
+        }
+        try {
+            PageHistory::forget($this->getServiceLocator()->get('Omeka\Connection'), $page->id());
+        } catch (\Exception $e) {
+            // No history table yet.
+        }
+    }
+
+    /** After a page is deleted, delete its private "Preview on site" copy, if any. */
+    public function deletePreviewCopy(Event $event): void
+    {
+        $api = $this->getServiceLocator()->get('Omeka\ApiManager');
+        while ($this->previewCopies) {
+            [$siteId, $slug] = array_pop($this->previewCopies);
+            try {
+                foreach ($api->search('site_pages', ['site_id' => $siteId, 'slug' => $slug])->getContent() as $copy) {
+                    $api->delete('site_pages', $copy->id());
+                }
+            } catch (\Exception $e) {
+                // A leftover private copy is harmless.
+            }
+        }
+    }
+}

@@ -1,0 +1,12 @@
+parameters:
+    level: 5
+    phpVersion: 70400
+    paths:
+        - /home/claude/vpb/module/VisualPageBuilder/src
+        - /home/claude/vpb/module/VisualPageBuilder/Module.php
+        - /home/claude/vpb/module/VisualPageBuilder/config
+    bootstrapFiles:
+        - tests/static/pstan-boot.php
+    scanDirectories:
+        - /home/claude/omeka-s/application/src
+    reportUnmatchedIgnoredErrors: false

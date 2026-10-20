@@ -1,0 +1,52 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Upcoming events, soonest first. Dates are formatted for the site's language.
+ *
+ * @var array $data
+ * @var array $events [['title', 'start' => DateTime, 'end' => ?DateTime, 'time', 'location', 'description', 'url'], …]
+ */
+$escape = $this->plugin('escapeHtml');
+$i18n = $this->i18n();
+// Short month name ("Jun") in the site's language.
+$monthFormat = extension_loaded('intl')
+    ? new IntlDateFormatter($this->lang(), IntlDateFormatter::NONE, IntlDateFormatter::NONE, null, null, 'MMM')
+    : null;
+if (!$events && $data['empty_text'] === '') {
+    return;
+}
+?>
+<div class="special-blocks special-blocks-upcoming-events">
+<?php echo $this->partial('common/special-blocks/heading', ['heading' => $data['heading']]); ?>
+<?php if (!$events): ?>
+<p class="special-blocks-empty"><?php echo $escape($data['empty_text']); ?></p>
+<?php else: ?>
+<ol class="special-blocks-events">
+    <?php foreach ($events as $event): ?>
+    <li class="special-blocks-event">
+        <time class="special-blocks-event-date" datetime="<?php echo $escape($event['date']); ?>">
+            <span class="special-blocks-event-month"><?php echo $escape($monthFormat ? $monthFormat->format($event['start']) : $event['start']->format('M')); ?></span>
+            <span class="special-blocks-event-day"><?php echo $escape($event['start']->format('j')); ?></span>
+        </time>
+        <div class="special-blocks-event-text">
+            <h3 class="special-blocks-event-title">
+                <?php if ($event['url'] !== ''): ?><a href="<?php echo $escape($event['url']); ?>"><?php endif; ?><?php echo $escape($event['title']); ?><?php if ($event['url'] !== ''): ?></a><?php endif; ?>
+            </h3>
+            <p class="special-blocks-event-when"><?php
+                $when = $i18n->dateFormat($event['start'], 'long');
+                if ($event['end']) {
+                    $when .= ' – ' . $i18n->dateFormat($event['end'], 'long');
+                }
+                if ($event['time'] !== '') {
+                    $when .= ', ' . $event['time'];
+                }
+                echo $escape($when);
+            ?></p>
+            <?php if ($event['location'] !== ''): ?><p class="special-blocks-event-where"><?php echo $escape($event['location']); ?></p><?php endif; ?>
+            <?php if ($event['description'] !== ''): ?><p><?php echo nl2br($escape($event['description'])); ?></p><?php endif; ?>
+        </div>
+    </li>
+    <?php endforeach; ?>
+</ol>
+<?php endif; ?>
+</div>

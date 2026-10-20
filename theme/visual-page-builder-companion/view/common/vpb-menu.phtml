@@ -1,0 +1,70 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * The site menu, drawn in one of the styles chosen in the Visual Page
+ * Builder's menu builder (MenuController::STYLES). Most styles are the same
+ * markup arranged by style.css; "split" puts the logo ($brand) between two
+ * halves of the menu.
+ * The links come from the site's navigation. Sub-menus open with buttons
+ * (asset/js/theme.js), so they work by keyboard and touch, not only hover.
+ *
+ * @var \Omeka\Api\Representation\SiteRepresentation $site
+ * @var string $style
+ * @var string|null $brand  logo link HTML, for the "split" style only
+ * @var array|null $menu    the vpbMenu helper's answer: colors ('vars',
+ *                          'classes') and, in the Menu page's preview, the
+ *                          unsaved links ('container')
+ */
+$escape = $this->plugin('escapeHtml');
+$menu = isset($menu) && is_array($menu) ? $menu : [];
+$container = !empty($menu['container']) ? $menu['container'] : $site->publicNav()->getContainer();
+$navVars = (string) ($menu['vars'] ?? '');
+$navClasses = (string) ($menu['classes'] ?? '');
+// Simple bar shows one level; mega and the vertical menus three; the others two.
+$maxDepth = ['bar' => 1, 'dropdown' => 2, 'centered' => 2, 'mega' => 3, 'sidebar' => 3, 'sidebar-right' => 3, 'vertical-list' => 3, 'vertical-flyout' => 3, 'vertical-boxed' => 3][$style] ?? 2;
+$counter = 0;
+$view = $this;
+$renderList = function ($pages, int $depth) use (&$renderList, $escape, $maxDepth, &$counter, $view) {
+    $html = '';
+    foreach ($pages as $page) {
+        if (!$page->isVisible()) {
+            continue;
+        }
+        $label = (string) $page->getLabel();
+        $children = $depth < $maxDepth && $page->hasPages() ? $page->getPages() : [];
+        $id = 'pb-sub-' . (++$counter);
+        $html .= '<li class="pb-item' . ($children ? ' has-sub' : '') . ($page->isActive(true) ? ' is-active' : '') . '">';
+        $html .= sprintf('<a href="%s"%s>%s</a>', $escape($page->getHref()), $page->isActive(false) ? ' aria-current="page"' : '', $escape($label));
+        if ($children) {
+            $html .= sprintf('<button type="button" class="pb-sub-toggle" aria-expanded="false" aria-controls="%s"><span class="pb-visually-hidden">%s</span></button>', $id, $escape(sprintf($view->translate('Show pages under %s'), $label)));
+            $html .= sprintf('<ul class="pb-sub pb-level-%d" id="%s">%s</ul>', $depth + 1, $id, $renderList($children, $depth + 1));
+        }
+        $html .= '</li>';
+    }
+    return $html;
+};
+?>
+<?php if ($style === 'split' && !empty($brand)):
+    // Two halves around the logo; on phones they show as one list.
+    $top = [];
+    foreach ($container as $page) {
+        if ($page->isVisible()) {
+            $top[] = $page;
+        }
+    }
+    $half = (int) ceil(count($top) / 2);
+?>
+<nav class="pb-nav pb-nav-split <?php echo $escape($navClasses); ?>"<?php echo $navVars !== '' ? ' style="' . $escape($navVars) . '"' : ''; ?> aria-label="<?php echo $escape($this->translate('Main menu')); ?>">
+    <?php echo $brand; ?>
+    <button type="button" class="pb-nav-toggle" aria-expanded="false" aria-controls="pb-menu"><span aria-hidden="true">&#9776;</span> <?php echo $escape($this->translate('Menu')); ?></button>
+    <div class="pb-split" id="pb-menu">
+        <ul class="pb-menu pb-level-1 pb-split-left"><?php echo $renderList(array_slice($top, 0, $half), 1); ?></ul>
+        <ul class="pb-menu pb-level-1 pb-split-right"><?php echo $renderList(array_slice($top, $half), 1); ?></ul>
+    </div>
+</nav>
+<?php else: ?>
+<nav class="pb-nav pb-nav-<?php echo $escape($style); ?> <?php echo $escape($navClasses); ?>"<?php echo $navVars !== '' ? ' style="' . $escape($navVars) . '"' : ''; ?> aria-label="<?php echo $escape($this->translate('Main menu')); ?>">
+    <button type="button" class="pb-nav-toggle" aria-expanded="false" aria-controls="pb-menu"><span aria-hidden="true">&#9776;</span> <?php echo $escape($this->translate('Menu')); ?></button>
+    <ul class="pb-menu pb-level-1" id="pb-menu"><?php echo $renderList($container, 1); ?></ul>
+</nav>
+<?php endif; ?>

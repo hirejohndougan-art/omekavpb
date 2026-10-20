@@ -1,0 +1,26 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * One field of the item.
+ * Outside a Theme Builder template it draws nothing; in the editor's preview
+ * it shows its sample.
+ *
+ * @var array $data
+ * @var \Omeka\Api\Representation\ItemRepresentation|null $item
+ * @var bool $isPreview
+ * @var string $sample
+ */
+$escape = $this->plugin('escapeHtml');
+if (!$item) {
+    if ($isPreview) {
+        echo '<p class="special-blocks-item-sample">' . $escape($sample) . '</p>';
+    }
+    return;
+}
+?>
+<?php if ($values): ?>
+<p class="special-blocks-item-one-field">
+<?php if ($data['show_label']): ?><span class="special-blocks-item-one-field-label"><?php echo $escape($label); ?>: </span><?php endif; ?>
+<?php echo $escape(implode('; ', $values)); ?>
+</p>
+<?php endif; ?>

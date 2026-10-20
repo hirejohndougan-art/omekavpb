@@ -1,0 +1,21 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Social media and email links.
+ *
+ * @var array $data
+ * @var array $links [['key', 'label', 'url'], …]
+ */
+$escape = $this->plugin('escapeHtml');
+if (!$links) {
+    return;
+}
+?>
+<div class="special-blocks special-blocks-social-links special-blocks-align-<?php echo $escape($data['align']); ?> special-blocks-social-<?php echo $escape($data['style']); ?>">
+<?php echo $this->partial('common/special-blocks/heading', ['heading' => $data['heading']]); ?>
+<ul class="special-blocks-social">
+    <?php foreach ($links as $link): ?>
+    <li><a class="special-blocks-social-<?php echo $escape($link['key']); ?>" href="<?php echo $escape($link['url']); ?>"><span class="special-blocks-social-mark" aria-hidden="true"><?php echo $escape(mb_substr($link['label'], 0, 1)); ?></span><span class="special-blocks-social-name"><?php echo $escape($link['label']); ?></span></a></li>
+    <?php endforeach; ?>
+</ul>
+</div>

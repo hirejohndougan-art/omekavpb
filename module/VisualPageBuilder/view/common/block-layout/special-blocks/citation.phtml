@@ -1,0 +1,24 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * How to cite and reuse. The Copy button is added by special-blocks/js/citation.js.
+ *
+ * @var array $data
+ * @var string $citation the filled-in citation (plain text)
+ */
+$escape = $this->plugin('escapeHtml');
+$this->headScript()->appendFile($this->assetUrl('special-blocks/js/citation.js', 'VisualPageBuilder'), 'text/javascript', ['defer' => 'defer']);
+?>
+<div class="special-blocks special-blocks-citation">
+<?php echo $this->partial('common/special-blocks/heading', ['heading' => $data['heading']]); ?>
+<?php if ($citation !== ''): ?>
+<h3><?php echo $escape($this->translate('How to cite this page')); ?></h3>
+<blockquote class="special-blocks-citation-text"><p><?php echo $escape($citation); ?></p></blockquote>
+<button type="button" class="special-blocks-copy" hidden data-copied="<?php echo $escape($this->translate('Copied')); ?>"><?php echo $escape($this->translate('Copy citation')); ?></button>
+<?php endif; ?>
+<?php if ($data['reuse'] !== ''): ?>
+<h3><?php echo $escape($this->translate('Using these materials')); ?></h3>
+<div class="special-blocks-reuse"><?php echo $data['reuse']; ?></div>
+<?php endif; ?>
+<?php if ($data['contact_text'] !== '' && $data['contact_url'] !== ''): ?><p><a class="special-blocks-button special-blocks-button-secondary" href="<?php echo $escape($data['contact_url']); ?>"><?php echo $escape($data['contact_text']); ?></a></p><?php endif; ?>
+</div>

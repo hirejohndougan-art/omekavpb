@@ -1,0 +1,17 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Logo, linking home.
+ *
+ * @var array $data
+ * @var string|null $logoUrl
+ * @var string $homeUrl
+ * @var string $siteTitle
+ */
+$escape = $this->plugin('escapeHtml');
+?>
+<div class="special-blocks special-blocks-logo special-blocks-align-<?php echo $escape($data['align']); ?> special-blocks-logo-<?php echo $escape($data['height']); ?>">
+    <a href="<?php echo $escape($homeUrl); ?>" class="special-blocks-logo-link">
+        <?php if ($logoUrl): ?><img src="<?php echo $escape($logoUrl); ?>" alt="<?php echo $escape($siteTitle); ?>"><?php else: ?><span class="special-blocks-logo-text"><?php echo $escape($siteTitle); ?></span><?php endif; ?>
+    </a>
+</div>

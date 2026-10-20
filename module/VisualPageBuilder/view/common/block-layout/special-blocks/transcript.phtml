@@ -1,0 +1,41 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Oral history and Document and transcription: one item's file beside its
+ * transcript. The recording or image is drawn by Omeka's own media renderer.
+ *
+ * @var array $data
+ * @var \Omeka\Api\Representation\ItemRepresentation|null $item
+ * @var \Omeka\Api\Representation\MediaRepresentation|null $media
+ * @var string $transcript plain text
+ * @var string $date
+ * @var string|null $url
+ * @var string $blockClass
+ */
+$escape = $this->plugin('escapeHtml');
+if (!$item) {
+    return;
+}
+?>
+<div class="special-blocks <?php echo $escape($blockClass); ?> special-blocks-transcript-<?php echo $escape($data['layout']); ?>">
+    <?php if ($data['show_title']): ?>
+    <h2 class="special-blocks-heading"><?php echo $escape($item->displayTitle()); ?><?php if ($date !== ''): ?> <span class="special-blocks-transcript-date"><?php echo $escape($date); ?></span><?php endif; ?></h2>
+    <?php endif; ?>
+    <div class="special-blocks-transcript-row">
+        <div class="special-blocks-transcript-media">
+            <?php if ($media): ?>
+                <?php echo $media->hasThumbnails() && strpos((string) $media->mediaType(), 'image/') === 0 ? '<img src="' . $escape($media->thumbnailDisplayUrl('large')) . '" alt="' . $escape($media->displayTitle()) . '">' : $media->render(); ?>
+            <?php else: ?>
+                <p class="special-blocks-note"><?php echo $escape($this->translate('This item has no file of that kind.')); ?></p>
+            <?php endif; ?>
+        </div>
+        <div class="special-blocks-transcript-text special-blocks-transcript-<?php echo $escape($data['transcript_height']); ?>" tabindex="0" role="region" aria-label="<?php echo $escape($this->translate('Transcript')); ?>">
+            <?php if ($transcript !== ''): ?>
+                <?php foreach (preg_split('/\n\s*\n/', $transcript) as $para): ?><p><?php echo nl2br($escape(trim($para))); ?></p><?php endforeach; ?>
+            <?php else: ?>
+                <p class="special-blocks-note"><?php echo $escape($this->translate('No transcript yet.')); ?></p>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php if ($url && $data['link_text'] !== ''): ?><p class="special-blocks-more"><a href="<?php echo $escape($url); ?>"><?php echo $escape($data['link_text']); ?></a></p><?php endif; ?>
+</div>

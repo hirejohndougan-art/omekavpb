@@ -1,0 +1,30 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Newsletter sign-up. Posts straight to the mailing service's form address.
+ *
+ * @var array $data
+ * @var string $action https form address, or '' if not set up
+ * @var string $emailField
+ * @var string $nameField
+ * @var string $idBase
+ */
+$escape = $this->plugin('escapeHtml');
+if ($action === '') {
+    return;
+}
+?>
+<div class="special-blocks special-blocks-newsletter">
+<?php echo $this->partial('common/special-blocks/heading', ['heading' => $data['heading']]); ?>
+<?php if ($data['text'] !== ''): ?><p><?php echo nl2br($escape($data['text'])); ?></p><?php endif; ?>
+<form class="special-blocks-newsletter-form" method="post" action="<?php echo $escape($action); ?>"<?php echo $data['new_tab'] ? ' target="_blank"' : ''; ?>>
+    <?php if ($data['ask_name']): ?>
+    <span class="special-blocks-field"><label for="<?php echo $escape($idBase); ?>-name"><?php echo $escape($this->translate('First name')); ?></label>
+    <input type="text" id="<?php echo $escape($idBase); ?>-name" name="<?php echo $escape($nameField); ?>" autocomplete="given-name"></span>
+    <?php endif; ?>
+    <span class="special-blocks-field"><label for="<?php echo $escape($idBase); ?>-email"><?php echo $escape($this->translate('Email address')); ?></label>
+    <input type="email" id="<?php echo $escape($idBase); ?>-email" name="<?php echo $escape($emailField); ?>" required autocomplete="email"></span>
+    <button type="submit"><?php echo $escape($data['button_text']); ?></button>
+</form>
+<?php if ($data['privacy'] !== ''): ?><p class="special-blocks-note"><?php echo $escape($data['privacy']); ?></p><?php endif; ?>
+</div>

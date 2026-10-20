@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Omeka S page builder editor</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&amp;family=Fraunces:opsz,wght@9..144,500;9..144,600&amp;display=swap">
+<style>
+body{margin:0;font-family:"IBM Plex Sans",system-ui,sans-serif;color:#1C1F23;background:#F4F2ED}
+a{color:#1D4ED8}a:hover{color:#1E3A8A}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; display: flex; flex-direction: column; background: #F4F2ED; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1C1F23; overflow: hidden">
+
+<div style="height: 60px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: #FFFFFF; border-bottom: 1px solid #E2DED5">
+<div style="display: flex; align-items: center; gap: 10px; font-size: 14px; color: #5B6068">
+<span style="font-weight: 600; color: #1C1F23">Omeka S</span>
+<span>/</span>
+<span>Dickinson Historical Society</span>
+<span>/</span>
+<span>Pages</span>
+<span>/</span>
+<span style="color: #1C1F23; font-weight: 500">Railroad Days</span>
+</div>
+<div style="display: flex; gap: 4px; padding: 4px; background: #F1EEE7; border-radius: 10px">
+<button type="button" onClick="{{ setDesktop }}" style="height: 36px; padding: 0 14px; border: 0; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; {{ desktopBtn }}">Desktop</button>
+<button type="button" onClick="{{ setTablet }}" style="height: 36px; padding: 0 14px; border: 0; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; {{ tabletBtn }}">Tablet</button>
+<button type="button" onClick="{{ setPhone }}" style="height: 36px; padding: 0 14px; border: 0; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; {{ phoneBtn }}">Phone</button>
+</div>
+<div style="display: flex; align-items: center; gap: 8px">
+<span style="font-size: 13px; color: #5B6068; margin-right: 6px">Draft saved</span>
+<button type="button" aria-label="Undo" style="width: 40px; height: 40px; border: 1px solid #E2DED5; background: #FFFFFF; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1F23" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"></path><path d="M4 9h11a5 5 0 010 10h-3"></path></svg></button>
+<button type="button" aria-label="Redo" style="width: 40px; height: 40px; border: 1px solid #E2DED5; background: #FFFFFF; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1F23" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"></path><path d="M20 9H9a5 5 0 000 10h3"></path></svg></button>
+<button type="button" style="height: 40px; padding: 0 16px; border: 1px solid #C9C4B8; background: #FFFFFF; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer">Preview</button>
+<button type="button" style="height: 40px; padding: 0 18px; border: 0; background: #0F5E54; color: #FFFFFF; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer">Publish</button>
+</div>
+</div>
+
+<div style="flex-grow: 1; display: flex; min-height: 0">
+
+<div style="width: 280px; flex-shrink: 0; background: #FFFFFF; border-right: 1px solid #E2DED5; display: flex; flex-direction: column; padding: 16px; gap: 14px; box-sizing: border-box">
+<div style="display: flex; gap: 4px; padding: 4px; background: #F1EEE7; border-radius: 10px">
+<button type="button" style="flex-grow: 1; height: 34px; border: 0; border-radius: 7px; background: #FFFFFF; font-size: 13px; font-weight: 600; cursor: pointer">Blocks</button>
+<button type="button" style="flex-grow: 1; height: 34px; border: 0; border-radius: 7px; background: transparent; color: #5B6068; font-size: 13px; font-weight: 500; cursor: pointer">Layers</button>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="blockSearch" style="font-size: 12px; font-weight: 500; color: #5B6068">Find a block</label>
+<input id="blockSearch" type="text" placeholder="map, gallery, search" style="height: 38px; padding: 0 12px; border: 1px solid #D6D1C6; border-radius: 8px; font-size: 14px; font-family: inherit; box-sizing: border-box">
+</div>
+
+<div style="font-size: 11px; font-weight: 600; letter-spacing: 0.06em; color: #5B6068; margin-top: 2px">LAYOUT</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+<div style="height: 64px; border: 1px solid #E2DED5; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 12px; background: #FDFCFA"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1C1F23" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"></rect></svg>Section</div>
+<div style="height: 64px; border: 1px solid #E2DED5; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 12px; background: #FDFCFA"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1C1F23" stroke-width="1.6"><rect x="3" y="5" width="8" height="14" rx="1.5"></rect><rect x="13" y="5" width="8" height="14" rx="1.5"></rect></svg>Columns</div>
+<div style="height: 64px; border: 1px solid #E2DED5; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 12px; background: #FDFCFA"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1C1F23" stroke-width="1.6" stroke-linecap="round"><path d="M4 8h16M4 16h16"></path><path d="M12 10v4"></path></svg>Spacer</div>
+</div>
+
+<div style="font-size: 11px; font-weight: 600; letter-spacing: 0.06em; color: #5B6068; margin-top: 2px">CONTENT</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+<div style="height: 64px; border: 1px solid #E2DED5; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 12px; background: #FDFCFA"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1C1F23" stroke-width="1.6" stroke-linecap="round"><path d="M6 5v14M18 5v14M6 12h12"></path></svg>Heading</div>
+<div style="height: 64px; border: 1px solid #E2DED5; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 12px; background: #FDFCFA"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1C1F23" stroke-width="1.6" stroke-linecap="round"><path d="M4 6h16M4 11h16M4 16h10"></path></svg>Text</div>
+<div style="height: 64px; border: 1px solid #E2DED5; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 12px; background: #FDFCFA"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1C1F23" stroke-width="1.6" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 16l5-5 4 4 3-3 6 6"></path></svg>Image</div>
+</div>
+
+<div style="font-size: 11px; font-weight: 600; letter-spacing: 0.06em; color: #5B6068; margin-top: 2px">COLLECTION</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+<div style="height: 64px; border: 1px solid #E2DED5; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 12px; background: #FDFCFA; text-align: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1C1F23" stroke-width="1.6"><rect x="3" y="6" width="5" height="12" rx="1"></rect><rect x="10" y="6" width="5" height="12" rx="1"></rect><rect x="17" y="6" width="4" height="12" rx="1"></rect></svg>Showcase</div>
+<div style="height: 64px; border: 1px solid #E2DED5; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 12px; background: #FDFCFA"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1C1F23" stroke-width="1.6"><rect x="3" y="3" width="8" height="8" rx="1"></rect><rect x="13" y="3" width="8" height="8" rx="1"></rect><rect x="3" y="13" width="8" height="8" rx="1"></rect><rect x="13" y="13" width="8" height="8" rx="1"></rect></svg>Browse</div>
+<div style="height: 64px; border: 2px solid #2563EB; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 12px; background: #EEF3FE; color: #1E3A8A; font-weight: 500"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1E3A8A" stroke-width="1.6" stroke-linejoin="round"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"></path><path d="M9 4v14M15 6v14"></path></svg>Map</div>
+<div style="height: 64px; border: 1px solid #E2DED5; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 12px; background: #FDFCFA"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1C1F23" stroke-width="1.6" stroke-linecap="round"><circle cx="10" cy="10" r="6"></circle><path d="M15 15l5 5"></path></svg>Facets</div>
+<div style="height: 64px; border: 1px solid #E2DED5; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 12px; background: #FDFCFA"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1C1F23" stroke-width="1.6" stroke-linecap="round"><path d="M3 12h18"></path><circle cx="7" cy="12" r="2"></circle><circle cx="15" cy="12" r="2"></circle></svg>Timeline</div>
+<div style="height: 64px; border: 1px solid #E2DED5; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 12px; background: #FDFCFA"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1C1F23" stroke-width="1.6" stroke-linejoin="round"><path d="M4 5h16v11H8l-4 4V5z"></path></svg>Quote</div>
+</div>
+<div style="margin-top: auto; font-size: 12px; color: #5B6068; line-height: 1.5">Blocks from installed modules appear here automatically.</div>
+</div>
+
+<div style="flex-grow: 1; min-width: 0; overflow: hidden; display: flex; justify-content: center; padding: 28px 24px; box-sizing: border-box; background: #E9E6DF">
+<div style="width: {{ pageWidth }}px; flex-shrink: 0; background: #FBF8F1; border-radius: 6px; border: 1px solid #D6D1C6; display: flex; flex-direction: column; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #2B2118; height: fit-content">
+
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 28px; border-bottom: 1px solid #E5DDCD">
+<span style="font-family: Fraunces, Georgia, serif; font-weight: 600; font-size: 17px">Dickinson Historical Society</span>
+<sc-if value="{{ showNav }}" hint-placeholder-val="{{ true }}">
+<span style="font-size: 13px; color: #6B5A48; display: flex; gap: 18px"><span>Collections</span><span>Exhibits</span><span>Visit</span></span>
+</sc-if>
+</div>
+
+<div style="padding: 18px 20px 0; display: flex; flex-direction: column; gap: 14px">
+
+<button type="button" onClick="{{ selHero }}" style="display: block; width: 100%; padding: 0; border: 0; background: transparent; text-align: left; font: inherit; color: inherit; position: relative; cursor: pointer; border-radius: 4px; {{ heroOutline }}">
+<sc-if value="{{ heroSel }}" hint-placeholder-val="{{ false }}">
+<span style="position: absolute; top: -12px; left: 8px; z-index: 2; background: #2563EB; color: #FFFFFF; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 4px">Hero image</span>
+</sc-if>
+<span style="height: 200px; border-radius: 4px; background: #3E3326; display: flex; flex-direction: column; justify-content: flex-end; padding: 22px 26px; box-sizing: border-box; color: #FBF8F1">
+<span style="font-size: 11px; letter-spacing: 0.08em; color: #E8DFCF">[HERO PHOTO FROM COLLECTION]</span>
+<span style="font-family: Fraunces, Georgia, serif; font-size: {{ heroSize }}px; font-weight: 600; line-height: 1.1; margin-top: 6px">Railroad Days in Dickinson</span>
+</span>
+</button>
+
+<div style="display: flex; flex-direction: {{ rowDir }}; gap: 16px">
+<button type="button" onClick="{{ selText }}" style="flex: 1 1 0; display: block; border: 0; background: transparent; text-align: left; font: inherit; color: inherit; position: relative; cursor: pointer; padding: 6px; border-radius: 4px; {{ textOutline }}">
+<sc-if value="{{ textSel }}" hint-placeholder-val="{{ false }}">
+<span style="position: absolute; top: -12px; left: 8px; z-index: 2; background: #2563EB; color: #FFFFFF; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 4px">Text</span>
+</sc-if>
+<span style="display: block; font-family: Fraunces, Georgia, serif; font-size: 19px; font-weight: 600; margin-bottom: 8px">[Section heading]</span>
+<span style="display: block; font-size: 13px; line-height: 1.6; color: #4A3D30">[Introductory text for this exhibit page, written by the curator. Click to edit it right here on the page.]</span>
+</button>
+
+<div style="flex: 1 1 0; position: relative; border-radius: 4px; {{ showcaseOutline }}">
+<sc-if value="{{ showcaseSel }}" hint-placeholder-val="{{ true }}">
+<span style="position: absolute; top: -12px; left: 8px; z-index: 2; background: #2563EB; color: #FFFFFF; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 4px">Item showcase</span>
+<span style="position: absolute; top: -14px; right: 8px; z-index: 2; display: flex; gap: 2px; background: #1C1F23; border-radius: 6px; padding: 2px">
+<button type="button" aria-label="Move up" style="width: 26px; height: 24px; border: 0; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"></path></svg></button>
+<button type="button" aria-label="Duplicate" style="width: 26px; height: 24px; border: 0; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2"><rect x="8" y="8" width="12" height="12" rx="2"></rect><path d="M16 8V5a1 1 0 00-1-1H5a1 1 0 00-1 1v10a1 1 0 001 1h3"></path></svg></button>
+<button type="button" aria-label="Delete" style="width: 26px; height: 24px; border: 0; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"></path></svg></button>
+</span>
+</sc-if>
+<button type="button" onClick="{{ selShowcase }}" aria-label="Select item showcase block" style="display: grid; width: 100%; grid-template-columns: repeat({{ showcaseCols }}, minmax(0, 1fr)); gap: 8px; padding: 6px; border: 0; background: transparent; text-align: left; font: inherit; cursor: pointer">
+<span style="display: flex; flex-direction: column; gap: 5px"><span style="display: block; aspect-ratio: 1; background: #D9CDB8; border-radius: 3px"></span><span style="font-size: 11px; color: #4A3D30">[Item 1]</span></span>
+<span style="display: flex; flex-direction: column; gap: 5px"><span style="display: block; aspect-ratio: 1; background: #CBBDA4; border-radius: 3px"></span><span style="font-size: 11px; color: #4A3D30">[Item 2]</span></span>
+<span style="display: flex; flex-direction: column; gap: 5px"><span style="display: block; aspect-ratio: 1; background: #BEAE93; border-radius: 3px"></span><span style="font-size: 11px; color: #4A3D30">[Item 3]</span></span>
+</button>
+</div>
+</div>
+
+<div style="position: relative; height: 44px; border: 2px dashed #2563EB; border-radius: 6px; background: #EEF3FE; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; color: #1E3A8A">
+Drop Map block here
+<span style="position: absolute; right: 22%; top: 18px; display: flex; align-items: center; gap: 6px; padding: 7px 12px; background: #FFFFFF; border: 1px solid #2563EB; border-radius: 8px; color: #1E3A8A; font-size: 12px; font-weight: 600; transform: rotate(-3deg)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1E3A8A" stroke-width="1.8" stroke-linejoin="round"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"></path></svg>Map</span>
+</div>
+
+<div style="height: 18px"></div>
+</div>
+</div>
+</div>
+
+<div style="width: 300px; flex-shrink: 0; background: #FFFFFF; border-left: 1px solid #E2DED5; display: flex; flex-direction: column; padding: 18px; gap: 16px; box-sizing: border-box">
+<div>
+<div style="font-size: 16px; font-weight: 600">{{ selName }}</div>
+<div style="font-size: 12px; color: #5B6068; margin-top: 2px">{{ selSource }}</div>
+</div>
+<div style="display: flex; gap: 4px; padding: 4px; background: #F1EEE7; border-radius: 10px">
+<button type="button" style="flex-grow: 1; height: 32px; border: 0; border-radius: 7px; background: transparent; color: #5B6068; font-size: 13px; cursor: pointer">Content</button>
+<button type="button" style="flex-grow: 1; height: 32px; border: 0; border-radius: 7px; background: #FFFFFF; font-size: 13px; font-weight: 600; cursor: pointer">Layout</button>
+<button type="button" style="flex-grow: 1; height: 32px; border: 0; border-radius: 7px; background: transparent; color: #5B6068; font-size: 13px; cursor: pointer">Style</button>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 12px; font-weight: 500; color: #5B6068">Width on {{ devLabel }}</div>
+<div style="display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 3px">
+<sc-for list="{{ spanCells }}" as="cell" hint-placeholder-count="12">
+<div style="height: 18px; border-radius: 3px; background: {{ cell.bg }}"></div>
+</sc-for>
+</div>
+<div style="font-size: 13px">{{ spanText }}</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 12px; font-weight: 500; color: #5B6068">Alignment</div>
+<div style="display: flex; gap: 4px">
+<button type="button" style="flex-grow: 1; height: 34px; border: 1px solid #D6D1C6; border-radius: 7px; background: #FFFFFF; font-size: 13px; cursor: pointer">Left</button>
+<button type="button" style="flex-grow: 1; height: 34px; border: 1px solid #2563EB; border-radius: 7px; background: #EEF3FE; color: #1E3A8A; font-size: 13px; font-weight: 600; cursor: pointer">Center</button>
+<button type="button" style="flex-grow: 1; height: 34px; border: 1px solid #D6D1C6; border-radius: 7px; background: #FFFFFF; font-size: 13px; cursor: pointer">Right</button>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="padding" style="font-size: 12px; font-weight: 500; color: #5B6068">Padding</label>
+<input id="padding" type="range" min="0" max="64" value="16" style="width: 100%">
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="tpl" style="font-size: 12px; font-weight: 500; color: #5B6068">Template (from theme)</label>
+<select id="tpl" style="height: 38px; border: 1px solid #D6D1C6; border-radius: 8px; padding: 0 10px; font-size: 14px; font-family: inherit; background: #FFFFFF">
+<option>Card</option>
+<option>Default</option>
+<option>Media object</option>
+</select>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="font-size: 12px; font-weight: 500; color: #5B6068">Background</div>
+<div style="display: flex; gap: 8px">
+<button type="button" aria-label="No background" style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid #2563EB; background: #FFFFFF; cursor: pointer"></button>
+<button type="button" aria-label="Cream" style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid #D6D1C6; background: #F3EAD8; cursor: pointer"></button>
+<button type="button" aria-label="Rust" style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid #D6D1C6; background: #9A3E1C; cursor: pointer"></button>
+<button type="button" aria-label="Image background" style="height: 32px; padding: 0 10px; border-radius: 16px; border: 1px solid #D6D1C6; background: #FFFFFF; font-size: 12px; cursor: pointer">Image</button>
+</div>
+</div>
+
+<div style="margin-top: auto; padding: 12px; background: #F4F2ED; border-radius: 8px; font-size: 12px; line-height: 1.5; color: #4A4F57">Saved as a standard Omeka S page with Grid layout, so it still displays if this module is removed.</div>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const sel = (this.state && this.state.sel) || 'showcase';
+    const dev = (this.state && this.state.dev) || 'desktop';
+    const widths = { desktop: 820, tablet: 620, phone: 360 };
+    const on = 'outline: 2px solid #2563EB; outline-offset: 3px;';
+    const off = 'outline: 1px dashed rgba(37,99,235,0);';
+    const names = { hero: 'Hero image', text: 'Text', showcase: 'Item showcase' };
+    const sources = { hero: 'Core block: Asset', text: 'Core block: HTML', showcase: 'Core block: Media' };
+    const active = 'background: #FFFFFF; color: #1C1F23; box-shadow: 0 0 0 1px #D6D1C6;';
+    const idle = 'background: transparent; color: #5B6068;';
+    const span = dev === 'phone' ? 12 : (sel === 'hero' ? 12 : 6);
+    const spanCells = [];
+    for (let i = 0; i < 12; i++) spanCells.push({ bg: i < span ? '#2563EB' : '#E2DED5' });
+    const devLabels = { desktop: 'desktop', tablet: 'tablet', phone: 'phone' };
+    return {
+      pageWidth: widths[dev],
+      rowDir: dev === 'phone' ? 'column' : 'row',
+      showcaseCols: dev === 'phone' ? 3 : (dev === 'tablet' ? 2 : 3),
+      heroSize: dev === 'phone' ? 24 : 32,
+      showNav: dev !== 'phone',
+      heroOutline: sel === 'hero' ? on : off,
+      textOutline: sel === 'text' ? on : off,
+      showcaseOutline: sel === 'showcase' ? on : off,
+      heroSel: sel === 'hero',
+      textSel: sel === 'text',
+      showcaseSel: sel === 'showcase',
+      selName: names[sel],
+      selSource: sources[sel],
+      devLabel: devLabels[dev],
+      spanCells: spanCells,
+      spanText: 'Spans ' + span + ' of 12 columns',
+      desktopBtn: dev === 'desktop' ? active : idle,
+      tabletBtn: dev === 'tablet' ? active : idle,
+      phoneBtn: dev === 'phone' ? active : idle,
+      selHero: () => this.setState({ sel: 'hero' }),
+      selText: () => this.setState({ sel: 'text' }),
+      selShowcase: () => this.setState({ sel: 'showcase' }),
+      setDesktop: () => this.setState({ dev: 'desktop' }),
+      setTablet: () => this.setState({ dev: 'tablet' }),
+      setPhone: () => this.setState({ dev: 'phone' })
+    };
+  }
+}
+</script>
+</body>
+</html>

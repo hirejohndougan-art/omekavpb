@@ -1,0 +1,18 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Did you know?
+ *
+ * @var array $data
+ * @var array|null $fact ['text', 'link_text', 'link_url']
+ */
+$escape = $this->plugin('escapeHtml');
+if (!$fact) {
+    return;
+}
+?>
+<aside class="special-blocks special-blocks-did-you-know special-blocks-dyk-<?php echo $escape($data['style']); ?>">
+<?php echo $this->partial('common/special-blocks/heading', ['heading' => $data['heading']]); ?>
+<p class="special-blocks-dyk-text"><?php echo nl2br($escape($fact['text'])); ?></p>
+<?php if ($fact['link_text'] !== '' && $fact['link_url'] !== ''): ?><p class="special-blocks-more"><a href="<?php echo $escape($fact['link_url']); ?>"><?php echo $escape($fact['link_text']); ?></a></p><?php endif; ?>
+</aside>

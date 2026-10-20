@@ -1,0 +1,30 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * A list of fields with their labels.
+ * Outside a Theme Builder template it draws nothing; in the editor's preview
+ * it shows its sample.
+ *
+ * @var array $data
+ * @var \Omeka\Api\Representation\ItemRepresentation|null $item
+ * @var bool $isPreview
+ * @var string $sample
+ */
+$escape = $this->plugin('escapeHtml');
+if (!$item) {
+    if ($isPreview) {
+        echo '<p class="special-blocks-item-sample">' . $escape($sample) . '</p>';
+    }
+    return;
+}
+?>
+<?php if ($rows): ?>
+<dl class="special-blocks-item-details special-blocks-labels-<?php echo $labels === 'above' ? 'above' : 'beside'; ?>">
+<?php foreach ($rows as $row): ?>
+    <div class="special-blocks-item-detail">
+        <dt><?php echo $escape($row['label']); ?></dt>
+        <dd><?php echo $escape(implode('; ', $row['values'])); ?></dd>
+    </div>
+<?php endforeach; ?>
+</dl>
+<?php endif; ?>

@@ -1,0 +1,18 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * A row of buttons.
+ *
+ * @var array $data
+ * @var array $buttons [['text', 'href', 'style', 'new_tab'], …]
+ */
+$escape = $this->plugin('escapeHtml');
+if (!$buttons) {
+    return;
+}
+?>
+<div class="special-blocks special-blocks-buttons special-blocks-align-<?php echo $escape($data['align']); ?> special-blocks-buttons-<?php echo $escape($data['size']); ?>">
+    <?php foreach ($buttons as $button): ?>
+    <a class="special-blocks-button special-blocks-button-<?php echo $escape($button['style']); ?>" href="<?php echo $escape($button['href']); ?>"<?php echo $button['new_tab'] ? ' target="_blank" rel="noopener noreferrer"' : ''; ?>><?php echo $escape($button['text']); ?><?php if ($button['new_tab']): ?><span class="special-blocks-visually-hidden"> <?php echo $escape($this->translate('(opens in a new tab)')); ?></span><?php endif; ?></a>
+    <?php endforeach; ?>
+</div>

@@ -1,0 +1,10 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * A block's optional heading. Shared by every Special Blocks template.
+ *
+ * @var string $heading
+ */
+if ($heading !== ''): ?>
+<h2 class="special-blocks-heading"><?php echo $this->escapeHtml($heading); ?></h2>
+<?php endif;

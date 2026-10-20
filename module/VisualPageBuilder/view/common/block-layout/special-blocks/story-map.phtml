@@ -1,0 +1,75 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Story map: map, information pane, controls, and timeline.
+ * special-blocks/js/story-map.js draws the map and runs the story. Without it,
+ * every stop's pane shows in date order (videos as links).
+ *
+ * @var array $data
+ * @var array $stops in date order: key, year, when, title, text, lat, lng, photo, video, url, itemTitle
+ * @var string $storyId
+ * @var bool $isPreview
+ */
+$escape = $this->plugin('escapeHtml');
+if (!$stops) {
+    if ($isPreview) {
+        echo '<p class="special-blocks-note">' . $escape($this->translate('Story map: add stops in the sidebar (click the map there), each with a date.')) . '</p>';
+    }
+    return;
+}
+if (!$isPreview) {
+    $this->headLink()->appendStylesheet($this->assetUrl('map/vpb-map.css', 'VisualPageBuilder'), 'all');
+    $this->headScript()->appendFile($this->assetUrl('map/vpb-map.js', 'VisualPageBuilder'), 'text/javascript', ['defer' => 'defer']);
+    $this->headScript()->appendFile($this->assetUrl('special-blocks/js/story-map.js', 'VisualPageBuilder'), 'text/javascript', ['defer' => 'defer']);
+}
+$points = array_map(function ($s) {
+    return ['lat' => $s['lat'], 'lng' => $s['lng'], 'title' => $s['title'], 'video' => (bool) $s['video']];
+}, $stops);
+$count = count($stops);
+?>
+<section class="special-blocks special-blocks-story-map special-blocks-story-pane-<?php echo $escape($data['pane']); ?>" id="<?php echo $escape($storyId); ?>"
+    data-stops="<?php echo $escape(json_encode($points)); ?>" data-seconds="<?php echo (int) $data['seconds']; ?>" data-loop="<?php echo $data['loop'] ? '1' : '0'; ?>"
+    aria-label="<?php echo $escape($data['heading'] ?: $this->translate('Story map')); ?>">
+<?php echo $this->partial('common/special-blocks/heading', ['heading' => $data['heading']]); ?>
+<div class="special-blocks-story-stage">
+    <?php if ($isPreview): ?>
+    <div class="special-blocks-story-mapbox special-blocks-map-<?php echo $escape($data['height']); ?> special-blocks-map-placeholder"><span><?php echo $escape(sprintf($this->translatePlural('Story map with %s stop', 'Story map with %s stops', $count), $count)); ?></span></div>
+    <?php else: ?>
+    <div class="special-blocks-story-mapbox special-blocks-map-<?php echo $escape($data['height']); ?>" role="region" aria-label="<?php echo $escape($this->translate('Map')); ?>"></div>
+    <?php endif; ?>
+    <div class="special-blocks-story-panes" aria-live="polite">
+        <?php foreach ($stops as $i => $s): ?>
+        <article class="special-blocks-story-pane<?php echo $s['photo'] ? ' has-photo' : ''; ?>" data-index="<?php echo $i; ?>"<?php echo $s['photo'] ? ' style="background-image: url(&quot;' . $escape($s['photo']) . '&quot;)"' : ''; ?>>
+            <div class="special-blocks-story-pane-body">
+                <p class="special-blocks-story-kicker"><?php echo $escape(sprintf($this->translate('Stop %1$s of %2$s'), $i + 1, $count)); ?> · <?php echo $escape($s['when']); ?></p>
+                <h3><?php echo $escape($s['title']); ?></h3>
+                <?php if ($s['video']): ?>
+                <div class="special-blocks-story-video">
+                    <?php if ($s['video']['kind'] === 'embed'): ?>
+                    <iframe data-src="<?php echo $escape($s['video']['src']); ?>" title="<?php echo $escape(sprintf($this->translate('Video: %s'), $s['title'])); ?>" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>
+                    <?php else: ?>
+                    <video controls preload="none" src="<?php echo $escape($s['video']['src']); ?>"></video>
+                    <?php endif; ?>
+                    <a class="special-blocks-story-video-link" href="<?php echo $escape($s['video']['link']); ?>"><?php echo $escape($this->translate('Watch the video')); ?></a>
+                </div>
+                <?php endif; ?>
+                <?php if ($s['text'] !== ''): ?><p><?php echo nl2br($escape($s['text'])); ?></p><?php endif; ?>
+                <?php if ($s['url']): ?><p><a href="<?php echo $escape($s['url']); ?>"><?php echo $escape(sprintf($this->translate('View the item: %s'), $s['itemTitle'])); ?></a></p><?php endif; ?>
+            </div>
+        </article>
+        <?php endforeach; ?>
+    </div>
+</div>
+<div class="special-blocks-story-controls" hidden>
+    <button type="button" class="special-blocks-story-rewind" aria-label="<?php echo $escape($this->translate('Back to the start')); ?>" title="<?php echo $escape($this->translate('Back to the start')); ?>">&#9198;</button>
+    <button type="button" class="special-blocks-story-prev" aria-label="<?php echo $escape($this->translate('Previous stop')); ?>" title="<?php echo $escape($this->translate('Previous stop')); ?>">&#9664;</button>
+    <button type="button" class="special-blocks-story-play" aria-pressed="false" data-play="<?php echo $escape($this->translate('Play')); ?>" data-pause="<?php echo $escape($this->translate('Pause')); ?>">&#9654; <?php echo $escape($this->translate('Play')); ?></button>
+    <button type="button" class="special-blocks-story-next" aria-label="<?php echo $escape($this->translate('Next stop')); ?>" title="<?php echo $escape($this->translate('Next stop')); ?>">&#9654;</button>
+    <span class="special-blocks-story-status" data-video-note="<?php echo $escape($this->translate('Paused for the video. Press Play to go on.')); ?>"></span>
+</div>
+<ol class="special-blocks-story-timeline" aria-label="<?php echo $escape($this->translate('Timeline')); ?>">
+    <?php foreach ($stops as $i => $s): ?>
+    <li><button type="button" data-index="<?php echo $i; ?>" aria-current="<?php echo $i === 0 ? 'step' : 'false'; ?>"><span class="special-blocks-story-year"><?php echo $escape((string) $s['year']); ?></span><span class="special-blocks-story-dot" aria-hidden="true"></span><span class="special-blocks-story-label"><?php echo $escape($s['title']); ?></span></button></li>
+    <?php endforeach; ?>
+</ol>
+</section>

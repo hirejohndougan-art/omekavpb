@@ -1,0 +1,728 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Visual Page Builder: its own map</title>
+<style>
+:root { --bg: #f6f3ec; --panel: #ffffff; --ink: #1f1b16; --muted: #5f5648; --line: #ddd4c3; --accent: #0f766e; --accent-ink: #ffffff; --water: #bcd6e8; --land: #e6ecdc; --road: #ffffff; --road2: #f3e3b3;
+  box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #191714; --panel: #23201c; --ink: #efe9df; --muted: #b5ab9b; --line: #3a352e; --accent: #3fb6a8; --accent-ink: #0d1a18; } }
+:root[data-theme="dark"] { --bg: #191714; --panel: #23201c; --ink: #efe9df; --muted: #b5ab9b; --line: #3a352e; --accent: #3fb6a8; --accent-ink: #0d1a18; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+*, *::before, *::after { box-sizing: inherit; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 1100px; margin: 0 auto; padding: 28px 18px 60px; }
+h1 { font-family: Georgia, serif; font-size: clamp(1.6rem, 3vw, 2.2rem); margin: 0 0 6px; }
+h2 { font-family: Georgia, serif; font-size: 1.35rem; margin: 0 0 4px; }
+.lead { color: var(--muted); margin: 0 0 22px; max-width: 70ch; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin: 0 0 22px; }
+.how { color: var(--muted); font-size: .92rem; margin: 0 0 12px; }
+.map { width: 100%; height: 380px; border-radius: 8px; border: 1px solid var(--line); }
+.places { margin: 12px 0 0; padding-left: 1.4em; display: grid; gap: 4px; }
+.vpb-map-pin { --vpb-pin: var(--accent); }
+.vpb-map-pin.is-current { --vpb-pin: #c2410c; z-index: 2; }
+.vpb-map-pin.is-current .vpb-map-pin-shape { transform: rotate(-45deg) scale(1.3); }
+.stage { display: flex; gap: 14px; }
+.stage .map { flex: 1 1 0; min-width: 0; }
+.pane { flex: 0 0 300px; min-height: 380px; border-radius: 8px; overflow: hidden; position: relative; display: flex; flex-direction: column; justify-content: flex-end; color: #fff; }
+.pane::before { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.78), rgba(0,0,0,.15) 65%); }
+.pane > div { position: relative; padding: 16px; }
+.pane .kick { margin: 0; font-size: .75rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; opacity: .9; }
+.pane h3 { margin: 4px 0 6px; font-family: Georgia, serif; font-size: 1.3rem; }
+.pane p { margin: 0; font-size: .95rem; }
+.controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 12px 0 4px; }
+.controls button { min-width: 42px; height: 38px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); font: inherit; cursor: pointer; }
+.controls .play { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+.timeline { list-style: none; margin: 0; padding: 26px 0 0; display: flex; justify-content: space-between; gap: 6px; position: relative; overflow-x: auto; }
+.timeline::before { content: ""; position: absolute; left: 0; right: 0; top: 35px; border-top: 3px solid var(--line); }
+.timeline li { flex: 1 0 5.5rem; position: relative; }
+.timeline button { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px; border: 0; background: none; color: inherit; font: inherit; font-size: .85rem; cursor: pointer; padding: 0; }
+.timeline .yr { position: absolute; top: -24px; font-weight: 700; color: var(--accent); font-size: .8rem; }
+.timeline .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--accent); border: 3px solid var(--panel); box-shadow: 0 0 0 1px var(--accent); position: relative; }
+.timeline [aria-current="step"] .dot { width: 20px; height: 20px; background: #c2410c; box-shadow: 0 0 0 1px #c2410c; }
+.timeline [aria-current="step"] { font-weight: 700; }
+.tool { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 14px; }
+.side { border: 1px solid var(--line); border-radius: 8px; padding: 12px; font-size: .92rem; }
+.side ol { padding-left: 1.3em; margin: 8px 0 0; }
+.newplace { border: 1px solid var(--accent); border-radius: 8px; padding: 10px; margin-top: 10px; display: grid; gap: 6px; }
+.newplace input { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink); }
+.newplace button { justify-self: start; font: inherit; padding: 5px 12px; border-radius: 6px; border: 0; background: var(--accent); color: var(--accent-ink); cursor: pointer; }
+.note { font-size: .82rem; color: var(--muted); margin-top: 8px; }
+@media (max-width: 760px) { .stage { flex-direction: column; } .pane { flex-basis: auto; min-height: 240px; } .tool { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+/* VpbMap: the module's own map (vpb-map.js). */
+.vpb-map { position: relative; overflow: hidden; background: #dfe7da; touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; outline-offset: 2px; }
+.vpb-map.panning { cursor: grabbing; }
+.vpb-map:focus-visible { outline: 3px solid #0f766e; }
+.vpb-map-tiles, .vpb-map-pins, .vpb-map-lines { position: absolute; left: 0; top: 0; }
+.vpb-map-tiles { width: 100%; height: 100%; }
+.vpb-map-tile { position: absolute; left: 0; top: 0; max-width: none !important; border: 0; image-rendering: auto; pointer-events: none; }
+.vpb-map-tile.failed { visibility: hidden; }
+.vpb-map-lines { pointer-events: none; overflow: visible; }
+.vpb-map-line { fill: none; stroke: #0f766e; stroke-width: 3; stroke-opacity: 0.75; stroke-linejoin: round; }
+.vpb-map-line.dashed { stroke-dasharray: 7 7; }
+.vpb-map-pin { position: absolute; left: 0; top: 0; width: 30px; height: 34px; margin: -34px 0 0 -15px; padding: 0; border: 0; background: none; cursor: pointer; color: inherit; }
+.vpb-map-pin-shape { position: absolute; left: 2px; top: 2px; width: 26px; height: 26px; box-sizing: border-box; border: 2px solid #fff; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); transform-origin: 50% 50%; background: var(--vpb-pin, #c2410c); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45); display: flex; align-items: center; justify-content: center; }
+.vpb-map-pin-label { transform: rotate(45deg); color: #fff; font: 700 12px/1 system-ui, sans-serif; }
+.vpb-map-pin:focus-visible { outline: none; }
+.vpb-map-pin:focus-visible .vpb-map-pin-shape { outline: 3px solid #1d4ed8; outline-offset: 2px; }
+.vpb-map-pin.dragging { cursor: grabbing; opacity: 0.85; }
+.vpb-map-popup { position: absolute; left: 0; top: 0; z-index: 5; min-width: 140px; max-width: 240px; padding: 10px 26px 10px 12px; background: #fff; color: #1c1f23; border-radius: 8px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3); font: 14px/1.4 system-ui, sans-serif; cursor: auto; user-select: text; }
+.vpb-map-popup::after { content: ""; position: absolute; left: 50%; bottom: -7px; margin-left: -7px; border: 7px solid transparent; border-bottom: 0; border-top-color: #fff; }
+.vpb-map-popup-close { position: absolute; right: 4px; top: 2px; border: 0; background: none; font-size: 18px; line-height: 1; padding: 2px 4px; cursor: pointer; color: #555; }
+.vpb-map-popup img { max-width: 100%; height: auto; }
+.vpb-map-zoom { position: absolute; left: 10px; top: 10px; z-index: 4; display: flex; flex-direction: column; border-radius: 6px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35); overflow: hidden; }
+.vpb-map-zoom button { width: 32px; height: 32px; border: 0; border-bottom: 1px solid #ccc; background: #fff; color: #1c1f23; font: 700 18px/1 system-ui, sans-serif; cursor: pointer; }
+.vpb-map-zoom button:last-child { border-bottom: 0; }
+.vpb-map-zoom button:disabled { color: #aaa; cursor: default; }
+.vpb-map-zoom button:focus-visible { outline: 3px solid #1d4ed8; outline-offset: -3px; }
+.vpb-map-credit { position: absolute; right: 0; bottom: 0; z-index: 4; padding: 1px 6px; background: rgba(255, 255, 255, 0.85); font: 11px/1.5 system-ui, sans-serif; color: #333; }
+.vpb-map-credit a { color: #0f5e54; }
+@media (prefers-reduced-motion: reduce) { .vpb-map-pin { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+<h1>Visual Page Builder's own map</h1>
+<p class="lead">This is the actual map code from the module (version 1.11), written from scratch with no outside libraries. Try it: drag (or flick) to move, pinch, double-tap, double-click, or use + and &minus; to zoom, click a pin, use the arrow keys after clicking the map. <strong>The map pictures here are drawn stand-ins</strong>, because this page can't load outside images; on your site the same code shows real OpenStreetMap maps.</p>
+
+<section class="card" aria-labelledby="h-places">
+<h2 id="h-places">Map of places (as a walking tour)</h2>
+<p class="how">Numbered stops joined in order. Click a pin for its note. The scroll wheel scrolls the page until you click the map.</p>
+<div id="placesMap" class="map" role="region" aria-label="Map of places"></div>
+<ol class="places" id="placesList"></ol>
+</section>
+
+<section class="card" aria-labelledby="h-story">
+<h2 id="h-story">Story map</h2>
+<p class="how">Press Play: the map glides from stop to stop in date order while the pane tells each stop's story.</p>
+<div class="stage">
+<div id="storyMap" class="map" role="region" aria-label="Story map"></div>
+<article class="pane" id="pane" aria-live="polite"><div><p class="kick" id="kick"></p><h3 id="ptitle"></h3><p id="ptext"></p></div></article>
+</div>
+<div class="controls">
+<button type="button" id="rew" aria-label="Back to the start" title="Back to the start">&#9198;</button>
+<button type="button" id="prev" aria-label="Previous stop" title="Previous stop">&#9664;</button>
+<button type="button" id="play" class="play" aria-pressed="false">&#9654; Play</button>
+<button type="button" id="next" aria-label="Next stop" title="Next stop">&#9654;</button>
+</div>
+<ol class="timeline" id="timeline" aria-label="Timeline"></ol>
+</section>
+
+<section class="card" aria-labelledby="h-tool">
+<h2 id="h-tool">The editor's pin tool</h2>
+<p class="how">This is what the sidebar map does in the editor: click the map to add a place, name it, and drag pins to move them.</p>
+<div class="tool">
+<div id="toolMap" class="map" role="region" aria-label="Map for placing pins"></div>
+<div class="side"><strong>Places</strong><ol id="toolList"></ol><div id="newPlace"></div><p class="note">In the editor you can also link an item and choose a picture for each place.</p></div>
+</div>
+</section>
+</main>
+<script>
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+/**
+ * VpbMap: the module's own small map, written from scratch (no outside
+ * library). OpenStreetMap tiles in the standard Web Mercator projection, with:
+ * drag to pan (mouse, pen, touch), two-finger pinch zoom, scroll-wheel zoom
+ * (optionally only after the map is clicked), double-click zoom, +/− buttons,
+ * keyboard (arrows pan, + and − zoom), pins (numbered, clickable, draggable,
+ * with popups), dashed lines between points, fitting points in view, gliding
+ * to a point, and the OpenStreetMap credit.
+ *
+ *   var map = VpbMap.create(el, { wheelZoom: 'after-click', label: 'Map' });
+ *   (options: tileUrl — template or function for other tile pictures; credit — HTML)
+ *   map.setView([29.46, -95.05], 13);
+ *   var pin = map.addPin([29.46, -95.05], { text: '1', title: 'The depot', popup: '<b>…</b>', draggable: false });
+ *   map.addLine([[lat, lng], …], { dashed: true });
+ *   map.fitBounds(points, { padding: 30, maxZoom: 16 });
+ *   map.flyTo([lat, lng], 15, { duration: 1.2, animate: true });
+ *   map.on('click', function (latlng) { … });
+ *
+ * Popup content is HTML the caller has already escaped. Pins are buttons, so
+ * they're reachable by keyboard.
+ */
+(function (window) {
+'use strict';
+
+var TILE = 256, MIN_ZOOM = 1, MAX_ZOOM = 19, MAX_LAT = 85.0511287798;
+var TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+var CREDIT = '\u00A9 <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors';
+
+/** [lat, lng] at zoom z → world pixel {x, y}. */
+function project(ll, z) {
+  var lat = Math.max(-MAX_LAT, Math.min(MAX_LAT, ll[0]));
+  var size = TILE * Math.pow(2, z), s = Math.sin(lat * Math.PI / 180);
+  return { x: (ll[1] + 180) / 360 * size, y: (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * size };
+}
+/** World pixel {x, y} at zoom z → [lat, lng]. */
+function unproject(p, z) {
+  var size = TILE * Math.pow(2, z);
+  var n = Math.PI - 2 * Math.PI * p.y / size;
+  return [180 / Math.PI * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n))), p.x / size * 360 - 180];
+}
+function clampZoom(z) { return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, z)); }
+function el(tag, cls, parent) { var e = document.createElement(tag); if (cls) e.className = cls; if (parent) parent.appendChild(e); return e; }
+function reduceMotion() { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
+
+function create(container, opts) {
+  opts = opts || {};
+  var state = { center: [0, 0], zoom: 2, anim: null };
+  var handlers = {};
+  var pins = [], lines = [];
+  var wheelOn = opts.wheelZoom === true || opts.wheelZoom === undefined;
+  var wheelAfterClick = opts.wheelZoom === 'after-click';
+
+  container.classList.add('vpb-map');
+  if (!container.hasAttribute('tabindex')) container.setAttribute('tabindex', '0');
+  if (opts.label && !container.getAttribute('aria-label')) container.setAttribute('aria-label', opts.label);
+  container.setAttribute('aria-roledescription', 'map');
+  var tilesEl = el('div', 'vpb-map-tiles', container);
+  var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('class', 'vpb-map-lines'); svg.setAttribute('aria-hidden', 'true');
+  container.appendChild(svg);
+  var pinsEl = el('div', 'vpb-map-pins', container);
+  var popup = el('div', 'vpb-map-popup', container); popup.hidden = true;
+  popup.setAttribute('role', 'dialog');
+  var zoomBox = el('div', 'vpb-map-zoom', container);
+  var zin = el('button', '', zoomBox), zout = el('button', '', zoomBox);
+  zin.type = zout.type = 'button'; zin.textContent = '+'; zout.textContent = '\u2212';
+  zin.setAttribute('aria-label', 'Zoom in'); zout.setAttribute('aria-label', 'Zoom out');
+  var credit = el('div', 'vpb-map-credit', container); credit.innerHTML = CREDIT;
+  var tiles = {}; // 'z/x/y' → img
+  // Tile pictures: OpenStreetMap unless the caller gives its own (a URL
+  // template with {z} {x} {y}, or a function (z, x, y) → URL).
+  var tileSrc = typeof opts.tileUrl === 'function' ? opts.tileUrl : function (z, x, y) {
+    return (opts.tileUrl || TILE_URL).replace('{z}', z).replace('{x}', x).replace('{y}', y);
+  };
+  if (opts.credit) credit.innerHTML = opts.credit;
+
+  function size() { return { w: container.clientWidth || 300, h: container.clientHeight || 200 }; }
+  /** Top-left world pixel of the view. */
+  function origin() { var c = project(state.center, state.zoom), s = size(); return { x: c.x - s.w / 2, y: c.y - s.h / 2 }; }
+  function toPoint(ll) { var p = project(ll, state.zoom), o = origin(); return { x: p.x - o.x, y: p.y - o.y }; }
+  function toLatLng(pt) { var o = origin(); return unproject({ x: o.x + pt.x, y: o.y + pt.y }, state.zoom); }
+  function emit(name, arg) { (handlers[name] || []).forEach(function (fn) { fn(arg); }); }
+
+  /**
+   * Draw the view. Tiles come from the zoom level nearest the current
+   * (possibly fractional) zoom, scaled to fit. Tiles from other levels stay
+   * underneath until the new level has finished loading, so zooming never
+   * flashes blank.
+   */
+  var renderQueued = false;
+  function queueRender() { if (!renderQueued) { renderQueued = true; requestAnimationFrame(function () { renderQueued = false; render(); }); } }
+  function render() {
+    var cz = clampZoom(Math.round(state.zoom)), s = size();
+    var n = Math.pow(2, cz), scale = Math.pow(2, state.zoom - cz);
+    var c = project(state.center, cz);
+    var o = { x: c.x - s.w / 2 / scale, y: c.y - s.h / 2 / scale };
+    var x0 = Math.floor(o.x / TILE), y0 = Math.max(0, Math.floor(o.y / TILE));
+    var x1 = Math.floor((o.x + s.w / scale) / TILE), y1 = Math.min(n - 1, Math.floor((o.y + s.h / scale) / TILE));
+    var needed = {}, allLoaded = true;
+    for (var tx = x0; tx <= x1; tx++) {
+      for (var ty = y0; ty <= y1; ty++) {
+        var key = cz + '/' + tx + '/' + ty;
+        needed[key] = true;
+        var t = tiles[key];
+        if (!t) {
+          var img = el('img', 'vpb-map-tile', tilesEl);
+          img.alt = ''; img.draggable = false; img.decoding = 'async';
+          t = tiles[key] = { img: img, z: cz, x: tx, y: ty, done: false };
+          (function (t) {
+            img.onload = function () { t.done = true; img.classList.add('loaded'); queueRender(); };
+            img.onerror = function () { t.done = true; img.classList.add('failed'); queueRender(); };
+          })(t);
+          img.src = tileSrc(cz, ((tx % n) + n) % n, ty);
+        }
+        if (!t.done) allLoaded = false;
+      }
+    }
+    Object.keys(tiles).forEach(function (k) {
+      var t = tiles[k];
+      var keep = needed[k] || (!allLoaded && t.done && !t.img.classList.contains('failed') && Math.abs(t.z - cz) <= 3);
+      if (keep) {
+        // Position any level's tile at the current zoom.
+        var sc = Math.pow(2, state.zoom - t.z), cc = project(state.center, t.z);
+        var left = (t.x * TILE - cc.x) * sc + s.w / 2, top = (t.y * TILE - cc.y) * sc + s.h / 2, w = TILE * sc;
+        if (!needed[k] && (left > s.w || top > s.h || left + w < 0 || top + w < 0)) keep = false;
+        else {
+          t.img.style.transform = 'translate(' + left + 'px,' + top + 'px)';
+          t.img.style.width = t.img.style.height = (w + 0.5) + 'px';
+          t.img.style.zIndex = needed[k] ? 2 : 1;
+        }
+      }
+      if (!keep) { t.img.remove(); delete tiles[k]; }
+    });
+    pins.forEach(placePin);
+    drawLines();
+    if (!popup.hidden && popup._pin) placePopup(popup._pin);
+    zin.disabled = state.zoom >= MAX_ZOOM; zout.disabled = state.zoom <= MIN_ZOOM;
+  }
+
+  function placePin(pin) {
+    var p = toPoint(pin.latlng);
+    pin.el.style.transform = 'translate(' + Math.round(p.x) + 'px,' + Math.round(p.y) + 'px)';
+  }
+  function drawLines() {
+    var s = size();
+    svg.setAttribute('width', s.w); svg.setAttribute('height', s.h);
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    lines.forEach(function (line) {
+      var pl = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+      pl.setAttribute('points', line.points.map(function (ll) { var p = toPoint(ll); return p.x.toFixed(1) + ',' + p.y.toFixed(1); }).join(' '));
+      pl.setAttribute('class', 'vpb-map-line' + (line.dashed ? ' dashed' : ''));
+      svg.appendChild(pl);
+    });
+  }
+
+  // ---- view changes
+  function stopAnim() {
+    if (state.anim) { cancelAnimationFrame(state.anim); state.anim = null; }
+    if (zoomTarget !== null) { zoomTarget = null; }
+  }
+  function setView(ll, z, keepAnim) {
+    if (!keepAnim) stopAnim();
+    state.center = [Math.max(-MAX_LAT, Math.min(MAX_LAT, ll[0])), ll[1]];
+    if (typeof z === 'number') state.zoom = clampZoom(z);
+    render();
+    emit('move');
+  }
+  /** Zoom to `z` keeping the spot under container point `pt` still (no animation). */
+  function zoomTo(z, pt) {
+    var s = size();
+    pt = pt || { x: s.w / 2, y: s.h / 2 };
+    var under = toLatLng(pt);
+    state.zoom = clampZoom(z);
+    var p = project(under, state.zoom);
+    state.center = unproject({ x: p.x - pt.x + s.w / 2, y: p.y - pt.y + s.h / 2 }, state.zoom);
+    render();
+  }
+  /**
+   * Zoom by `dz` whole levels around `pt`, animated (about a quarter second;
+   * instant with reduced motion). Zooming again while animating continues
+   * from the level it was heading to.
+   */
+  var zoomTarget = null;
+  function zoomAround(dz, pt) {
+    var from = state.zoom, base = zoomTarget !== null ? zoomTarget : Math.round(from);
+    var to = clampZoom(Math.round(base + dz));
+    if (to === from && zoomTarget === null) return;
+    stopAnim();
+    if (reduceMotion()) { zoomTo(to, pt); emit('move'); return; }
+    zoomTarget = to;
+    var start = null;
+    function step(t) {
+      if (start === null) start = t;
+      var k = Math.min(1, (t - start) / 250), e = 1 - Math.pow(1 - k, 3);
+      zoomTo(from + (to - from) * e, pt);
+      if (k < 1) state.anim = requestAnimationFrame(step);
+      else { state.anim = null; zoomTarget = null; emit('move'); }
+    }
+    state.anim = requestAnimationFrame(step);
+  }
+  /** Pan by dx, dy pixels over `ms` (instant with reduced motion). */
+  function animatePan(dx, dy, ms) {
+    stopAnim();
+    if (reduceMotion() || !ms) { panBy(dx, dy); return; }
+    var start = null, done = 0;
+    function step(t) {
+      if (start === null) start = t;
+      var k = Math.min(1, (t - start) / ms), e = 1 - Math.pow(1 - k, 3);
+      panBy(dx * (e - done), dy * (e - done), true); done = e;
+      if (k < 1) state.anim = requestAnimationFrame(step); else { state.anim = null; emit('move'); }
+    }
+    state.anim = requestAnimationFrame(step);
+  }
+  function panBy(dx, dy, keepAnim) {
+    var c = project(state.center, state.zoom);
+    setView(unproject({ x: c.x + dx, y: c.y + dy }, state.zoom), state.zoom, keepAnim);
+  }
+  function fitBounds(points, o) {
+    o = o || {};
+    if (!points.length) return;
+    if (points.length === 1) { setView(points[0], o.maxZoom || 15); return; }
+    var pad = o.padding == null ? 30 : o.padding, s = size(), z = o.maxZoom || MAX_ZOOM;
+    for (; z > MIN_ZOOM; z--) {
+      var ps = points.map(function (ll) { return project(ll, z); });
+      var xs = ps.map(function (p) { return p.x; }), ys = ps.map(function (p) { return p.y; });
+      if (Math.max.apply(null, xs) - Math.min.apply(null, xs) <= s.w - 2 * pad && Math.max.apply(null, ys) - Math.min.apply(null, ys) <= s.h - 2 * pad) break;
+    }
+    var q = points.map(function (ll) { return project(ll, z); });
+    var cx = (Math.min.apply(null, q.map(function (p) { return p.x; })) + Math.max.apply(null, q.map(function (p) { return p.x; }))) / 2;
+    var cy = (Math.min.apply(null, q.map(function (p) { return p.y; })) + Math.max.apply(null, q.map(function (p) { return p.y; }))) / 2;
+    setView(unproject({ x: cx, y: cy }, z), z);
+  }
+  /** Glide to a point: zoom out a little if it's far, travel, zoom in. */
+  function flyTo(ll, z, o) {
+    o = o || {};
+    z = clampZoom(typeof z === 'number' ? z : state.zoom);
+    if (o.animate === false || reduceMotion()) { setView(ll, z); return; }
+    stopAnim();
+    var s = size(), z0 = state.zoom;
+    var a = project(state.center, z0), b = project(ll, z0);
+    var dist = Math.sqrt(Math.pow(b.x - a.x, 2) + Math.pow(b.y - a.y, 2)) / Math.max(s.w, s.h);
+    var zMid = Math.min(z0, z) - (dist > 1 ? Math.min(4, Math.ceil(Math.log(dist) / Math.LN2) + 1) : 0);
+    var from = state.center, start = null, dur = (o.duration || 1.2) * 1000;
+    function step(t) {
+      if (start === null) start = t;
+      var k = Math.min(1, (t - start) / dur), e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      // Travel in projected space so the motion looks straight on the map.
+      var zz = k < 0.5 ? z0 + (zMid - z0) * (k * 2) : zMid + (z - zMid) * ((k - 0.5) * 2);
+      var pa = project(from, 20), pb = project(ll, 20);
+      state.center = unproject({ x: pa.x + (pb.x - pa.x) * e, y: pa.y + (pb.y - pa.y) * e }, 20);
+      state.zoom = k < 1 ? zz : z;
+      render();
+      if (k < 1) state.anim = requestAnimationFrame(step); else { state.anim = null; emit('move'); }
+    }
+    state.anim = requestAnimationFrame(step);
+  }
+
+  // ---- pins
+  function addPin(ll, o) {
+    o = o || {};
+    var b = el('button', 'vpb-map-pin' + (o.className ? ' ' + o.className : '') + (o.text ? ' has-text' : ''), pinsEl);
+    b.type = 'button';
+    if (o.title) { b.title = o.title; b.setAttribute('aria-label', o.title); }
+    // The button only carries the position; the shape inside is the
+    // teardrop (rotating the button itself would skew its position).
+    var shape = el('span', 'vpb-map-pin-shape', b);
+    var label = el('span', 'vpb-map-pin-label', shape);
+    label.textContent = o.text || '';
+    var pin = { el: b, latlng: [ll[0], ll[1]], opts: o };
+    pin.setLatLng = function (v) { pin.latlng = [v[0], v[1]]; placePin(pin); };
+    pin.setClass = function (cls, on) { b.classList.toggle(cls, on); };
+    pin.openPopup = function () { openPopup(pin); };
+    var drag = null;
+    b.addEventListener('pointerdown', function (e) {
+      e.stopPropagation();
+      if (!o.draggable) return;
+      drag = { id: e.pointerId, x: e.clientX, y: e.clientY, moved: false, start: toPoint(pin.latlng) };
+      b.setPointerCapture && b.setPointerCapture(e.pointerId);
+    });
+    b.addEventListener('pointermove', function (e) {
+      if (!drag || e.pointerId !== drag.id) return;
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (!drag.moved && Math.abs(dx) + Math.abs(dy) < 4) return;
+      drag.moved = true;
+      b.classList.add('dragging');
+      pin.latlng = toLatLng({ x: drag.start.x + dx, y: drag.start.y + dy });
+      placePin(pin);
+    });
+    b.addEventListener('pointerup', function () {
+      if (drag && drag.moved) { b.classList.remove('dragging'); pin.justDragged = true; if (o.onDragEnd) o.onDragEnd(pin.latlng); }
+      drag = null;
+    });
+    b.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (pin.justDragged) { pin.justDragged = false; return; }
+      if (o.popup) openPopup(pin);
+      if (o.onClick) o.onClick();
+    });
+    pins.push(pin);
+    placePin(pin);
+    return pin;
+  }
+  function openPopup(pin) {
+    popup.innerHTML = '';
+    var close = el('button', 'vpb-map-popup-close', popup);
+    close.type = 'button'; close.textContent = '\u00D7'; close.setAttribute('aria-label', 'Close');
+    close.addEventListener('click', closePopup);
+    var body = el('div', 'vpb-map-popup-body', popup);
+    body.innerHTML = pin.opts.popup; // already escaped by the caller
+    popup.setAttribute('aria-label', pin.opts.title || 'Place');
+    popup.hidden = false; popup._pin = pin;
+    placePopup(pin);
+    close.focus({ preventScroll: true });
+    // Nudge the map so the whole popup is visible.
+    var pr = popup.getBoundingClientRect(), cr = container.getBoundingClientRect(), m = 10, dx = 0, dy = 0;
+    if (pr.left < cr.left + m) dx = pr.left - cr.left - m;
+    else if (pr.right > cr.right - m) dx = pr.right - cr.right + m;
+    if (pr.top < cr.top + m) dy = pr.top - cr.top - m;
+    else if (pr.bottom > cr.bottom - m) dy = pr.bottom - cr.bottom + m;
+    if (dx || dy) animatePan(dx, dy, 250);
+  }
+  function placePopup(pin) {
+    var p = toPoint(pin.latlng);
+    popup.style.transform = 'translate(' + Math.round(p.x) + 'px,' + Math.round(p.y - 34) + 'px) translate(-50%, -100%)';
+  }
+  function closePopup() {
+    if (popup.hidden) return;
+    var pin = popup._pin;
+    popup.hidden = true; popup._pin = null;
+    if (pin && document.activeElement && popup.contains(document.activeElement)) pin.el.focus({ preventScroll: true });
+  }
+
+  // ---- interaction: drag to pan, pinch, wheel, double-click, keys
+  var pointers = {}, gesture = null;
+  container.addEventListener('pointerdown', function (e) {
+    if (e.target.closest('.vpb-map-zoom, .vpb-map-popup, .vpb-map-credit, .vpb-map-pin')) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    stopAnim();
+    pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+    container.setPointerCapture && container.setPointerCapture(e.pointerId);
+    var ids = Object.keys(pointers);
+    if (ids.length === 1) gesture = { type: 'pan', x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, moved: false, track: [{ x: e.clientX, y: e.clientY, t: Date.now() }] };
+    else if (ids.length === 2) {
+      var a = pointers[ids[0]], c = pointers[ids[1]];
+      gesture = { type: 'pinch', d: Math.hypot(a.x - c.x, a.y - c.y) || 1, z: state.zoom, moved: true };
+    }
+  });
+  container.addEventListener('pointermove', function (e) {
+    if (!pointers[e.pointerId] || !gesture) return;
+    pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+    if (gesture.type === 'pan') {
+      var dx = e.clientX - gesture.x, dy = e.clientY - gesture.y;
+      if (!gesture.moved && Math.abs(e.clientX - gesture.sx) + Math.abs(e.clientY - gesture.sy) < 4) return;
+      gesture.moved = true;
+      container.classList.add('panning');
+      gesture.x = e.clientX; gesture.y = e.clientY;
+      gesture.track.push({ x: e.clientX, y: e.clientY, t: Date.now() });
+      if (gesture.track.length > 6) gesture.track.shift();
+      panBy(-dx, -dy);
+    } else {
+      var ids = Object.keys(pointers), a = pointers[ids[0]], b = pointers[ids[1]];
+      if (!a || !b) return;
+      var r = container.getBoundingClientRect(), mid = { x: (a.x + b.x) / 2 - r.left, y: (a.y + b.y) / 2 - r.top };
+      var target = gesture.z + Math.log(Math.hypot(a.x - b.x, a.y - b.y) / gesture.d) / Math.LN2;
+      var under = toLatLng(mid);
+      state.zoom = clampZoom(target);
+      var p = project(under, state.zoom), s = size();
+      state.center = unproject({ x: p.x - mid.x + s.w / 2, y: p.y - mid.y + s.h / 2 }, state.zoom);
+      render();
+    }
+  });
+  function endPointer(e) {
+    if (!pointers[e.pointerId]) return;
+    delete pointers[e.pointerId];
+    container.classList.remove('panning');
+    if (!gesture) return;
+    if (gesture.type === 'pinch') {
+      // Settle on a whole zoom level so tiles are sharp.
+      zoomAround(0, null);
+      gesture = Object.keys(pointers).length ? { type: 'pan', x: 0, y: 0, sx: 0, sy: 0, moved: true, stale: true } : null;
+      return;
+    }
+    if (e.type === 'pointerup' && !gesture.moved) tap(e);
+    else if (e.type === 'pointerup' && gesture.type === 'pan' && gesture.track) glide(gesture.track);
+    if (!Object.keys(pointers).length) gesture = null;
+  }
+  /** Keep drifting a little after a quick drag, slowing to a stop. */
+  function glide(track) {
+    if (reduceMotion() || track.length < 2) return;
+    var a = track[0], b = track[track.length - 1], dt = b.t - a.t;
+    if (Date.now() - b.t > 80 || dt <= 0) return; // the finger had stopped
+    var vx = (b.x - a.x) / dt, vy = (b.y - a.y) / dt; // px per ms
+    var speed = Math.sqrt(vx * vx + vy * vy);
+    if (speed < 0.3) return;
+    if (speed > 1.5) { vx *= 1.5 / speed; vy *= 1.5 / speed; } // a flick, not a fling across the county
+    var last = null;
+    function step(t) {
+      var ms = last === null ? 16 : Math.min(40, t - last); last = t;
+      vx *= Math.pow(0.93, ms / 16); vy *= Math.pow(0.93, ms / 16);
+      panBy(-vx * ms, -vy * ms, true);
+      if (Math.sqrt(vx * vx + vy * vy) > 0.02) state.anim = requestAnimationFrame(step); else { state.anim = null; emit('move'); }
+    }
+    stopAnim();
+    state.anim = requestAnimationFrame(step);
+  }
+  /**
+   * A tap or click (no drag). Two within 300 ms and 30 px zoom in there
+   * (shift: out) instead; so a single one is reported a moment later, and a
+   * double one isn't reported as two clicks (no stray pins in the editor).
+   */
+  var lastTap = null, tapTimer = null;
+  function tap(e) {
+    var r = container.getBoundingClientRect(), pt = { x: e.clientX - r.left, y: e.clientY - r.top }, now = Date.now();
+    closePopup();
+    if (wheelAfterClick) wheelOn = true;
+    if (lastTap && now - lastTap.t < 300 && Math.abs(pt.x - lastTap.x) < 30 && Math.abs(pt.y - lastTap.y) < 30) {
+      clearTimeout(tapTimer); lastTap = null;
+      zoomAround(e.shiftKey ? -1 : 1, pt);
+      return;
+    }
+    lastTap = { x: pt.x, y: pt.y, t: now };
+    var ll = toLatLng(pt);
+    clearTimeout(tapTimer);
+    tapTimer = setTimeout(function () { lastTap = null; emit('click', ll); }, 260);
+  }
+  container.addEventListener('pointerup', endPointer);
+  container.addEventListener('pointercancel', endPointer);
+  var wheelAt = 0;
+  container.addEventListener('wheel', function (e) {
+    if (!wheelOn) return;
+    e.preventDefault();
+    var now = Date.now();
+    if (now - wheelAt < 220 || Math.abs(e.deltaY) < 1) return;
+    wheelAt = now;
+    var r = container.getBoundingClientRect();
+    zoomAround(e.deltaY < 0 ? 1 : -1, { x: e.clientX - r.left, y: e.clientY - r.top });
+  }, { passive: false });
+  // Double-clicks are handled by tap(); stop the browser selecting text.
+  container.addEventListener('dblclick', function (e) { e.preventDefault(); });
+  container.addEventListener('keydown', function (e) {
+    if (e.target !== container) { if (e.key === 'Escape') closePopup(); return; }
+    var step = 80, done = true;
+    if (e.key === 'ArrowLeft') panBy(-step, 0);
+    else if (e.key === 'ArrowRight') panBy(step, 0);
+    else if (e.key === 'ArrowUp') panBy(0, -step);
+    else if (e.key === 'ArrowDown') panBy(0, step);
+    else if (e.key === '+' || e.key === '=') zoomAround(1);
+    else if (e.key === '-' || e.key === '_') zoomAround(-1);
+    else if (e.key === 'Escape') closePopup();
+    else done = false;
+    if (done) e.preventDefault();
+  });
+  if (wheelAfterClick) {
+    wheelOn = false;
+    container.addEventListener('focus', function () { wheelOn = true; });
+    container.addEventListener('mouseleave', function () { wheelOn = false; });
+    container.addEventListener('blur', function () { wheelOn = false; });
+  }
+  zin.addEventListener('click', function (e) { e.stopPropagation(); zoomAround(1); });
+  zout.addEventListener('click', function (e) { e.stopPropagation(); zoomAround(-1); });
+  if (window.ResizeObserver) new ResizeObserver(function () { render(); }).observe(container);
+  else window.addEventListener('resize', render);
+
+  var api = {
+    setView: function (ll, z) { setView(ll, z); return api; },
+    fitBounds: function (pts, o) { fitBounds(pts, o); return api; },
+    flyTo: function (ll, z, o) { flyTo(ll, z, o); return api; },
+    getZoom: function () { return state.zoom; },
+    getCenter: function () { return state.center.slice(); },
+    addPin: addPin,
+    addLine: function (pts, o) { lines.push({ points: pts.slice(), dashed: !!(o && o.dashed) }); drawLines(); return api; },
+    on: function (name, fn) { (handlers[name] = handlers[name] || []).push(fn); return api; },
+    toLatLng: toLatLng, toPoint: toPoint, closePopup: closePopup, el: container
+  };
+  setView([0, 0], 2);
+  return api;
+}
+
+window.VpbMap = { create: create, project: project, unproject: unproject };
+})(window);
+
+</script>
+<script>
+(function () {
+  'use strict';
+  // ---- Drawn stand-in tiles (canvas): land, the bay, a bayou, roads. Everything is placed in
+  // map coordinates, so tiles line up at every zoom level like real ones.
+  var cache = {};
+  var BAY = [[29.62, -95.02], [29.55, -94.96], [29.48, -94.97], [29.40, -94.93], [29.30, -94.82], [29.20, -94.80], [29.10, -94.95], [29.0, -94.6], [29.7, -94.6], [29.75, -94.9]];
+  var BAYOU = [[29.38, -95.20], [29.41, -95.15], [29.44, -95.11], [29.455, -95.07], [29.46, -95.04], [29.47, -95.0], [29.49, -94.98], [29.50, -94.965]];
+  function css(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim() || '#ccc'; }
+  function tile(z, x, y) {
+    var key = z + '/' + x + '/' + y;
+    if (cache[key]) return cache[key];
+    var c = document.createElement('canvas'); c.width = c.height = 256;
+    var g = c.getContext('2d'), ox = x * 256, oy = y * 256;
+    function pt(ll) { var p = VpbMap.project(ll, z); return [p.x - ox, p.y - oy]; }
+    g.fillStyle = css('--land'); g.fillRect(0, 0, 256, 256);
+    // Roads every so many degrees (finer as you zoom in).
+    var a = VpbMap.unproject({ x: ox, y: oy }, z), b = VpbMap.unproject({ x: ox + 256, y: oy + 256 }, z);
+    var step = 0.4 / Math.pow(2, Math.max(0, z - 8)); if (step < 0.004) step = 0.004;
+    for (var lng = Math.floor(a[1] / step) * step; lng <= b[1] + step; lng += step) {
+      var major = Math.abs(Math.round(lng / step) % 4) === 0;
+      g.strokeStyle = major ? css('--road2') : css('--road'); g.lineWidth = major ? 3 : 1.5;
+      var p1 = pt([a[0], lng]), p2 = pt([b[0], lng]); g.beginPath(); g.moveTo(p1[0], p1[1]); g.lineTo(p2[0], p2[1]); g.stroke();
+    }
+    for (var lat = Math.floor(b[0] / step) * step; lat <= a[0] + step; lat += step) {
+      var maj = Math.abs(Math.round(lat / step) % 4) === 0;
+      g.strokeStyle = maj ? css('--road2') : css('--road'); g.lineWidth = maj ? 3 : 1.5;
+      var q1 = pt([lat, a[1]]), q2 = pt([lat, b[1]]); g.beginPath(); g.moveTo(q1[0], q1[1]); g.lineTo(q2[0], q2[1]); g.stroke();
+    }
+    g.fillStyle = css('--water'); g.beginPath(); BAY.forEach(function (ll, i) { var p = pt(ll); if (i) g.lineTo(p[0], p[1]); else g.moveTo(p[0], p[1]); }); g.closePath(); g.fill();
+    g.strokeStyle = css('--water'); g.lineWidth = Math.max(2, Math.pow(2, z - 11) * 3); g.lineJoin = g.lineCap = 'round';
+    g.beginPath(); BAYOU.forEach(function (ll, i) { var p = pt(ll); if (i) g.lineTo(p[0], p[1]); else g.moveTo(p[0], p[1]); }); g.stroke();
+    return (cache[key] = c.toDataURL('image/png'));
+  }
+  var CREDIT = 'Drawn stand-in tiles for this demo &middot; on your site: &copy; OpenStreetMap contributors';
+  function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+
+  // ---- Map of places
+  var places = [
+    { name: 'The depot', lat: 29.4608, lng: -95.0513, note: 'The railroad reached Dickinson in 1896.' },
+    { name: 'Main Street', lat: 29.4655, lng: -95.0440, note: 'The first paved stretch, 1925.' },
+    { name: 'First school', lat: 29.4720, lng: -95.0475, note: 'Opened north of the tracks.' },
+    { name: 'Bayou landing', lat: 29.4575, lng: -95.0330, note: 'Where boats unloaded strawberries.' }
+  ];
+  var pm = VpbMap.create(document.getElementById('placesMap'), { wheelZoom: 'after-click', tileUrl: tile, credit: CREDIT });
+  places.forEach(function (p, i) {
+    pm.addPin([p.lat, p.lng], { text: String(i + 1), title: (i + 1) + '. ' + p.name, popup: '<strong>' + esc(p.name) + '</strong><br>' + esc(p.note) });
+    var li = document.createElement('li'); li.innerHTML = '<strong>' + esc(p.name) + '</strong> &mdash; ' + esc(p.note); document.getElementById('placesList').appendChild(li);
+  });
+  pm.addLine(places.map(function (p) { return [p.lat, p.lng]; }), { dashed: true });
+  pm.fitBounds(places.map(function (p) { return [p.lat, p.lng]; }), { padding: 40, maxZoom: 16 });
+
+  // ---- Story map
+  var stops = [
+    { date: '1896', title: 'The depot opens', text: 'The railroad reaches Dickinson, and a small depot opens beside the tracks.', lat: 29.4608, lng: -95.0513, bg: '#8a7a5e' },
+    { date: '1900', title: 'The Great Storm', text: 'The hurricane that devastated Galveston also struck Dickinson.', lat: 29.30, lng: -94.80, bg: '#566470' },
+    { date: '1911', title: 'Strawberry shipments', text: 'Daily shipments fill the depot ledger.', lat: 29.4590, lng: -95.0480, bg: '#7b5a52' },
+    { date: '1925', title: 'Main Street paved', text: 'Automobiles come downtown.', lat: 29.4655, lng: -95.0440, bg: '#6f6a52' },
+    { date: '1938', title: 'A new school', text: 'A new school building opens north of the tracks.', lat: 29.4720, lng: -95.0475, bg: '#5d7046' }
+  ];
+  var sm = VpbMap.create(document.getElementById('storyMap'), { wheelZoom: 'after-click', tileUrl: tile, credit: CREDIT });
+  var pins = [], cur = 0, timer = null;
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  stops.forEach(function (s, i) { pins.push(sm.addPin([s.lat, s.lng], { text: String(i + 1), title: (i + 1) + '. ' + s.title, onClick: function () { pause(); show(i); } })); });
+  sm.fitBounds(stops.map(function (s) { return [s.lat, s.lng]; }), { padding: 40, maxZoom: 15 });
+  var tl = document.getElementById('timeline');
+  stops.forEach(function (s, i) {
+    var li = document.createElement('li');
+    li.innerHTML = '<button type="button"><span class="yr">' + esc(s.date) + '</span><span class="dot" aria-hidden="true"></span><span>' + esc(s.title) + '</span></button>';
+    li.firstChild.addEventListener('click', function () { pause(); show(i); });
+    tl.appendChild(li);
+  });
+  function show(i) {
+    cur = Math.max(0, Math.min(stops.length - 1, i));
+    var s = stops[cur];
+    document.getElementById('pane').style.background = s.bg;
+    document.getElementById('kick').textContent = 'Stop ' + (cur + 1) + ' of ' + stops.length + ' \u00B7 ' + s.date;
+    document.getElementById('ptitle').textContent = s.title;
+    document.getElementById('ptext').textContent = s.text;
+    [].forEach.call(tl.querySelectorAll('button'), function (b, j) { b.setAttribute('aria-current', j === cur ? 'step' : 'false'); });
+    pins.forEach(function (p, j) { p.setClass('is-current', j === cur); });
+    sm.flyTo([s.lat, s.lng], Math.max(Math.round(sm.getZoom()), 14), { duration: 1.2, animate: !reduce });
+  }
+  var playBtn = document.getElementById('play');
+  function setPlaying(on) { playBtn.setAttribute('aria-pressed', String(on)); playBtn.textContent = on ? '\u275A\u275A Pause' : '\u25B6 Play'; }
+  function pause() { clearInterval(timer); timer = null; setPlaying(false); }
+  function play() { if (cur >= stops.length - 1) show(0); setPlaying(true); timer = setInterval(function () { if (cur >= stops.length - 1) pause(); else show(cur + 1); }, 4000); }
+  playBtn.addEventListener('click', function () { if (timer) pause(); else play(); });
+  document.getElementById('rew').addEventListener('click', function () { pause(); show(0); });
+  document.getElementById('prev').addEventListener('click', function () { pause(); show(cur - 1); });
+  document.getElementById('next').addEventListener('click', function () { pause(); show(cur + 1); });
+  setTimeout(function () { show(0); }, 50);
+
+  // ---- Editor pin tool
+  var tm = VpbMap.create(document.getElementById('toolMap'), { wheelZoom: 'after-click', tileUrl: tile, credit: CREDIT });
+  var tPlaces = [{ name: 'The depot', lat: 29.4608, lng: -95.0513 }];
+  var tPins = [];
+  function drawList() {
+    document.getElementById('toolList').innerHTML = tPlaces.map(function (p) { return '<li>' + esc(p.name || '(unnamed)') + ' <small>' + p.lat.toFixed(4) + ', ' + p.lng.toFixed(4) + '</small></li>'; }).join('');
+  }
+  function addToolPin(p, i) {
+    tPins.push(tm.addPin([p.lat, p.lng], { text: String(i + 1), title: (i + 1) + '. ' + (p.name || 'New place') + ' (drag to move)', draggable: true,
+      onDragEnd: function (ll) { p.lat = ll[0]; p.lng = ll[1]; drawList(); } }));
+  }
+  tPlaces.forEach(addToolPin);
+  tm.setView([29.463, -95.045], 14);
+  tm.on('click', function (ll) {
+    var p = { name: '', lat: ll[0], lng: ll[1] };
+    tPlaces.push(p); addToolPin(p, tPlaces.length - 1); drawList();
+    var box = document.getElementById('newPlace');
+    box.innerHTML = '<div class="newplace" role="group" aria-label="New place"><label for="np">Name the new place</label><input id="np" type="text" placeholder="e.g. Old post office"><button type="button">Done</button></div>';
+    var input = box.querySelector('input');
+    function done() { p.name = input.value.trim() || 'Place ' + tPlaces.length; box.innerHTML = ''; drawList(); }
+    box.querySelector('button').addEventListener('click', done);
+    input.addEventListener('keydown', function (e) { if (e.key === 'Enter') done(); });
+    input.focus();
+  });
+  drawList();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Links to the item's files.
+ * Outside a Theme Builder template it draws nothing; in the editor's preview
+ * it shows its sample.
+ *
+ * @var array $data
+ * @var \Omeka\Api\Representation\ItemRepresentation|null $item
+ * @var bool $isPreview
+ * @var string $sample
+ */
+$escape = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+$translate = $this->plugin('translate');
+if (!$item) {
+    if ($isPreview) {
+        echo '<p class="special-blocks-item-sample">' . $escape($sample) . '</p>';
+    }
+    return;
+}
+?>
+<?php if ($files): ?>
+<ul class="special-blocks-item-downloads">
+<?php foreach ($files as $file): ?>
+    <li><a href="<?php echo $escape($file['url']); ?>" download><?php echo $escape($file['title'] ?: $translate('Download')); ?></a> <span class="special-blocks-item-filetype"><?php echo $escape($file['type']); ?></span></li>
+<?php endforeach; ?>
+</ul>
+<?php endif; ?>

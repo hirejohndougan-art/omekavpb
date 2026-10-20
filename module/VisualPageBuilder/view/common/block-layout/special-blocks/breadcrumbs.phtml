@@ -1,0 +1,26 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Breadcrumbs. Empty on the home page.
+ *
+ * @var array $data
+ * @var array $crumbs [['label', 'url'], …]
+ * @var bool $preview  true in the visual editor, where there's no current page
+ */
+$escape = $this->plugin('escapeHtml');
+$sep = ['chevron' => '›', 'slash' => '/', 'arrow' => '→'][$data['separator']] ?? '›';
+if ($preview) {
+    echo '<p class="special-blocks-note">' . $escape(sprintf($this->translate('Breadcrumbs: on the site this shows %1$s %2$s Section %2$s This page'), $data['home_label'] ?: 'Home', $sep)) . '</p>';
+    return;
+}
+if (!$crumbs) {
+    return;
+}
+?>
+<nav class="special-blocks special-blocks-breadcrumbs" aria-label="<?php echo $escape($this->translate('Breadcrumb')); ?>">
+<ol>
+    <?php foreach ($crumbs as $i => $c): $last = $i === count($crumbs) - 1; ?>
+    <li><?php if ($last): ?><span aria-current="page"><?php echo $escape($c['label']); ?></span><?php else: ?><a href="<?php echo $escape($c['url']); ?>"><?php echo $escape($c['label']); ?></a><span class="special-blocks-crumb-sep" aria-hidden="true"> <?php echo $escape($sep); ?> </span><?php endif; ?></li>
+    <?php endforeach; ?>
+</ol>
+</nav>

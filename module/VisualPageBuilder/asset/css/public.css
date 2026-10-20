@@ -1,0 +1,100 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+/* Visual Page Builder: columns inside sections. */
+.vpb-section > .vpb-column {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--vpb-row-gap, 16px);
+}
+.vpb-section > .vpb-column > .block {
+    margin-top: 0;
+}
+/* A Table link takes no space: it cancels the column gap before it. */
+.vpb-section > .vpb-column > .block.block-specialTableLink { height: 0; margin: calc(-1 * var(--vpb-row-gap, 16px)) 0 0; padding: 0; }
+.vpb-section > .vpb-column.has-background {
+    padding: 1rem;
+}
+/* Smaller screens. Omeka stacks grid pages into one column below 897px;
+   sections do the same unless set otherwise in the editor ("Smaller
+   screens": vpb-tablet-two / -same, vpb-phone-two). Tablets: 601–896px. */
+@media screen and (max-width: 896px) {
+    .vpb-section.block-group-grid {
+        display: flex;
+        flex-direction: column;
+        gap: var(--vpb-row-gap, 16px);
+        /* Stacked columns fill the width (a theme may center them, which
+           let wide content push past a phone screen). */
+        align-items: stretch !important;
+    }
+    .vpb-section.block-group-grid > .vpb-column { min-width: 0; max-width: 100%; }
+}
+@media screen and (min-width: 601px) and (max-width: 896px) {
+    .vpb-section.vpb-tablet-same.block-group-grid { display: grid; }
+    .vpb-section.vpb-tablet-two.block-group-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--vpb-row-gap, 16px); }
+    .vpb-section.vpb-tablet-two > .vpb-column { grid-column: auto !important; }
+}
+@media screen and (max-width: 600px) {
+    .vpb-section.vpb-phone-two.block-group-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--vpb-row-gap, 16px); }
+    .vpb-section.vpb-phone-two > .vpb-column { grid-column: auto !important; }
+}
+
+/* Dark backgrounds (chosen in the visual editor): white text. */
+.vpb-on-dark { color: #fff; }
+.vpb-on-dark h1, .vpb-on-dark h2, .vpb-on-dark h3, .vpb-on-dark h4, .vpb-on-dark a:not(.special-blocks-button) { color: inherit; }
+.vpb-on-dark a { text-decoration: underline; }
+.vpb-on-dark .special-blocks { --sb-muted: rgba(255, 255, 255, 0.78); --sb-border: rgba(255, 255, 255, 0.3); --sb-surface: rgba(255, 255, 255, 0.08); }
+
+/* Background images with "darken so text is readable" (visual editor). */
+.vpb-overlay { position: relative; isolation: isolate; }
+.vpb-overlay::before { content: ""; position: absolute; inset: 0; background: rgba(0, 0, 0, 0.45); z-index: -1; border-radius: inherit; }
+/* Omeka's background image classes, repeated here for headers and footers
+   (Omeka loads its own copy only on page views). */
+.block-layout-background-image-size-cover, .block-layout-background-image-size-contain { background-repeat: no-repeat; }
+.block-layout-background-image-size-cover { background-size: cover; }
+.block-layout-background-image-size-contain { background-size: contain; }
+.block-layout-background-image-position-y-top { background-position-y: top; }
+.block-layout-background-image-position-y-center { background-position-y: center; }
+.block-layout-background-image-position-y-bottom { background-position-y: bottom; }
+.block-layout-background-image-position-x-center { background-position-x: center; }
+
+/* Grid columns may shrink below their content's natural width, so a wide
+   block (e.g. a large search box in a built header) can't push the page
+   wider than a phone screen. Omeka's own page CSS isn't loaded in theme
+   headers and footers, where this mattered (v1.8.1). */
+.vpb-page.grid-template-columns-12 { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+@media screen and (max-width: 600px) {
+    .vpb-page.page-layout-grid { column-gap: 0 !important; }
+    .vpb-page.page-layout-grid > * { grid-column: 1 / -1; }
+}
+
+/* ---------- Printing (v1.12.0) ----------
+   Printed pages keep the content: menus, buttons, search boxes, map
+   controls, and players drop out; link addresses are printed after the
+   link text; blocks avoid splitting across pages. */
+@media print {
+    .special-blocks-search-box, .special-blocks-share, .special-blocks-newsletter,
+    .special-blocks-story-controls, .special-blocks-tl-nav, .special-blocks-quiz-check,
+    .vpb-map-zoom, .special-blocks-oh-tools, .special-blocks-slideshow-controls,
+    .special-blocks-gallery-viewer, .ins, nav.special-blocks-site-menu { display: none !important; }
+    .vpb-page a[href^="http"]::after, .vpb-page a[href^="/"]::after { content: " (" attr(href) ")"; font-size: 0.85em; word-break: break-all; }
+    .vpb-page a.special-blocks-button::after, .vpb-page .special-blocks-jump-links a::after { content: none; }
+    .vpb-section, .vpb-page > .block, .special-blocks-tl-entry, .special-blocks-quiz-question, .special-blocks-story-pane { break-inside: avoid; }
+    .vpb-overlay::before { display: none; }
+    .vpb-on-dark, .vpb-overlay { color: #000 !important; background: none !important; }
+    .special-blocks-story-map.is-enhanced .special-blocks-story-pane[hidden] { display: block !important; }
+    .special-blocks-story-pane { color: #000 !important; background: none !important; min-height: 0 !important; }
+    .special-blocks-story-pane.has-photo::before { display: none; }
+    .special-blocks-timeline-horizontal .special-blocks-tl-track { overflow: visible; }
+    .special-blocks-timeline-horizontal .special-blocks-tl-list { flex-wrap: wrap; }
+    .special-blocks-oh-cue.is-current { background: none; box-shadow: none; }
+    img { max-width: 100% !important; }
+    h1, h2, h3 { break-after: avoid; }
+}
+
+/* ---------- Footnotes (v1.12.0) ---------- */
+.vpb-fn-ref a { text-decoration: none; padding: 0 0.15em; font-weight: 700; }
+.vpb-fn-ref a:focus-visible, .vpb-fn-back:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.vpb-footnotes { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #ddd; font-size: 0.92em; }
+.vpb-footnotes ol { padding-left: 1.6em; display: grid; gap: 0.35em; }
+.vpb-fn-back { text-decoration: none; margin-left: 0.25em; }
+[id^="vpb-fn-"], [id^="vpb-fnref-"] { scroll-margin-top: var(--vpb-anchor-offset, 6rem); }

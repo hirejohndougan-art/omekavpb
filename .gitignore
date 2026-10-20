@@ -1,0 +1,3 @@
+node_modules/
+tools/php-cs-fixer.phar
+.php-cs-fixer.cache

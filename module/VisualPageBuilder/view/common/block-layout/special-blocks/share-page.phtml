@@ -1,0 +1,29 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Share this page. Copy and Print are buttons shown by special-blocks/js/share.js.
+ *
+ * @var array $data
+ * @var array $links [['key', 'label', 'href' (null for copy/print)], …]
+ * @var string $url
+ */
+$escape = $this->plugin('escapeHtml');
+if (!$links) {
+    return;
+}
+$this->headScript()->appendFile($this->assetUrl('special-blocks/js/share.js', 'VisualPageBuilder'), 'text/javascript', ['defer' => 'defer']);
+?>
+<div class="special-blocks special-blocks-share-page special-blocks-align-<?php echo $escape($data['align']); ?>">
+<?php if ($data['heading'] !== ''): ?><p class="special-blocks-share-heading"><?php echo $escape($data['heading']); ?></p><?php endif; ?>
+<ul class="special-blocks-share">
+    <?php foreach ($links as $l): ?>
+    <li>
+        <?php if ($l['href']): ?>
+        <a class="special-blocks-button special-blocks-button-secondary" href="<?php echo $escape($l['href']); ?>"<?php echo $l['key'] !== 'email' ? ' target="_blank" rel="noopener noreferrer"' : ''; ?>><?php echo $escape($l['label']); ?></a>
+        <?php else: ?>
+        <button type="button" class="special-blocks-button special-blocks-button-secondary special-blocks-share-<?php echo $escape($l['key']); ?>" data-url="<?php echo $escape($url); ?>" data-done="<?php echo $escape($this->translate('Link copied')); ?>" hidden><?php echo $escape($l['label']); ?></button>
+        <?php endif; ?>
+    </li>
+    <?php endforeach; ?>
+</ul>
+</div>

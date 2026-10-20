@@ -1,0 +1,14 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Copyright line.
+ *
+ * @var array $data
+ * @var string $line
+ */
+$escape = $this->plugin('escapeHtml');
+if ($line === '') {
+    return;
+}
+?>
+<p class="special-blocks special-blocks-copyright special-blocks-align-<?php echo $escape($data['align']); ?>"><?php echo $escape($line); ?></p>

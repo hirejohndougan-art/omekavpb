@@ -1,0 +1,51 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Hours, location, admission, contact.
+ *
+ * @var array $data  the block's settings (heading, layout)
+ * @var array $info  the details to show: from the block or from a site's settings
+ */
+$escape = $this->plugin('escapeHtml');
+$email = filter_var($info['email'], FILTER_VALIDATE_EMAIL) ? $info['email'] : '';
+$tel = preg_replace('/[^0-9+]/', '', $info['phone']);
+?>
+<div class="special-blocks special-blocks-visit-info special-blocks-visit-<?php echo $escape($data['layout']); ?>">
+<?php echo $this->partial('common/special-blocks/heading', ['heading' => $data['heading']]); ?>
+<div class="special-blocks-visit">
+    <?php if ($info['hours'] || $info['hours_note'] !== ''): ?>
+    <section class="special-blocks-visit-part">
+        <h3><?php echo $escape($this->translate('Hours')); ?></h3>
+        <?php if ($info['hours']): ?>
+        <dl class="special-blocks-hours">
+            <?php foreach ($info['hours'] as $row): ?>
+            <div><dt><?php echo $escape($row['days']); ?></dt><dd><?php echo $escape($row['times']); ?></dd></div>
+            <?php endforeach; ?>
+        </dl>
+        <?php endif; ?>
+        <?php if ($info['hours_note'] !== ''): ?><p class="special-blocks-note"><?php echo $escape($info['hours_note']); ?></p><?php endif; ?>
+    </section>
+    <?php endif; ?>
+    <?php if ($info['address'] !== ''): ?>
+    <section class="special-blocks-visit-part">
+        <h3><?php echo $escape($this->translate('Location')); ?></h3>
+        <address><?php echo nl2br($escape($info['address'])); ?></address>
+        <?php if ($info['directions_url'] !== ''): ?><p><a href="<?php echo $escape($info['directions_url']); ?>"><?php echo $escape($this->translate('Get directions')); ?></a></p><?php endif; ?>
+    </section>
+    <?php endif; ?>
+    <?php if ($info['admission'] !== ''): ?>
+    <section class="special-blocks-visit-part">
+        <h3><?php echo $escape($this->translate('Admission')); ?></h3>
+        <p><?php echo nl2br($escape($info['admission'])); ?></p>
+    </section>
+    <?php endif; ?>
+    <?php if ($info['phone'] !== '' || $email || $info['notes'] !== ''): ?>
+    <section class="special-blocks-visit-part">
+        <h3><?php echo $escape($this->translate('Contact')); ?></h3>
+        <?php if ($info['phone'] !== ''): ?><p><?php echo $tel ? '<a href="tel:' . $escape($tel) . '">' . $escape($info['phone']) . '</a>' : $escape($info['phone']); ?></p><?php endif; ?>
+        <?php if ($email): ?><p><a href="mailto:<?php echo $escape($email); ?>"><?php echo $escape($email); ?></a></p><?php endif; ?>
+        <?php if ($info['notes'] !== ''): ?><div class="special-blocks-notes"><?php echo $info['notes']; ?></div><?php endif; ?>
+    </section>
+    <?php endif; ?>
+</div>
+</div>

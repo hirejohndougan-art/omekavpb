@@ -1,0 +1,49 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Table of contents ("On this page"). Plain links to #ids on the page, nested
+ * by level (Heading 2, 3, 4 and Table links); the small
+ * special-blocks/js/jump-links.js glides there (unless reduced motion) and
+ * moves keyboard focus to the spot.
+ *
+ * @var array $data
+ * @var array $entries [['id', 'label', 'level' (1-3), 'num' ("1.2")], …]
+ * @var bool $isPreview
+ */
+$escape = $this->plugin('escapeHtml');
+if ($isPreview) {
+    echo '<p class="special-blocks-note">' . $escape($this->translate('Table of contents: on the page this lists your headings (Heading 2, 3, and 4) and Table links, in page order.')) . '</p>';
+    return;
+}
+if (!$entries) {
+    return;
+}
+$this->headScript()->appendFile($this->assetUrl('special-blocks/js/jump-links.js', 'VisualPageBuilder'), 'text/javascript', ['defer' => 'defer']);
+$tag = $data['numbered'] ? 'ol' : 'ul';
+$flat = $data['style'] === 'row';
+$link = function (array $e) use ($escape, $data) {
+    $num = $data['numbered'] ? '<span class="special-blocks-jump-num">' . $escape($e['num']) . '</span> ' : '';
+    return $num . '<a href="#' . $escape($e['id']) . '">' . $escape($e['label']) . '</a>';
+};
+?>
+<nav class="special-blocks special-blocks-jump-links special-blocks-jump-<?php echo $escape($data['style']); ?><?php echo $data['numbered'] ? ' special-blocks-jump-numbered' : ''; ?>" aria-label="<?php echo $escape($data['heading'] ?: $this->translate('On this page')); ?>">
+<?php echo $this->partial('common/special-blocks/heading', ['heading' => $data['heading']]); ?>
+<?php
+$out = '<' . $tag . ' class="special-blocks-jump-list">';
+$cur = 1;
+foreach ($entries as $i => $e) {
+    $level = $flat ? 1 : (int) $e['level'];
+    if ($i > 0) {
+        if ($level > $cur) {
+            $out .= '<' . $tag . '>';
+        } else {
+            $out .= '</li>' . str_repeat('</' . $tag . '></li>', $cur - $level);
+        }
+    }
+    $out .= '<li class="special-blocks-jump-level-' . (int) $e['level'] . '">' . $link($e);
+    $cur = $level;
+}
+$out .= '</li>' . str_repeat('</' . $tag . '></li>', $cur - 1) . '</' . $tag . '>';
+echo $out;
+?>
+</nav>

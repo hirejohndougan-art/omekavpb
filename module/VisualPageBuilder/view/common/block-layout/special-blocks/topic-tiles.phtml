@@ -1,0 +1,28 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Explore by topic: picture tiles with links.
+ *
+ * @var array $data
+ * @var array $tiles [['title', 'text', 'image', 'href'], …]
+ */
+$escape = $this->plugin('escapeHtml');
+if (!$tiles) {
+    return;
+}
+$columns = $data['columns'] === 'auto' ? 'auto' : (int) $data['columns'];
+?>
+<div class="special-blocks special-blocks-topic-tiles special-blocks-tiles-<?php echo $escape($data['style']); ?>">
+<?php echo $this->partial('common/special-blocks/heading', ['heading' => $data['heading']]); ?>
+<ul class="special-blocks-grid special-blocks-grid-wide" data-columns="<?php echo $escape($columns); ?>">
+    <?php foreach ($tiles as $tile): ?>
+    <li class="special-blocks-tile">
+        <?php if ($tile['href']): ?><a href="<?php echo $escape($tile['href']); ?>"><?php endif; ?>
+        <span class="special-blocks-tile-image"><?php if ($tile['image']): ?><img src="<?php echo $escape($tile['image']); ?>" alt="" loading="lazy"><?php endif; ?></span>
+        <span class="special-blocks-tile-title"><?php echo $escape($tile['title']); ?></span>
+        <?php if ($tile['href']): ?></a><?php endif; ?>
+        <?php if ($tile['text'] !== ''): ?><p class="special-blocks-card-description"><?php echo $escape($tile['text']); ?></p><?php endif; ?>
+    </li>
+    <?php endforeach; ?>
+</ul>
+</div>

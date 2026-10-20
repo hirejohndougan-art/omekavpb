@@ -1,0 +1,13 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Table link: an empty, zero-height spot the Table of contents jumps to.
+ *
+ * @var array $data
+ * @var string $anchorId
+ */
+if ($anchorId === '') {
+    return;
+}
+?>
+<span class="vpb-table-link" id="<?php echo $this->escapeHtml($anchorId); ?>" data-vpb-anchor></span>

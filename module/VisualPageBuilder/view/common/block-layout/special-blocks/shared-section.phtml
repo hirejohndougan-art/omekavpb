@@ -1,0 +1,16 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Shared section.
+ *
+ * @var string $html the shared section, drawn like a page
+ * @var bool $missing
+ * @var bool $isPreview
+ */
+if ($missing) {
+    if ($isPreview) {
+        echo '<p class="special-blocks-note">' . $this->escapeHtml($this->translate('Shared section: choose one in the sidebar.')) . '</p>';
+    }
+    return;
+}
+echo '<div class="special-blocks-shared-section">' . $html . '</div>';

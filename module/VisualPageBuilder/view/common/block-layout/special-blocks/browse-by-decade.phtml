@@ -1,0 +1,21 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Browse by decade.
+ *
+ * @var array $data
+ * @var array $decades [['label', 'count', 'url'], …]
+ */
+$escape = $this->plugin('escapeHtml');
+if (!$decades) {
+    return;
+}
+?>
+<nav class="special-blocks special-blocks-browse-by-decade" aria-label="<?php echo $escape($data['heading'] ?: $this->translate('Browse by decade')); ?>">
+<?php echo $this->partial('common/special-blocks/heading', ['heading' => $data['heading']]); ?>
+<ul class="special-blocks-decades">
+    <?php foreach ($decades as $d): ?>
+    <li><a href="<?php echo $escape($d['url']); ?>"><span class="special-blocks-decade"><?php echo $escape($d['label']); ?></span><?php if ($data['show_count']): ?> <span class="special-blocks-count"><?php echo $escape(sprintf($this->translatePlural('%s item', '%s items', $d['count']), $this->specialBlocksNumber($d['count']))); ?></span><?php endif; ?></a></li>
+    <?php endforeach; ?>
+</ul>
+</nav>

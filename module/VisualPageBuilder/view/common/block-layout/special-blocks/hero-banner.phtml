@@ -1,0 +1,29 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Wide image with text over it.
+ *
+ * @var array $data
+ * @var string|null $imageUrl
+ */
+$escape = $this->plugin('escapeHtml');
+$classes = [
+    'special-blocks', 'special-blocks-hero-banner',
+    'special-blocks-hero-' . $data['height'],
+    'special-blocks-hero-text-' . $data['text_position'],
+    'special-blocks-hero-shade-' . $data['shade'],
+    $imageUrl ? 'has-image' : 'no-image',
+];
+?>
+<div class="<?php echo $escape(implode(' ', $classes)); ?>">
+    <?php if ($imageUrl): ?>
+    <img class="special-blocks-hero-image" src="<?php echo $escape($imageUrl); ?>" alt="<?php echo $escape($data['alt']); ?>" style="object-position: center <?php echo $escape($data['focus']); ?>">
+    <?php endif; ?>
+    <div class="special-blocks-hero-text">
+        <?php if ($data['title'] !== ''): ?><h2 class="special-blocks-hero-title"><?php echo $escape($data['title']); ?></h2><?php endif; ?>
+        <?php if ($data['subtitle'] !== ''): ?><p class="special-blocks-hero-subtitle"><?php echo nl2br($escape($data['subtitle'])); ?></p><?php endif; ?>
+        <?php if ($data['button_text'] !== '' && $data['button_url'] !== ''): ?>
+        <a class="special-blocks-button special-blocks-button-primary" href="<?php echo $escape($data['button_url']); ?>"><?php echo $escape($data['button_text']); ?></a>
+        <?php endif; ?>
+    </div>
+</div>

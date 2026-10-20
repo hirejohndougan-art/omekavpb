@@ -1,0 +1,28 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Milestones timeline.
+ *
+ * @var array $data
+ * @var array $milestones [['when', 'title', 'text', 'image'], …]
+ */
+$escape = $this->plugin('escapeHtml');
+if (!$milestones) {
+    return;
+}
+?>
+<div class="special-blocks special-blocks-milestones">
+<?php echo $this->partial('common/special-blocks/heading', ['heading' => $data['heading']]); ?>
+<ol class="special-blocks-timeline">
+    <?php foreach ($milestones as $m): ?>
+    <li class="special-blocks-milestone">
+        <span class="special-blocks-milestone-when"><?php echo $escape($m['when']); ?></span>
+        <div class="special-blocks-milestone-body">
+            <?php if ($m['title'] !== ''): ?><h3><?php echo $escape($m['title']); ?></h3><?php endif; ?>
+            <?php if ($m['text'] !== ''): ?><p><?php echo nl2br($escape($m['text'])); ?></p><?php endif; ?>
+            <?php if ($m['image']): ?><img src="<?php echo $escape($m['image']); ?>" alt="" loading="lazy"><?php endif; ?>
+        </div>
+    </li>
+    <?php endforeach; ?>
+</ol>
+</div>

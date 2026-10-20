@@ -1,0 +1,28 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Visual Builder: choose a site.
+ *
+ * @var \Omeka\Api\Representation\SiteRepresentation[] $sites
+ */
+$escape = $this->plugin('escapeHtml');
+echo $this->pageTitle($this->translate('Visual Builder'));
+?>
+<p><?php echo $escape($this->translate('Choose a site to build its pages, header, footer, and menu.')); ?></p>
+<?php if (!$sites): ?>
+<p><?php echo $escape($this->translate('There are no sites you can edit.')); ?></p>
+<?php else: ?>
+<table class="tablesaw" data-tablesaw-mode="stack">
+    <thead><tr><th><?php echo $escape($this->translate('Site')); ?></th><th><?php echo $escape($this->translate('Pages')); ?></th><th></th></tr></thead>
+    <tbody>
+    <?php foreach ($sites as $site): ?>
+    <?php $count = count(array_filter($site->pages(), function ($p) { return !\VisualPageBuilder\SiteRegions::isHiddenSlug($p->slug()); })); ?>
+    <tr>
+        <td><a href="<?php echo $escape($this->url('admin/visual-page-builder-pages', ['site-slug' => $site->slug()])); ?>"><?php echo $escape($site->title()); ?></a></td>
+        <td><?php echo $escape($this->specialBlocksNumber($count)); ?></td>
+        <td><a class="button" href="<?php echo $escape($this->url('admin/visual-page-builder-pages', ['site-slug' => $site->slug()])); ?>"><?php echo $escape($this->translate('Open')); ?></a></td>
+    </tr>
+    <?php endforeach; ?>
+    </tbody>
+</table>
+<?php endif; ?>

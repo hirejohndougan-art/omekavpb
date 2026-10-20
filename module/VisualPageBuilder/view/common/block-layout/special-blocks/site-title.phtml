@@ -1,0 +1,15 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Site title with optional tagline, linking home.
+ *
+ * @var array $data
+ * @var string $title
+ * @var string $homeUrl
+ */
+$escape = $this->plugin('escapeHtml');
+?>
+<div class="special-blocks special-blocks-site-title special-blocks-align-<?php echo $escape($data['align']); ?> special-blocks-title-<?php echo $escape($data['size']); ?>">
+    <a href="<?php echo $escape($homeUrl); ?>" class="special-blocks-site-name"><?php echo $escape($title); ?></a>
+    <?php if ($data['tagline'] !== ''): ?><p class="special-blocks-tagline"><?php echo $escape($data['tagline']); ?></p><?php endif; ?>
+</div>

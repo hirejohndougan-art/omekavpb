@@ -1,0 +1,24 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * A pull quote.
+ *
+ * @var array $data
+ * @var string|null $sourceUrl
+ */
+$escape = $this->plugin('escapeHtml');
+if ($data['text'] === '') {
+    return;
+}
+?>
+<figure class="special-blocks special-blocks-quote special-blocks-quote-<?php echo $escape($data['style']); ?>">
+    <blockquote><p><?php echo nl2br($escape($data['text'])); ?></p></blockquote>
+    <?php if ($data['attribution'] !== '' || $data['context'] !== ''): ?>
+    <figcaption>
+        <?php if ($data['attribution'] !== ''): ?>
+        <?php if ($sourceUrl): ?><a href="<?php echo $escape($sourceUrl); ?>"><?php endif; ?><span class="special-blocks-quote-who"><?php echo $escape($data['attribution']); ?></span><?php if ($sourceUrl): ?></a><?php endif; ?>
+        <?php endif; ?>
+        <?php if ($data['context'] !== ''): ?><span class="special-blocks-quote-context"><?php echo $escape($data['context']); ?></span><?php endif; ?>
+    </figcaption>
+    <?php endif; ?>
+</figure>

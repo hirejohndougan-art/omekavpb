@@ -1,0 +1,49 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Map of places. special-blocks/js/places-map.js draws the map from
+ * data-places with the module's own map; the list under it works without JavaScript.
+ *
+ * @var array $data
+ * @var array $places [['name', 'lat', 'lng', 'note', 'url', 'thumb', 'itemTitle'], …]
+ * @var string $mapId
+ * @var bool $isPreview
+ */
+$escape = $this->plugin('escapeHtml');
+if (!$places) {
+    if ($isPreview) {
+        echo '<p class="special-blocks-note">' . $escape($this->translate('Map of places: add places in the sidebar (click the map there) to show the map.')) . '</p>';
+    }
+    return;
+}
+$this->headLink()->appendStylesheet($this->assetUrl('map/vpb-map.css', 'VisualPageBuilder'), 'all');
+$this->headScript()->appendFile($this->assetUrl('map/vpb-map.js', 'VisualPageBuilder'), 'text/javascript', ['defer' => 'defer']);
+$this->headScript()->appendFile($this->assetUrl('special-blocks/js/places-map.js', 'VisualPageBuilder'), 'text/javascript', ['defer' => 'defer']);
+$pins = array_map(function ($p) {
+    return ['name' => $p['name'], 'lat' => $p['lat'], 'lng' => $p['lng'], 'note' => $p['note'], 'url' => $p['url'], 'thumb' => $p['thumb']];
+}, $places);
+?>
+<div class="special-blocks special-blocks-places-map<?php echo $data['tour'] ? ' special-blocks-map-tour' : ''; ?>">
+<?php echo $this->partial('common/special-blocks/heading', ['heading' => $data['heading']]); ?>
+<?php if (!$isPreview): ?>
+<div class="special-blocks-map special-blocks-map-<?php echo $escape($data['height']); ?>" id="<?php echo $escape($mapId); ?>" role="region" aria-label="<?php echo $escape($this->translate('Map')); ?>"
+    data-places="<?php echo $escape(json_encode($pins)); ?>" data-tour="<?php echo $data['tour'] ? '1' : '0'; ?>"
+    data-view-item="<?php echo $escape($this->translate('View the item')); ?>"></div>
+<?php else: ?>
+<div class="special-blocks-map special-blocks-map-<?php echo $escape($data['height']); ?> special-blocks-map-placeholder"><span><?php echo $escape(sprintf($this->translatePlural('Map with %s place', 'Map with %s places', count($places)), count($places))); ?></span></div>
+<?php endif; ?>
+<?php if ($data['show_list'] || $isPreview): ?>
+<<?php echo $data['tour'] ? 'ol' : 'ul'; ?> class="special-blocks-map-list">
+    <?php foreach ($places as $p): ?>
+    <li>
+        <?php if ($p['thumb']): ?><img src="<?php echo $escape($p['thumb']); ?>" alt="" loading="lazy"><?php endif; ?>
+        <span>
+            <strong><?php echo $escape($p['name']); ?></strong>
+            <?php if ($p['note'] !== ''): ?><br><?php echo nl2br($escape($p['note'])); ?><?php endif; ?>
+            <?php if ($p['url']): ?><br><a href="<?php echo $escape($p['url']); ?>"><?php echo $escape($p['itemTitle']); ?></a><?php endif; ?>
+        </span>
+    </li>
+    <?php endforeach; ?>
+</<?php echo $data['tour'] ? 'ol' : 'ul'; ?>>
+<?php endif; ?>
+</div>

@@ -1,0 +1,34 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Two photos compared with a slider (added by asset/js/then-and-now.js).
+ * Without JavaScript both photos show, labeled, one after the other.
+ *
+ * @var array $data
+ * @var array $before ['url', 'label', 'alt']
+ * @var array $after  ['url', 'label', 'alt']
+ * @var string $sliderId
+ */
+$escape = $this->plugin('escapeHtml');
+if (!$before['url'] || !$after['url']) {
+    return;
+}
+$this->headScript()->appendFile($this->assetUrl('special-blocks/js/then-and-now.js', 'VisualPageBuilder'), 'text/javascript', ['defer' => 'defer']);
+?>
+<figure class="special-blocks special-blocks-then-and-now" data-start="<?php echo (int) $data['start']; ?>">
+    <div class="special-blocks-compare">
+        <div class="special-blocks-compare-after">
+            <img src="<?php echo $escape($after['url']); ?>" alt="<?php echo $escape($after['alt']); ?>">
+            <span class="special-blocks-compare-label special-blocks-compare-label-after"><?php echo $escape($after['label']); ?></span>
+        </div>
+        <div class="special-blocks-compare-before">
+            <img src="<?php echo $escape($before['url']); ?>" alt="<?php echo $escape($before['alt']); ?>">
+            <span class="special-blocks-compare-label special-blocks-compare-label-before"><?php echo $escape($before['label']); ?></span>
+        </div>
+        <label class="special-blocks-visually-hidden" for="<?php echo $escape($sliderId); ?>"><?php echo $escape(sprintf($this->translate('Compare %1$s and %2$s'), $before['label'], $after['label'])); ?></label>
+        <input class="special-blocks-compare-slider" id="<?php echo $escape($sliderId); ?>" type="range" min="0" max="100" value="<?php echo (int) $data['start']; ?>" hidden>
+    </div>
+    <?php if ($data['caption'] !== ''): ?>
+    <figcaption><?php echo nl2br($escape($data['caption'])); ?></figcaption>
+    <?php endif; ?>
+</figure>

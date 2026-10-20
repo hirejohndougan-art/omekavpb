@@ -1,0 +1,31 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * One featured item.
+ *
+ * @var array $data
+ * @var \Omeka\Api\Representation\ItemRepresentation|null $item
+ * @var string|null $url
+ */
+$escape = $this->plugin('escapeHtml');
+if (!$item) {
+    return;
+}
+$thumb = $item->thumbnailDisplayUrl($data['thumbnail_type']);
+$description = $data['show_description'] ? $item->displayDescription() : null;
+?>
+<div class="special-blocks special-blocks-item-spotlight special-blocks-image-<?php echo $escape($data['image_position']); ?>">
+<?php echo $this->partial('common/special-blocks/heading', ['heading' => $data['heading']]); ?>
+<div class="special-blocks-spotlight">
+    <?php if ($thumb): ?>
+    <img class="special-blocks-spotlight-image" src="<?php echo $escape($thumb); ?>" alt="" loading="lazy">
+    <?php endif; ?>
+    <div class="special-blocks-spotlight-text">
+        <h3 class="special-blocks-spotlight-title"><?php echo $escape($item->displayTitle()); ?></h3>
+        <?php if ($description): ?><p><?php echo $escape($description); ?></p><?php endif; ?>
+        <?php if ($url && $data['link_text'] !== ''): ?>
+        <p class="special-blocks-more"><a href="<?php echo $escape($url); ?>"><?php echo $escape($data['link_text']); ?></a></p>
+        <?php endif; ?>
+    </div>
+</div>
+</div>

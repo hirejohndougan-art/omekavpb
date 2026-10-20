@@ -1,0 +1,34 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Item table. Click a column heading to sort (special-blocks/js/item-table.js).
+ *
+ * @var array $data
+ * @var array $columns term => heading
+ * @var array $rows [['title', 'url', 'cells' => [...]], …]
+ */
+$escape = $this->plugin('escapeHtml');
+if (!$rows) {
+    return;
+}
+$this->headScript()->appendFile($this->assetUrl('special-blocks/js/item-table.js', 'VisualPageBuilder'), 'text/javascript', ['defer' => 'defer']);
+?>
+<div class="special-blocks special-blocks-item-table">
+<?php echo $this->partial('common/special-blocks/heading', ['heading' => $data['heading']]); ?>
+<div class="special-blocks-table-scroll" tabindex="0" role="region" aria-label="<?php echo $escape($data['heading'] ?: $this->translate('Items')); ?>">
+<table>
+    <thead><tr>
+        <th scope="col"><?php echo $escape($this->translate('Title')); ?></th>
+        <?php foreach ($columns as $heading): ?><th scope="col"><?php echo $escape($heading); ?></th><?php endforeach; ?>
+    </tr></thead>
+    <tbody>
+    <?php foreach ($rows as $row): ?>
+    <tr>
+        <td><?php if ($row['url']): ?><a href="<?php echo $escape($row['url']); ?>"><?php echo $escape($row['title']); ?></a><?php else: ?><?php echo $escape($row['title']); ?><?php endif; ?></td>
+        <?php foreach ($row['cells'] as $cell): ?><td><?php echo $escape($cell); ?></td><?php endforeach; ?>
+    </tr>
+    <?php endforeach; ?>
+    </tbody>
+</table>
+</div>
+</div>

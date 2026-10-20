@@ -1,0 +1,106 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * @var \Laminas\View\Renderer\PhpRenderer $this
+ * @var array $config
+ * @var \Omeka\Api\Representation\SitePageRepresentation $page
+ */
+$escape = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+$json = json_encode($config, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE);
+?><!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title><?php echo $escape(sprintf($translate('Visual editor: %s'), $page->title())); ?></title>
+<link rel="stylesheet" href="<?php echo $escape($this->assetUrl('css/editor.css', 'VisualPageBuilder')); ?>">
+<link rel="stylesheet" href="<?php echo $escape($this->assetUrl('map/vpb-map.css', 'VisualPageBuilder')); ?>">
+<script src="<?php echo $escape($this->assetUrl('map/vpb-map.js', 'VisualPageBuilder')); ?>"></script>
+<?php foreach ($config['stylesheets'] as $sheet): // Styles other modules' block previews use. ?>
+<link rel="stylesheet" href="<?php echo $escape($sheet); ?>">
+<?php endforeach; ?>
+</head>
+<body class="editing">
+<div class="app">
+  <header class="top">
+    <button type="button" class="icon-btn" id="sideToggle" aria-controls="side" aria-expanded="true" aria-label="Hide sidebar" title="Hide sidebar (Ctrl+\)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button>
+    <a class="btn hub-back" id="backToHub" href="<?php echo $escape($config['hubUrl']); ?>" title="<?php echo $escape($translate('Back to this site in the Visual Builder')); ?>"><span aria-hidden="true">&larr;</span> <?php echo $escape($translate('Visual Builder')); ?></a>
+    <div class="crumbs">
+      <a href="<?php echo $escape($config['hubUrl']); ?>"><?php echo $escape($page->site()->title()); ?></a>
+      <span aria-hidden="true">/</span>
+      <span class="page-name"><?php echo $escape($page->title()); ?></span>
+    </div>
+    <div class="seg" role="group" aria-label="Preview width">
+      <button type="button" data-dev="desktop" aria-pressed="true">Desktop</button>
+      <button type="button" data-dev="tablet" aria-pressed="false">Tablet</button>
+      <button type="button" data-dev="phone" aria-pressed="false">Phone</button>
+    </div>
+    <div class="actions">
+      <span class="status" id="status" role="status" aria-live="polite">No changes</span>
+      <button type="button" class="icon-btn" id="undo" aria-label="Undo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 010 10h-3"/></svg></button>
+      <button type="button" class="icon-btn" id="redo" aria-label="Redo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 000 10h3"/></svg></button>
+      <?php if ($config['region'] !== 'header'): ?><a class="btn" href="<?php echo $escape($config['regionUrls']['header']); ?>" title="<?php echo $escape($translate('Build the header shown at the top of every page')); ?>"><?php echo $escape($translate('Header')); ?></a><?php endif; ?>
+      <?php if ($config['region'] !== 'footer'): ?><a class="btn" href="<?php echo $escape($config['regionUrls']['footer']); ?>" title="<?php echo $escape($translate('Build the footer shown at the bottom of every page')); ?>"><?php echo $escape($translate('Footer')); ?></a><?php endif; ?>
+      <a class="btn" href="<?php echo $escape($config['menuUrl']); ?>" title="<?php echo $escape($translate('Arrange the site menu and choose its style')); ?>"><?php echo $escape($translate('Menu')); ?></a>
+      <a class="btn" id="standardLink" href="<?php echo $escape($config['standardEditUrl']); ?>">Standard editor</a>
+      <a class="btn" href="<?php echo $escape($config['publicUrl']); ?>" target="_blank" rel="noopener noreferrer">View page</a>
+      <button type="button" class="btn" id="pageMenuBtn" aria-haspopup="menu" aria-expanded="false" title="<?php echo $escape($translate('History, download or import the layout, check the page')); ?>"><?php echo $escape($translate('Page')); ?> &#9662;</button>
+      <button type="button" class="btn" id="previewBtn" aria-pressed="false">Preview</button>
+      <?php if (!$config['region'] && !$config['isShared']): ?><button type="button" class="btn" id="sitePreviewBtn" title="<?php echo $escape($translate('See the unsaved page on your site, with its theme, header, and footer')); ?>"><?php echo $escape($translate('Preview on site')); ?></button><?php endif; ?>
+      <button type="button" class="btn primary" id="saveBtn">Save</button>
+    </div>
+  </header>
+  <div class="main">
+    <aside class="side" id="side" aria-label="Elements and settings">
+      <div class="sheet-close"><button type="button" class="icon-btn" data-close="side" aria-label="Close panel"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div id="palView">
+        <div id="notice"></div>
+        <div id="selBar"></div>
+        <div id="palette"></div>
+        <p class="hint">Start with a section, then drag blocks into its columns. Drag the bar between two columns to change their widths. Click anything on the page to open its settings here.</p>
+      </div>
+      <div id="propsView" hidden></div>
+    </aside>
+    <div class="side-resize" id="sideResize" role="separator" aria-orientation="vertical" aria-controls="side" aria-label="Sidebar width. Drag, or use the left and right arrow keys. Double-click to reset." title="Drag to change the sidebar width. Double-click to reset." tabindex="0"><span></span></div>
+    <main class="canvas-wrap" id="canvasWrap">
+      <div class="page" id="page">
+        <div id="regionTop"></div>
+        <div class="secs" id="secs"></div>
+        <div id="regionBottom"></div>
+      </div>
+    </main>
+  </div>
+</div>
+<nav class="bottom-bar" aria-label="Editor panels">
+  <button type="button" id="openBlocks" aria-pressed="false">Add</button>
+  <button type="button" id="openProps" aria-pressed="false">Settings</button>
+</nav>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script type="application/json" id="vpb-config"><?php echo $json; ?></script>
+<?php
+// Editor scripts, in load order. See the header of editor/core.js for how the
+// parts fit together. A file may read another part while loading only if that
+// part is listed above it. To support another block layout, add a file under
+// editor/blocks/ after blocks/registry (or give the layout a schema; see
+// README, "Blocks from other modules").
+$scripts = [
+    'core', 'dom', 'model', 'store', 'fields', 'toc', 'picker', 'previews',
+    'blocks/registry', 'blocks/about', 'blocks/html', 'blocks/page-title', 'blocks/attachments',
+    'blocks/media', 'blocks/item-with-metadata', 'blocks/asset', 'blocks/browse-preview',
+    'blocks/list-of-sites', 'blocks/page-date-time', 'blocks/table-of-contents',
+    'blocks/line-break', 'blocks/oembed', 'blocks/iiif',
+    'blocks/photo-hotspots', 'blocks/places-map', 'blocks/shared-section',
+    // Last among blocks: forms for other modules' blocks that have a schema.
+    'blocks/schema',
+    // Table of contents and Table link: patch the schema-built forms.
+    'blocks/toc-blocks', 'blocks/site-menu',
+    'templates/catalog', 'templates/home', 'templates/browse', 'templates/story',
+    'templates/about', 'templates/contact', 'templates/events', 'templates/regions', 'templates/sections',
+    'actions', 'canvas', 'drag', 'resize', 'layers', 'templates-panel', 'palette', 'sidebar', 'side-resize', 'save', 'theme-preview', 'regions-view', 'page-check', 'page-tools', 'app',
+];
+foreach ($scripts as $script): ?>
+<script src="<?php echo $escape($this->assetUrl('js/editor/' . $script . '.js', 'VisualPageBuilder')); ?>"></script>
+<?php endforeach; ?>
+</body>
+</html>

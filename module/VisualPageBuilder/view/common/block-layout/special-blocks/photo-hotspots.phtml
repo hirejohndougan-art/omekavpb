@@ -1,0 +1,36 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Who's who in this photo. Markers are buttons positioned by percentage;
+ * special-blocks/js/hotspots.js shows a marker's note when tapped. The
+ * numbered list below names everyone, with or without JavaScript.
+ *
+ * @var array $data
+ * @var string|null $imageUrl
+ * @var array $markers [['label', 'note', 'x', 'y'], …]
+ * @var string $idBase
+ */
+$escape = $this->plugin('escapeHtml');
+if (!$imageUrl) {
+    return;
+}
+$this->headScript()->appendFile($this->assetUrl('special-blocks/js/hotspots.js', 'VisualPageBuilder'), 'text/javascript', ['defer' => 'defer']);
+?>
+<figure class="special-blocks special-blocks-photo-hotspots">
+<?php echo $this->partial('common/special-blocks/heading', ['heading' => $data['heading']]); ?>
+<div class="special-blocks-hotspot-photo">
+    <img src="<?php echo $escape($imageUrl); ?>" alt="<?php echo $escape($data['alt']); ?>">
+    <?php foreach ($markers as $i => $m): ?>
+    <button type="button" class="special-blocks-hotspot" style="left: <?php echo (int) $m['x']; ?>%; top: <?php echo (int) $m['y']; ?>%" aria-describedby="<?php echo $escape($idBase . '-' . $i); ?>" aria-expanded="false" aria-label="<?php echo $escape(($i + 1) . ': ' . $m['label']); ?>"><?php echo $i + 1; ?></button>
+    <?php endforeach; ?>
+    <div class="special-blocks-hotspot-bubble" role="status" aria-live="polite" hidden></div>
+</div>
+<?php if ($data['caption'] !== ''): ?><figcaption><?php echo nl2br($escape($data['caption'])); ?></figcaption><?php endif; ?>
+<?php if ($markers): ?>
+<ol class="special-blocks-hotspot-list<?php echo $data['show_list'] ? '' : ' special-blocks-visually-hidden'; ?>">
+    <?php foreach ($markers as $i => $m): ?>
+    <li id="<?php echo $escape($idBase . '-' . $i); ?>"><strong><?php echo $escape($m['label']); ?></strong><?php if ($m['note'] !== ''): ?> <span class="special-blocks-hotspot-note"><?php echo $escape($m['note']); ?></span><?php endif; ?></li>
+    <?php endforeach; ?>
+</ol>
+<?php endif; ?>
+</figure>

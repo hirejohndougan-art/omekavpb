@@ -1,0 +1,35 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Featured slideshow. special-blocks/js/slideshow.js turns the list into a
+ * slideshow with Previous/Next, dots, and Pause. Without it, slides stack.
+ *
+ * @var array $data
+ * @var array $slides [['title', 'image', 'alt', 'text', 'button_text', 'href'], …]
+ * @var string $blockKey
+ */
+$escape = $this->plugin('escapeHtml');
+if (!$slides) {
+    // In the visual editor, explain an empty slideshow (e.g. fresh from a template).
+    if (!empty($needsImages) && $blockKey === 'preview') {
+        echo '<p class="special-blocks-note">' . $escape($this->translate('Featured slideshow: choose a photo for each slide to show it.')) . '</p>';
+    }
+    return;
+}
+$this->headScript()->appendFile($this->assetUrl('special-blocks/js/slideshow.js', 'VisualPageBuilder'), 'text/javascript', ['defer' => 'defer']);
+$id = 'special-slides-' . preg_replace('/[^a-z0-9]/i', '', $blockKey);
+?>
+<section class="special-blocks special-blocks-slideshow special-blocks-slideshow-<?php echo $escape($data['height']); ?>" aria-roledescription="carousel" aria-label="<?php echo $escape($this->translate('Featured')); ?>" data-seconds="<?php echo (int) $data['seconds']; ?>">
+    <ul class="special-blocks-slides" id="<?php echo $escape($id); ?>" aria-live="off">
+        <?php foreach ($slides as $i => $slide): ?>
+        <li class="special-blocks-slide" role="group" aria-roledescription="slide" aria-label="<?php echo $escape(sprintf($this->translate('%1$s of %2$s'), $i + 1, count($slides))); ?>">
+            <img src="<?php echo $escape($slide['image']); ?>" alt="<?php echo $escape($slide['alt']); ?>"<?php echo $i ? ' loading="lazy"' : ''; ?>>
+            <div class="special-blocks-slide-text">
+                <?php if ($slide['title'] !== ''): ?><h2 class="special-blocks-slide-title"><?php echo $escape($slide['title']); ?></h2><?php endif; ?>
+                <?php if ($slide['text'] !== ''): ?><p><?php echo nl2br($escape($slide['text'])); ?></p><?php endif; ?>
+                <?php if ($slide['button_text'] !== '' && $slide['href']): ?><a class="special-blocks-button special-blocks-button-primary" href="<?php echo $escape($slide['href']); ?>"><?php echo $escape($slide['button_text']); ?></a><?php endif; ?>
+            </div>
+        </li>
+        <?php endforeach; ?>
+    </ul>
+</section>

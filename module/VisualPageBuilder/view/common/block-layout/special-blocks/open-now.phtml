@@ -1,0 +1,33 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Open now / closed now, from the block's weekly hours (worked out when the
+ * page is shown, in Omeka's time zone).
+ *
+ * @var array $data
+ * @var array $status ['open', 'until', 'next' => ['day', 'time'], 'note']
+ * @var array $week [['day', 'hours'], …]
+ * @var bool $hasHours
+ * @var array $clientData for open-now.js: week ranges, closed dates, time zone, text
+ */
+$escape = $this->plugin('escapeHtml');
+if (!$hasHours) {
+    return;
+}
+$this->headScript()->appendFile($this->assetUrl('special-blocks/js/open-now.js', 'VisualPageBuilder'), 'text/javascript', ['defer' => 'defer']);
+?>
+<div class="special-blocks special-blocks-open-now special-blocks-align-<?php echo $escape($data['align']); ?>" data-hours="<?php echo $escape(json_encode($clientData)); ?>">
+<p class="special-blocks-open-status <?php echo $status['open'] ? 'is-open' : 'is-closed'; ?>" aria-live="polite">
+    <span class="special-blocks-open-dot" aria-hidden="true"></span>
+    <?php if ($status['open']): ?>
+    <strong><?php echo $escape($this->translate('Open now')); ?></strong> · <?php echo $escape(sprintf($this->translate('until %s'), $status['until'])); ?>
+    <?php else: ?>
+    <strong><?php echo $escape($this->translate('Closed now')); ?></strong><?php if ($status['note'] !== ''): ?> (<?php echo $escape($status['note']); ?>)<?php endif; ?><?php if ($status['next']): ?> · <?php echo $escape(sprintf($this->translate('opens %1$s at %2$s'), $this->translate($status['next']['day']), $status['next']['time'])); ?><?php endif; ?>
+    <?php endif; ?>
+</p>
+<?php if ($data['show_week']): ?>
+<dl class="special-blocks-hours">
+    <?php foreach ($week as $w): ?><div><dt><?php echo $escape($w['day']); ?></dt><dd><?php echo $escape($w['hours']); ?></dd></div><?php endforeach; ?>
+</dl>
+<?php endif; ?>
+</div>

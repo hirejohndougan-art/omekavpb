@@ -1,0 +1,24 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * A search field that opens the chosen site's item browse page.
+ *
+ * @var array $data
+ * @var string $action  the results page URL
+ * @var string $inputId
+ */
+$escape = $this->plugin('escapeHtml');
+?>
+<div class="special-blocks special-blocks-search-box special-blocks-search-<?php echo $escape($data['size']); ?>">
+<?php echo $this->partial('common/special-blocks/heading', ['heading' => $data['heading']]); ?>
+<form class="special-blocks-search" role="search" method="get" action="<?php echo $escape($action); ?>">
+    <label for="<?php echo $escape($inputId); ?>" class="<?php echo $data['show_label'] ? 'special-blocks-search-label' : 'special-blocks-visually-hidden'; ?>"><?php echo $escape($data['label']); ?></label>
+    <span class="special-blocks-search-row">
+        <input type="search" id="<?php echo $escape($inputId); ?>" name="fulltext_search" placeholder="<?php echo $escape($data['placeholder']); ?>">
+        <?php foreach ($data['item_set_ids'] as $id): ?>
+        <input type="hidden" name="item_set_id[]" value="<?php echo (int) $id; ?>">
+        <?php endforeach; ?>
+        <button type="submit"><?php echo $escape($data['button_text']); ?></button>
+    </span>
+</form>
+</div>

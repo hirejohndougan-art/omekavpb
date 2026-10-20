@@ -1,0 +1,29 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Gallery. Each photo links to its item page; special-blocks/js/gallery.js
+ * opens it large instead, with Previous/Next.
+ *
+ * @var array $data
+ * @var array $photos [['item', 'caption', 'thumb', 'large', 'url'], …]
+ */
+$escape = $this->plugin('escapeHtml');
+if (!$photos) {
+    return;
+}
+$this->headScript()->appendFile($this->assetUrl('special-blocks/js/gallery.js', 'VisualPageBuilder'), 'text/javascript', ['defer' => 'defer']);
+$columns = $data['columns'] === 'auto' ? 'auto' : (int) $data['columns'];
+?>
+<div class="special-blocks special-blocks-gallery">
+<?php echo $this->partial('common/special-blocks/heading', ['heading' => $data['heading']]); ?>
+<ul class="special-blocks-grid special-blocks-gallery-grid" data-columns="<?php echo $escape($columns); ?>">
+    <?php foreach ($photos as $photo): ?>
+    <li class="special-blocks-card">
+        <a class="special-blocks-gallery-link" href="<?php echo $escape($photo['url'] ?: $photo['large']); ?>" data-large="<?php echo $escape($photo['large']); ?>" data-caption="<?php echo $escape($photo['caption']); ?>" data-item-url="<?php echo $escape((string) $photo['url']); ?>">
+            <img class="special-blocks-thumb special-blocks-thumb-square" src="<?php echo $escape($photo['thumb']); ?>" alt="<?php echo $escape($photo['caption']); ?>" loading="lazy">
+        </a>
+        <?php if ($data['show_captions']): ?><span class="special-blocks-card-description"><?php echo $escape($photo['caption']); ?></span><?php endif; ?>
+    </li>
+    <?php endforeach; ?>
+</ul>
+</div>

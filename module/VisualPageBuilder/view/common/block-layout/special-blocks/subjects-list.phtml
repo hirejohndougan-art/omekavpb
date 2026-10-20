@@ -1,0 +1,21 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Subjects list (or any field's values) with counts.
+ *
+ * @var array $data
+ * @var array $values [['value', 'count', 'url', 'weight' (1–5)], …]
+ */
+$escape = $this->plugin('escapeHtml');
+if (!$values) {
+    return;
+}
+?>
+<nav class="special-blocks special-blocks-subjects-list special-blocks-subjects-<?php echo $escape($data['style']); ?>" aria-label="<?php echo $escape($data['heading'] ?: $this->translate('Subjects')); ?>">
+<?php echo $this->partial('common/special-blocks/heading', ['heading' => $data['heading']]); ?>
+<ul class="special-blocks-subjects">
+    <?php foreach ($values as $v): ?>
+    <li class="special-blocks-weight-<?php echo (int) $v['weight']; ?>"><a href="<?php echo $escape($v['url']); ?>"><?php echo $escape($v['value']); ?><?php if ($data['show_count']): ?> <span class="special-blocks-count">(<?php echo $escape($this->specialBlocksNumber($v['count'])); ?>)</span><?php endif; ?></a></li>
+    <?php endforeach; ?>
+</ul>
+</nav>

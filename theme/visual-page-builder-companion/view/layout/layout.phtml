@@ -1,0 +1,177 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Companion Theme: the frame around every public page.
+ *
+ * Header (logo or title, menu, search) · page content · footer (text, visit
+ * info, social links). If the site's header or footer was built in the
+ * module's visual editor (Modules › Visual Builder), that one is shown
+ * instead of the built-in one. Colors, fonts, and width come from theme settings and
+ * are passed to the stylesheet as CSS variables. The menu style comes from the
+ * Visual Page Builder's Menu page (style, colors, links: the vpbMenu view
+ * helper), falling back to this theme's own setting.
+ *
+ * @var \Omeka\Api\Representation\SiteRepresentation $site
+ */
+$escape = $this->plugin('escapeHtml');
+$setting = function ($name, $default = '') {
+    $v = $this->themeSetting($name);
+    return $v === null || $v === '' ? $default : $v;
+};
+$color = function ($name, $default) use ($setting) {
+    $v = (string) $setting($name, $default);
+    return preg_match('/^#[0-9a-f]{3}([0-9a-f]{3})?$/i', $v) ? $v : $default;
+};
+$fonts = [
+    'serif' => 'Iowan Old Style, Palatino Linotype, Palatino, Georgia, serif',
+    'sans' => 'system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif',
+    'humanist' => 'Seravek, Gill Sans Nova, Gill Sans, Calibri, Ubuntu, sans-serif',
+    'slab' => 'Rockwell, Roboto Slab, DejaVu Serif, Georgia, serif',
+];
+$widths = ['narrow' => '760px', 'standard' => '1100px', 'wide' => '1400px'];
+$styles = ['bar', 'dropdown', 'mega', 'centered', 'sidebar', 'centered-band', 'masthead', 'centered-dividers', 'centered-caps', 'split', 'right', 'pills', 'tabs', 'two-tier', 'button',
+    'sidebar-right', 'vertical-list', 'vertical-flyout', 'vertical-boxed'];
+// Vertical styles run down the side of the page (in the theme's own header).
+$verticalStyles = ['sidebar', 'sidebar-right', 'vertical-list', 'vertical-flyout', 'vertical-boxed'];
+// The Menu page (Visual Page Builder) sets the style, colors, and links; its
+// preview may show unsaved ones. Without the module: this theme's setting.
+$menu = $this->getHelperPluginManager()->has('vpbMenu') ? $this->vpbMenu($site) : ['style' => null, 'vars' => '', 'classes' => '', 'container' => null];
+$menuStyle = $menu['style'] ?: $setting('menu_style', 'dropdown');
+$menuStyle = in_array($menuStyle, $styles, true) ? $menuStyle : 'dropdown';
+$siteTitle = $site->title();
+$logo = $this->themeSettingAssetUrl('logo');
+$safeLink = function ($url) {
+    return is_string($url) && preg_match('~^https?://~i', trim($url)) ? trim($url) : '';
+};
+
+$this->htmlElement('html')->setAttribute('lang', $this->lang());
+$this->headMeta()->setCharset('utf-8');
+$this->headMeta()->appendName('viewport', 'width=device-width, initial-scale=1');
+$this->headTitle($siteTitle)->setSeparator(' · ');
+$this->headLink()->prependStylesheet($this->assetUrl('css/style.css'), 'all');
+$this->headScript()->appendFile($this->assetUrl('js/theme.js'), 'text/javascript', ['defer' => 'defer']);
+$this->htmlElement('body')->appendAttribute('class', 'pb-menu-' . $menuStyle);
+// A header or footer built in the module's visual editor (Header & footer)
+// replaces the built-in one below. Empty if not built, or without the module.
+$builtHeader = $builtFooter = '';
+if ($this->getHelperPluginManager()->has('vpbSiteRegion')) {
+    $builtHeader = $this->vpbSiteRegion($site, 'header');
+    $builtFooter = $this->vpbSiteRegion($site, 'footer');
+}
+// The theme's own header moves to a side column for vertical menus. (In a
+// header built in the visual editor, a Site menu block stacks in its column.)
+if ($builtHeader === '' && in_array($menuStyle, $verticalStyles, true)) {
+    $this->htmlElement('body')->appendAttribute('class', 'pb-menu-side' . ($menuStyle === 'sidebar-right' ? ' pb-menu-side-right' : ''));
+}
+$this->trigger('view.layout');
+// Global styles (Theme Builder): text size, corners, and the named colors.
+$sizes = ['small' => '0.95rem', 'medium' => '1.0625rem', 'large' => '1.15rem'];
+$corners = ['square' => '0', 'soft' => '6px', 'round' => '14px'];
+$accent = $color('accent_color', '#0f5e54');
+$linkColor = $color('link_color', '');
+$vars = sprintf(
+    ':root{--pb-accent:%s;--pb-header:%s;--pb-bg:%s;--pb-heading-font:%s;--pb-body-font:%s;--pb-width:%s;--pb-secondary:%s;--pb-ink:%s;--pb-link:%s;--pb-text-size:%s;--pb-radius:%s}',
+    $accent,
+    $color('header_color', '#ffffff'),
+    $color('background_color', '#fbf8f1'),
+    $fonts[$setting('heading_font', 'serif')] ?? $fonts['serif'],
+    $fonts[$setting('body_font', 'sans')] ?? $fonts['sans'],
+    $widths[$setting('content_width', 'standard')] ?? $widths['standard'],
+    $color('secondary_color', '#5b5348'),
+    $color('text_color', '#1f1b16'),
+    $linkColor !== '' ? $linkColor : $accent,
+    $sizes[$setting('text_size', 'medium')] ?? $sizes['medium'],
+    $corners[$setting('corner_style', 'soft')] ?? $corners['soft']
+);
+?>
+<?php echo $this->doctype(); ?>
+<?php echo $this->htmlElement('html'); ?>
+<head>
+    <?php echo $this->headMeta(); ?>
+    <?php echo $this->headTitle(); ?>
+    <?php echo $this->headLink(); ?>
+    <style><?php echo $vars; ?></style>
+    <?php echo $this->headStyle(); ?>
+    <?php echo $this->headScript(); ?>
+</head>
+<?php echo $this->htmlElement('body'); ?>
+<a class="pb-skip" href="#content"><?php echo $escape($this->translate('Skip to main content')); ?></a>
+<?php // Not in the Menu page's preview of unsaved changes (it's a picture of the site).
+if (empty($menu['draft'])) { echo $this->userBar(); } ?>
+<?php if ($builtHeader !== ''): ?>
+<header class="pb-header pb-header-built"><div class="pb-region-inner"><?php echo $builtHeader; ?></div></header>
+<?php else: ?>
+<header class="pb-header">
+    <?php
+    $brand = '<a class="pb-brand" href="' . $escape($site->siteUrl()) . '">'
+        . ($logo ? '<img src="' . $escape($logo) . '" alt="' . $escape($siteTitle) . '">' : $escape($siteTitle)) . '</a>';
+    $search = $setting('show_search', '1') ? '<div class="pb-search">' . $this->partial('common/search-form') . '</div>' : '';
+    ?>
+    <?php if ($menuStyle === 'two-tier'): ?>
+    <div class="pb-topbar"><div class="pb-topbar-inner"><span class="pb-topbar-name"><?php echo $escape($siteTitle); ?></span><?php echo $search; ?></div></div>
+    <?php endif; ?>
+    <div class="pb-header-inner">
+        <?php if ($menuStyle === 'split'): ?>
+        <?php // The logo sits inside the menu, between its two halves. ?>
+        <?php echo $this->partial('common/vpb-menu', ['site' => $site, 'style' => $menuStyle, 'brand' => $brand, 'menu' => $menu]); ?>
+        <?php else: ?>
+        <?php echo $brand; ?>
+        <?php echo $this->partial('common/vpb-menu', ['site' => $site, 'style' => $menuStyle, 'menu' => $menu]); ?>
+        <?php endif; ?>
+        <?php if ($menuStyle !== 'two-tier') { echo $search; } ?>
+    </div>
+</header>
+<?php endif; ?>
+<main id="content" class="pb-main" tabindex="-1">
+    <?php
+    // Screen-reader users navigate by headings: if the page has no main
+    // heading (no "Page title" block), add one they can find but nobody sees.
+    if (stripos((string) $this->content, '<h1') === false):
+        $parts = (array) $this->headTitle()->getContainer()->getValue();
+        $heading = '';
+        foreach ($parts as $part) {
+            if (is_string($part) && trim($part) !== '' && $part !== $siteTitle) {
+                $heading = $part;
+                break;
+            }
+        }
+    ?>
+    <h1 class="pb-visually-hidden"><?php echo $escape($heading !== '' ? $heading : $siteTitle); ?></h1>
+    <?php endif; ?>
+    <?php echo $this->content; ?>
+</main>
+<?php if ($builtFooter !== ''): ?>
+<footer class="pb-footer pb-footer-built"><div class="pb-region-inner"><?php echo $builtFooter; ?></div></footer>
+<?php else: ?>
+<footer class="pb-footer">
+    <div class="pb-footer-inner">
+        <?php
+        // Visit info from the Visual Page Builder module's site settings, if any.
+        $address = trim((string) $this->siteSetting('vpb_visit_address'));
+        $hours = trim((string) $this->siteSetting('vpb_visit_hours'));
+        ?>
+        <?php if ($setting('footer_visit_info', '1') && ($address !== '' || $hours !== '')): ?>
+        <div class="pb-footer-visit">
+            <?php if ($address !== ''): ?><address><?php echo nl2br($escape($address)); ?></address><?php endif; ?>
+            <?php if ($hours !== ''): ?>
+            <ul class="pb-hours">
+                <?php foreach (preg_split('/\R/', $hours) as $line): if (trim($line) === '') { continue; } $parts = array_map('trim', explode('|', $line, 2)); ?>
+                <li><span><?php echo $escape($parts[0]); ?></span> <span><?php echo $escape($parts[1] ?? ''); ?></span></li>
+                <?php endforeach; ?>
+            </ul>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
+        <div class="pb-footer-text">
+            <?php $text = $setting('footer_text', ''); ?>
+            <p><?php echo $text !== '' ? nl2br($escape($text)) : $escape($siteTitle); ?></p>
+            <?php $social = array_filter(['Facebook' => $safeLink($setting('facebook_url')), 'Instagram' => $safeLink($setting('instagram_url')), 'YouTube' => $safeLink($setting('youtube_url'))]); ?>
+            <?php if ($social): ?>
+            <ul class="pb-social"><?php foreach ($social as $name => $url): ?><li><a href="<?php echo $escape($url); ?>"><?php echo $escape($name); ?></a></li><?php endforeach; ?></ul>
+            <?php endif; ?>
+        </div>
+    </div>
+</footer>
+<?php endif; ?>
+</body>
+</html>

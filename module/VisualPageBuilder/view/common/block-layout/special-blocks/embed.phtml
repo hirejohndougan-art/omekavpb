@@ -1,0 +1,27 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Embed from a trusted site. In the visual editor's preview a labeled box
+ * stands in for the embed.
+ *
+ * @var array $data
+ * @var array|null $embed ['src', 'site']
+ * @var bool $isPreview
+ */
+$escape = $this->plugin('escapeHtml');
+if (!$embed) {
+    if ($isPreview && $data['url'] !== '') {
+        echo '<p class="special-blocks-note">' . $escape($this->translate('This address isn\'t from one of the trusted sites, so it won\'t be shown.')) . '</p>';
+    }
+    return;
+}
+$title = $data['title'] !== '' ? $data['title'] : sprintf($this->translate('Embedded from %s'), $embed['site']);
+?>
+<figure class="special-blocks special-blocks-embed special-blocks-embed-<?php echo $escape($data['shape']); ?>">
+    <?php if ($isPreview): ?>
+    <div class="special-blocks-embed-frame special-blocks-embed-placeholder"><span><?php echo $escape($embed['site'] . ': ' . $title); ?></span></div>
+    <?php else: ?>
+    <div class="special-blocks-embed-frame"><iframe src="<?php echo $escape($embed['src']); ?>" title="<?php echo $escape($title); ?>" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>
+    <?php endif; ?>
+    <?php if ($data['caption'] !== ''): ?><figcaption><?php echo $escape($data['caption']); ?></figcaption><?php endif; ?>
+</figure>
