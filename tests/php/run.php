@@ -81,6 +81,14 @@ foreach (GlobalStyles::FONTS as $key => $stack) {
 check('preview font stacks match the theme layout', $themeFontsMatch);
 check('preview style carries the link color, falling back to primary', strpos(GlobalStyles::previewStyle(['accent_color' => '#123456']), '--pb-link:#123456') !== false);
 check('preview style carries the font stacks', strpos(GlobalStyles::previewStyle([]), '--pb-body-font:system-ui') !== false);
+// Starter for the list screens: the filters sit in a left column, the results in the right.
+$side = \VisualPageBuilder\Templates\Screens::starterBlocks('search-results', 'dhs');
+$layouts = array_column($side, 'o:layout');
+$group = $side[1] ?? [];
+check('the list starter has a two-column block group', ($group['o:layout'] ?? '') === 'blockGroup' && count($group['o:layout_data']['vpb_section']['cols'] ?? []) === 2);
+check('the filters are in the left column (0), the results in the right (1)', ($side[2]['o:layout_data']['vpb_col'] ?? null) === 0 && $side[2]['o:layout'] === 'facets' && ($side[5]['o:layout_data']['vpb_col'] ?? null) === 1);
+check('the list starter keeps every required block', \VisualPageBuilder\Templates\Required::missing('search-results', $layouts) === []);
+check('other starters stay flat', array_column(\VisualPageBuilder\Templates\Screens::starterBlocks('item', 'dhs'), 'o:layout') === ['itemTitle', 'itemMainImage']);
 check('bad link color falls back to blank', GlobalStyles::clean(['link_color' => 'nope'])['link_color'] === '');
 check('unknown select choice falls back', GlobalStyles::clean(['text_size' => 'huge'])['text_size'] === 'medium');
 check('values fill missing settings with defaults', GlobalStyles::values([])['corner_style'] === 'soft');

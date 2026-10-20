@@ -81,9 +81,7 @@ class Store
         // The starter blocks go in with the page. Omeka adds its page-title block (which
         // shows the page's name, here the template's internal name) to any new page
         // created without blocks, so an empty create would bring that block in.
-        $blocks = array_map(function ($layout) use ($site) {
-            return ['o:layout' => $layout, 'o:data' => Screens::starterData($layout, $site->slug()), 'o:attachment' => []];
-        }, Screens::starters($screen));
+        $blocks = Screens::starterBlocks($screen, $site->slug());
         $page = $api->create('site_pages', [
             'o:site' => ['o:id' => $site->id()],
             'o:title' => mb_substr($name !== '' ? $name : Screens::label($screen), 0, 190),

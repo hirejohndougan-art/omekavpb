@@ -30,6 +30,10 @@ img { max-width: 100%; height: auto; }
 .pb-search form { display: flex; gap: 0.4rem; }
 .pb-search input[type="text"], .pb-search input[type="search"] { padding: 0.45em 0.7em; border: 1px solid var(--pb-line); border-radius: var(--pb-radius); font: inherit; font-size: 0.95rem; }
 .pb-search button, .pb-search input[type="submit"] { padding: 0.45em 0.9em; border: 0; border-radius: var(--pb-radius); background: var(--pb-accent); color: #fff; font: inherit; font-size: 0.95rem; cursor: pointer; }
+/* Omeka's search form draws its magnifier with Omeka's icon font, which this theme
+   doesn't load; draw it here so the button isn't an empty square. */
+.pb-search .o-icon-search { display: inline-block; position: relative; width: 0.8em; height: 0.8em; border: 2px solid currentColor; border-radius: 50%; vertical-align: -0.1em; }
+.pb-search .o-icon-search::after { content: ""; position: absolute; width: 0.45em; height: 2px; background: currentColor; right: -0.42em; bottom: -0.2em; transform: rotate(45deg); transform-origin: right center; }
 .pb-nav ul { list-style: none; margin: 0; padding: 0; }
 /* Menu colors come from the Menu page (--pb-nav-*; see the module's
    MenuSettings), falling back to the theme's own. */

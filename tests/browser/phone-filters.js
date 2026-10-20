@@ -3,7 +3,7 @@
 //   PLAYWRIGHT_MODULE=/path/to/playwright CHROME_PATH=/path/to/headless_shell node tests/browser/phone-filters.js
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 (async () => {
-  const browser = await chromium.launch({ executablePath: 'process.env.CHROME_PATH || undefined', args: ['--no-sandbox'] });
+  const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || undefined, args: ['--no-sandbox'] });
   const page = await browser.newPage({ viewport: { width: 390, height: 800 } });
   await page.goto('' + (process.env.BASE || 'http://127.0.0.1:8080') + '/s/' + (process.env.SITE || 'dhs') + '/item');
   const toggle = page.locator('.vpb-filters-toggle');

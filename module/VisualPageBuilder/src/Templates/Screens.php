@@ -77,6 +77,50 @@ class Screens
         return [];
     }
 
+    /** Screens whose starter puts the filters in a side column, with the results beside them. */
+    const SIDE_FILTERS = ['browse-items', 'search-results'];
+
+    /**
+     * The blocks a new template starts with, as Omeka block rows. The list screens put
+     * the search box across the top, then the filters in a narrow left column and the
+     * page size, sort, results and pagination in a wide right column (a block group, the
+     * same structure the editor saves its sections in).
+     */
+    public static function starterBlocks(string $screen, string $siteSlug): array
+    {
+        if (!in_array($screen, self::SIDE_FILTERS, true)) {
+            return array_map(function ($layout) use ($siteSlug) {
+                return self::plainBlock($layout, $siteSlug);
+            }, self::starters($screen));
+        }
+        return [
+            self::plainBlock('specialSearchBox', $siteSlug),
+            [
+                'o:layout' => 'blockGroup',
+                'o:data' => ['span' => 5],
+                'o:layout_data' => ['vpb_section' => ['cols' => [['w' => 3], ['w' => 9]]]],
+                'o:attachment' => [],
+            ],
+            self::inColumn('facets', 0, $siteSlug),
+            self::inColumn('perPage', 1, $siteSlug),
+            self::inColumn('sort', 1, $siteSlug),
+            self::inColumn('results', 1, $siteSlug),
+            self::inColumn('pagination', 1, $siteSlug),
+        ];
+    }
+
+    private static function plainBlock(string $layout, string $siteSlug): array
+    {
+        return ['o:layout' => $layout, 'o:data' => self::starterData($layout, $siteSlug), 'o:attachment' => []];
+    }
+
+    private static function inColumn(string $layout, int $column, string $siteSlug): array
+    {
+        $block = self::plainBlock($layout, $siteSlug);
+        $block['o:layout_data'] = ['vpb_col' => $column];
+        return $block;
+    }
+
     /** Layout names a new template for the screen starts with (empty when none). */
     public static function starters(string $screen): array
     {
