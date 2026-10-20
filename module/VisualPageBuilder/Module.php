@@ -48,6 +48,7 @@ class Module extends AbstractModule
         require_once __DIR__ . '/src/Search/Index.php';
         PageHistory::createTable($services->get('Omeka\Connection'));
         Search\Index::createTables($services->get('Omeka\Connection'));
+        ItemHistory::createTable($services->get('Omeka\Connection'));
     }
 
     /**
@@ -60,6 +61,8 @@ class Module extends AbstractModule
         // Page history goes with the module (the pages themselves stay).
         require_once __DIR__ . '/src/PageHistory.php';
         PageHistory::dropTable($services->get('Omeka\Connection'));
+        require_once __DIR__ . '/src/ItemHistory.php';
+        ItemHistory::dropTable($services->get('Omeka\Connection'));
         // The search index goes too. Omeka's own search keeps working without it.
         Search\Index::dropTables($services->get('Omeka\Connection'));
         $dir = OMEKA_PATH . '/files/visual-page-builder';
@@ -81,6 +84,33 @@ class Module extends AbstractModule
         if (version_compare($oldVersion, '2.2.0', '<')) {
             // The index is filled by a reindex job, started from the search settings.
             Search\Index::createTables($services->get('Omeka\Connection'));
+        }
+        // Item history (Phase 9). Its table is created here or on first use.
+        require_once __DIR__ . '/src/ItemHistory.php';
+        ItemHistory::createTable($services->get('Omeka\Connection'));
+    }
+
+    /** Item history: save the item's values before each change made through the API. */
+    public function snapshotItemBeforeUpdate(Event $event): void
+    {
+        require_once __DIR__ . '/src/ItemHistory.php';
+        $services = $event->getTarget()->getServiceLocator();
+        ItemHistory::snapshot(
+            $services->get('Omeka\Connection'),
+            $services->get('Omeka\ApiManager'),
+            (int) $event->getParam('request')->getId()
+        );
+    }
+
+    /** Batch changes: save each item before the batch is applied. */
+    public function snapshotItemsBeforeBatch(Event $event): void
+    {
+        require_once __DIR__ . '/src/ItemHistory.php';
+        $services = $event->getTarget()->getServiceLocator();
+        $conn = $services->get('Omeka\Connection');
+        $api = $services->get('Omeka\ApiManager');
+        foreach ((array) $event->getParam('request')->getIds() as $id) {
+            ItemHistory::snapshot($conn, $api, (int) $id);
         }
     }
 
@@ -159,6 +189,9 @@ class Module extends AbstractModule
         $sharedEventManager->attach($items, 'api.update.post', [$this, 'indexItemAfterSave']);
         $sharedEventManager->attach($items, 'api.delete.post', [$this, 'removeItemFromIndex']);
         $sharedEventManager->attach($items, 'api.batch_update.post', [$this, 'indexItemsAfterBatch']);
+        // Item history: a snapshot before each change.
+        $sharedEventManager->attach($items, 'api.update.pre', [$this, 'snapshotItemBeforeUpdate']);
+        $sharedEventManager->attach($items, 'api.batch_update.pre', [$this, 'snapshotItemsBeforeBatch']);
 
         $sharedEventManager->attach(
             'Omeka\Controller\SiteAdmin\Page',
