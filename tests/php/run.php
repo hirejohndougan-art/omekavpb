@@ -106,6 +106,19 @@ check('pdf without a thumbnail is a link', Placeholder::mediaKind('application/p
 check('no media type gives the placeholder panel', Placeholder::mediaKind(null, false) === 'none');
 check('unknown type with a thumbnail uses it', Placeholder::mediaKind('video/mp4', true) === 'image');
 
+// --- Block visibility by device -----------------------------------------
+use VisualPageBuilder\Devices;
+
+check('no stored value hides nothing', Devices::fromValue('') === []);
+check('devices read in desktop, tablet, phone order', Devices::fromValue('phone,tablet') === ['tablet', 'phone']);
+check('unknown device names are ignored', Devices::fromValue('tablet,watch') === ['tablet']);
+check('spaces around names are ignored', Devices::fromValue(' phone ') === ['phone']);
+$wrapped = Devices::withClasses('<div class="block block-html" style="grid-column: 1 / 7"><p>x</p></div>', ['tablet', 'phone']);
+check('device classes go on the block wrapper', $wrapped === '<div class="block vpb-hide-tablet vpb-hide-phone block-html" style="grid-column: 1 / 7"><p>x</p></div>', $wrapped);
+check('wrapper keeps its own inline style', strpos($wrapped, 'grid-column: 1 / 7') !== false);
+check('a block with no hidden devices is unchanged', Devices::withClasses('<div class="block x">a</div>', []) === '<div class="block x">a</div>');
+check('a block without a wrapper gets one', Devices::withClasses('<p>a</p>', ['desktop']) === '<div class="vpb-hide-desktop"><p>a</p></div>');
+
 // --- Report -------------------------------------------------------------
 $total = $pass + count($fail);
 echo "PHP tests: $pass of $total passed\n";

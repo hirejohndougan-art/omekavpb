@@ -528,5 +528,7 @@ body.preview #regionTop,body.preview #regionBottom{display:none}
 .toc-entry{display:flex;flex-direction:column;gap:8px;margin:2px 4px 8px 12px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
 .toc-entry .field{margin:0}
 .tools .req-tag{align-self:center;margin:0 4px;padding:2px 7px;border-radius:999px;background:rgba(255,255,255,.18);color:#fff;font-size:11px;letter-spacing:.02em}
+.tools .dev-hide{width:auto;padding:2px 7px;margin:0 2px;border-radius:999px;background:rgba(255,255,255,.12);color:#fff;font-size:11px;opacity:.85}
+.tools .dev-hide[aria-pressed="true"]{background:#fff;color:#1f2a24;text-decoration:line-through;opacity:1}
 .tools .req-hide{width:auto;padding:2px 8px;margin:0 4px;border-radius:999px;background:rgba(255,255,255,.18);color:#fff;font-size:11px}
 .blk.is-hidden .inner{opacity:.4}

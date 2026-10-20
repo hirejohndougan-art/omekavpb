@@ -36,6 +36,8 @@ class PageLayout extends OmekaPageLayout
             return '';
         }
         $html = (string) $this->getView()->blockLayout()->render($block);
+        // Hidden on some devices only (layout data "vpb_hide": desktop, tablet, phone).
+        $html = \VisualPageBuilder\Devices::withClasses($html, \VisualPageBuilder\Devices::fromValue($block->layoutDataValue('vpb_hide', '')));
         if ($block->layout() === 'html' && strpos($html, 'vpb-footnote') !== false) {
             $html = \VisualPageBuilder\Footnotes::numberRefs($html, $this->nextNote);
         }

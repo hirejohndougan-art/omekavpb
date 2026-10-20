@@ -165,6 +165,12 @@ function blkEl(b, bi) {
   tools.appendChild(toolBtn('Move down', I.down, function () { moveBlock(b.id, 1); }));
   tools.appendChild(toolBtn('Duplicate', I.dup, function () { dupBlock(b.id); }));
   tools.appendChild(toolBtn('Block settings', I.set, openSettings, 'set-btn'));
+  // Hide this block on one device (desktop, tablet or phone); the page shows it on the others.
+  var hiddenOn = (b.ld && b.ld.vpb_hide ? String(b.ld.vpb_hide) : '').split(',');
+  ['desktop', 'tablet', 'phone'].forEach(function (dev) {
+    var off = hiddenOn.indexOf(dev) >= 0;
+    tools.appendChild(h('button', { type: 'button', class: 'dev-hide', 'aria-pressed': off ? 'true' : 'false', text: dev.charAt(0).toUpperCase() + dev.slice(1), title: (off ? 'Show' : 'Hide') + ' this block on ' + dev, onclick: function (e) { e.stopPropagation(); A.toggleDevice(b.id, dev); } }));
+  });
   var hidden = !!(b.ld && b.ld.vpb_hidden);
   if (VPB.actions.isRequired(b)) {
     // Required blocks can be hidden on the public page, never deleted.

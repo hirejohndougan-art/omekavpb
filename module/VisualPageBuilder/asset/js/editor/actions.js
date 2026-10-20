@@ -36,6 +36,19 @@ function toggleHidden(id) {
   if (r.block.ld && r.block.ld.vpb_hidden) delete r.block.ld.vpb_hidden; else r.block.ld = Object.assign({}, r.block.ld, { vpb_hidden: '1' });
   commit(); renderAll(); toast(r.block.ld.vpb_hidden ? 'Hidden on the page. It stays in the template.' : 'Shown on the page.');
 }
+/** Hide or show any block on one device (desktop, tablet or phone) on the public page. */
+function toggleDevice(id, dev) {
+  var r = findBlock(id); if (!r) return;
+  var ld = Object.assign({}, r.block.ld);
+  var list = (ld.vpb_hide || '').split(',').filter(Boolean);
+  var at = list.indexOf(dev);
+  if (at >= 0) list.splice(at, 1); else list.push(dev);
+  if (list.length) ld.vpb_hide = list.join(','); else delete ld.vpb_hide;
+  r.block.ld = ld;
+  commit(); renderAll();
+  var off = list.indexOf(dev) < 0;
+  toast(off ? 'Shown on ' + dev + '.' : 'Hidden on ' + dev + '. It stays in the template.');
+}
 function delBlock(id) {
   var r = findBlock(id); if (!r) return;
   if (isRequired(r.block)) { toast('This block is required by the template, so it stays.'); return; }
@@ -143,6 +156,7 @@ VPB.actions = {
   moveBlock: moveBlock, dupBlock: dupBlock, delBlock: delBlock,
   moveSec: moveSec, dupSec: dupSec, delSec: delSec,
   shiftBorder: shiftBorder, adjustColWidth: adjustColWidth, setLayout: setLayout, addColumn: addColumn, removeColumn: removeColumn,
-  addSection: tapAddSection, addBlock: tapAddBlock, isRequired: isRequired, toggleHidden: toggleHidden
+  addSection: tapAddSection, addBlock: tapAddBlock, isRequired: isRequired, toggleHidden: toggleHidden,
+  toggleDevice: toggleDevice
 };
 })(window.VPB);

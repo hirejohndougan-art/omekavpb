@@ -67,7 +67,15 @@
     .vpb-page.page-layout-grid > * { grid-column: 1 / -1; }
 }
 
-/* ---------- Printing (v1.12.0) ----------
+/* ---------- Block visibility by device (Phase 5) ----------
+   A block can be hidden on any device (layout data "vpb_hide"). The ranges
+   match the tablet and phone stacking above: phone up to 600px, tablet
+   601-896px, desktop from 897px. Print shows everything. */
+@media screen and (min-width: 897px) { .vpb-hide-desktop { display: none !important; } }
+@media screen and (min-width: 601px) and (max-width: 896px) { .vpb-hide-tablet { display: none !important; } }
+@media screen and (max-width: 600px) { .vpb-hide-phone { display: none !important; } }
+
+/* ---------- Printing (v1.12.0) ---------- */
    Printed pages keep the content: menus, buttons, search boxes, map
    controls, and players drop out; link addresses are printed after the
    link text; blocks avoid splitting across pages. */
