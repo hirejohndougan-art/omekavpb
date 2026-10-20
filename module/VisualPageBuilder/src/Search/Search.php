@@ -26,7 +26,8 @@ class Search
         int $perPage = 12,
         ?Synonyms $synonyms = null,
         array $facets = [],
-        ?int $siteId = null
+        ?int $siteId = null,
+        string $sort = 'relevance'
     ): array {
         $parsed = QueryParser::parse($raw, $synonyms);
         [$where, $params] = self::conditions($parsed, $staff, $facets, $siteId);
@@ -39,8 +40,14 @@ class Search
         $ids = [];
         if ($total > 0) {
             // Best match first when there are words; a year-only or phrase-only search sorts by title.
-            $score = self::scoreSql($parsed);
-            $order = $score === null ? 'd.title ASC' : $score['sql'] . ' DESC, d.title ASC';
+            // Sort: best match (relevance, title when there are no words), A-Z, or by date (undated last).
+            $score = $sort === 'relevance' ? self::scoreSql($parsed) : null;
+            $order = match ($sort) {
+                'title' => 'd.title ASC',
+                'oldest' => '(d.year_start IS NULL), d.year_start ASC, d.title ASC',
+                'newest' => '(d.year_start IS NULL), d.year_start DESC, d.title ASC',
+                default => $score === null ? 'd.title ASC' : $score['sql'] . ' DESC, d.title ASC',
+            };
             $sql = 'SELECT d.item_id FROM ' . Index::DOC . ' d WHERE ' . $where
                 . ' ORDER BY ' . $order
                 . ' LIMIT ' . max(1, $perPage) . ' OFFSET ' . max(0, ($page - 1) * $perPage);

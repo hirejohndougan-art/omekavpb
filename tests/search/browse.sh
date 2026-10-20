@@ -48,5 +48,9 @@ SETS_PRESSED=$(page 'item_set%5B%5D=771' | grep -c 'aria-pressed="true"')
 check "a chosen collection is marked and listed as a filter in use" "$([ "$SETS_PRESSED" -ge 1 ] && page 'item_set%5B%5D=771' | grep -q 'Remove Light set' && echo yes || echo no)" "yes"
 check "Results per page is drawn" "$(page '' | grep -c 'vpb-per-page"')" "1"
 
+check "Sort is drawn" "$(page '' | grep -c 'vpb-sort"')" "1"
+check "an unknown sort falls back to best match" "$(page 'sort=bogus' | grep -o 'aria-current="true">Best match' | wc -l)" "1"
+check "a sort keeps the search on its links" "$(page 'q=lighthouse&sort=title' | grep -c 'sort=oldest&amp;q=lighthouse\|q=lighthouse&amp;sort=oldest\|sort=oldest')" "1"
+
 echo "browse checks: $pass passed, $fail failed"
 [ "$fail" -eq 0 ]

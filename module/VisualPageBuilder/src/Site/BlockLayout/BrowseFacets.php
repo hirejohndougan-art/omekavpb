@@ -67,6 +67,8 @@ class BrowseFacets extends AbstractSchemaBlock
 
         return [
             'show' => $result['mode'] === 'index' && $screen !== 'browse-item-sets',
+            'panelId' => 'vpb-facets-' . preg_replace('/[^A-Za-z0-9_-]/', '', $blockKey),
+            'total' => $result['total'],
             'groups' => $groups,
             'active' => $active,
             'clearUrl' => $active ? self::url($view, ['item_set' => [], 'class' => []]) : null,
@@ -77,7 +79,7 @@ class BrowseFacets extends AbstractSchemaBlock
     /** The address for these filters, keeping the search and page size, and starting at page one. */
     public static function url(PhpRenderer $view, array $selected): string
     {
-        $query = array_intersect_key($view->params()->fromQuery(), array_flip(['q', 'fulltext_search', 'per_page']));
+        $query = array_intersect_key($view->params()->fromQuery(), array_flip(['q', 'fulltext_search', 'per_page', 'sort']));
         foreach (['item_set', 'class'] as $field) {
             if (!empty($selected[$field])) {
                 $query[$field] = array_values($selected[$field]);

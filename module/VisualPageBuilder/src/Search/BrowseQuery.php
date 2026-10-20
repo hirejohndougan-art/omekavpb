@@ -28,6 +28,9 @@ class BrowseQuery
 
     const DEFAULT_PER_PAGE = 24;
 
+    /** Sort choices: relevance (best match), A-Z, oldest and newest first. */
+    const SORTS = ['relevance', 'title', 'oldest', 'newest'];
+
     /** @var array<string, array> one answer per distinct request */
     protected static $answers = [];
 
@@ -52,6 +55,7 @@ class BrowseQuery
             'param' => $fulltext !== '' ? 'fulltext_search' : 'q',
             'page' => max(1, (int) $query->get('page', 1)),
             'per_page' => $perPage,
+            'sort' => in_array((string) $query->get('sort', ''), self::SORTS, true) ? (string) $query->get('sort') : 'relevance',
             'facets' => [
                 'item_set' => array_map('intval', (array) $query->get('item_set', [])),
                 'class' => array_map('intval', (array) $query->get('class', [])),
@@ -99,7 +103,7 @@ class BrowseQuery
             ];
         } elseif (Index::ready($conn, $settings)) {
             $synonyms = Synonyms::fromText((string) $settings->get(Index::SYNONYMS_SETTING, ''));
-            $result = Search::run($conn, $state['q'], false, $state['page'], $state['per_page'], $synonyms, $state['facets'], $siteId);
+            $result = Search::run($conn, $state['q'], false, $state['page'], $state['per_page'], $synonyms, $state['facets'], $siteId, $state['sort']);
             $items = self::items($api, $result['ids']);
             $answer = [
                 'items' => $items,
@@ -137,6 +141,7 @@ class BrowseQuery
             'pages' => max(1, (int) ceil($answer['total'] / $state['per_page'])),
             'query' => $state['q'],
             'param' => $state['param'],
+            'sort' => $state['sort'],
             'selected' => $state['facets'],
             'facetOptions' => [],
         ];

@@ -77,7 +77,7 @@ class Store
         self::assertScreen($screen);
         self::assertScope($scope, $value);
         $count = count(self::all($site));
-        return $api->create('site_pages', [
+        $page = $api->create('site_pages', [
             'o:site' => ['o:id' => $site->id()],
             'o:title' => mb_substr($name !== '' ? $name : Screens::label($screen), 0, 190),
             'o:slug' => SiteRegions::TEMPLATE_PREFIX . bin2hex(random_bytes(4)),
@@ -90,6 +90,15 @@ class Store
             ],
             'o:block' => [],
         ])->getContent();
+        $starters = Screens::starters($screen);
+        if ($starters) {
+            // The starter blocks: the required ones are in place from the start.
+            $api->update('site_pages', $page->id(), ['o:block' => array_map(function ($layout) {
+                return ['o:layout' => $layout, 'o:data' => [], 'o:attachment' => []];
+            }, $starters)], [], ['isPartial' => true]);
+            $page = $api->read('site_pages', $page->id())->getContent();
+        }
+        return $page;
     }
 
     /**

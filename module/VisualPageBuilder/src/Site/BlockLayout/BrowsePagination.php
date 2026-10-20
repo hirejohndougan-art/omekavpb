@@ -35,7 +35,7 @@ class BrowsePagination extends AbstractSchemaBlock
         $page = $result['page'];
         $pages = $result['pages'];
         // Only the browse state (q, per_page, facets) carries over; other address parameters are left out.
-        $query = array_intersect_key($view->params()->fromQuery(), array_flip(['q', 'fulltext_search', 'per_page', 'item_set', 'class']));
+        $query = array_intersect_key($view->params()->fromQuery(), array_flip(['q', 'fulltext_search', 'per_page', 'sort', 'item_set', 'class']));
 
         // A link to the same screen with one parameter changed.
         $link = function (int $to) use ($view, $query): string {

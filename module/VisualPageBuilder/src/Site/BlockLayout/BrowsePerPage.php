@@ -31,7 +31,7 @@ class BrowsePerPage extends AbstractSchemaBlock
     {
         $result = BrowseQuery::run($view, $site);
         // Keep the search and filters; a new page size starts again at page one.
-        $query = array_intersect_key($view->params()->fromQuery(), array_flip(['q', 'fulltext_search', 'item_set', 'class']));
+        $query = array_intersect_key($view->params()->fromQuery(), array_flip(['q', 'fulltext_search', 'sort', 'item_set', 'class']));
         $choices = [];
         foreach (BrowseQuery::PER_PAGE_CHOICES as $number) {
             $choices[] = [

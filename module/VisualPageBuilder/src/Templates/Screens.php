@@ -32,6 +32,19 @@ class Screens
         'footer' => ['label' => 'Footer', 'omeka' => null, 'required' => []], // @translate
     ];
 
+    /**
+     * The blocks a new template starts with (plan decision 10): the required ones are
+     * always here, so a new template can go live. Layout names, in order.
+     */
+    const STARTERS = [
+        'item' => ['itemTitle', 'itemMainImage'],
+        'browse-items' => ['specialSearchBox', 'perPage', 'sort', 'facets', 'results', 'pagination'],
+        'search-results' => ['specialSearchBox', 'perPage', 'sort', 'facets', 'results', 'pagination'],
+        'browse-item-sets' => ['specialSearchBox', 'results', 'pagination'],
+        'item-set' => ['itemSetHeader', 'results', 'pagination'],
+        'not-found' => ['specialSearchBox'],
+    ];
+
     /** Screens that take a record (an item, media or item set); the others are page-wide. */
     const RECORD_SCREENS = ['item', 'media', 'item-set'];
 
@@ -49,6 +62,12 @@ class Screens
     public static function label(string $screen): string
     {
         return self::SCREENS[$screen]['label'] ?? $screen;
+    }
+
+    /** Layout names a new template for the screen starts with (empty when none). */
+    public static function starters(string $screen): array
+    {
+        return self::STARTERS[$screen] ?? [];
     }
 
     /** Keys of every screen, in the Theme Builder's order. */

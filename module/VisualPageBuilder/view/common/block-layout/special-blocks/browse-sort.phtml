@@ -1,0 +1,18 @@
+<?php
+/**
+ * The order of the results.
+ *
+ * @var array $choices  [{label, url, current}]
+ * @var string $blockClass
+ */
+$escape = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+?>
+<nav class="special-blocks <?php echo $escape($blockClass); ?> vpb-sort" aria-label="<?php echo $escape($translate('Sort results')); ?>">
+    <span class="vpb-sort-label"><?php echo $escape($translate('Sort by')); ?></span>
+    <ul>
+    <?php foreach ($choices as $choice): ?>
+        <li><a href="<?php echo $escape($choice['url']); ?>"<?php echo $choice['current'] ? ' aria-current="true"' : ''; ?>><?php echo $escape($choice['label']); ?></a></li>
+    <?php endforeach; ?>
+    </ul>
+</nav>

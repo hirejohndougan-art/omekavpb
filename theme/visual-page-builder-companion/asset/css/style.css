@@ -279,3 +279,12 @@ img { max-width: 100%; height: auto; }
   body { background: #fff !important; color: #000 !important; }
   .pb-main { padding: 0 !important; max-width: none !important; }
 }
+
+/* Browse filters (Phase 4): on phones they open as a full-screen panel. */
+.vpb-filters-toggle, .vpb-facets-done { display: none; }
+@media (max-width: 860px) {
+  .vpb-filters-toggle { display: inline-block; margin: 0.5rem 0; padding: 0.5rem 1rem; border: 1px solid currentColor; border-radius: 4px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+  .vpb-facets { display: none; }
+  .vpb-facets.is-open { display: block; position: fixed; inset: 0; z-index: 1000; background: #fff; color: #222; overflow-y: auto; padding: 1rem 1rem 5rem; }
+  .vpb-facets.is-open .vpb-facets-done { display: block; position: sticky; bottom: 0; width: 100%; margin-top: 1rem; padding: 0.9rem; border: 0; border-radius: 4px; background: #1f4d3f; color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+}

@@ -6,6 +6,8 @@
  * @var array $groups  [{label, options: [{id, label, count, active, url}]}]
  * @var array $active  [{label, url}] the filters in use; each link removes one
  * @var string|null $clearUrl
+ * @var string $panelId
+ * @var int $total
  * @var string $blockClass
  */
 if (!$show) {
@@ -14,7 +16,8 @@ if (!$show) {
 $escape = $this->plugin('escapeHtml');
 $translate = $this->plugin('translate');
 ?>
-<div class="special-blocks <?php echo $escape($blockClass); ?> vpb-facets">
+<button type="button" class="vpb-filters-toggle" aria-expanded="false" aria-controls="<?php echo $escape($panelId); ?>"><?php echo $escape($translate('Filters')); ?></button>
+<div class="special-blocks <?php echo $escape($blockClass); ?> vpb-facets" id="<?php echo $escape($panelId); ?>" tabindex="-1">
 <?php if ($active): ?>
     <div class="vpb-facets-active">
         <p class="vpb-facets-heading"><?php echo $escape($translate('Filtered by')); ?></p>
@@ -41,4 +44,5 @@ $translate = $this->plugin('translate');
         </ul>
     </fieldset>
 <?php endforeach; ?>
+    <button type="button" class="vpb-facets-done"><?php echo $escape(sprintf($translate('Show %s results'), number_format($total))); ?></button>
 </div>

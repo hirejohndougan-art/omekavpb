@@ -90,6 +90,7 @@ class SpecialBlocks
         'itemSetHeader' => Site\BlockLayout\ItemSetHeader::class,
         'facets' => Site\BlockLayout\BrowseFacets::class,
         'perPage' => Site\BlockLayout\BrowsePerPage::class,
+        'sort' => Site\BlockLayout\BrowseSort::class,
     ];
 
     /**
@@ -109,7 +110,7 @@ class SpecialBlocks
         // Only offered in headers and footers (where the palette shows them all together).
         'Header and footer' => ['specialLogo', 'specialSiteTitle', 'specialSiteMenu', 'specialCopyright'], // @translate
         // Only offered when editing a Theme Builder browse or search template.
-        'Browse pages' => ['results', 'pagination', 'itemSetHeader', 'facets', 'perPage'], // @translate
+        'Browse pages' => ['results', 'pagination', 'itemSetHeader', 'facets', 'perPage', 'sort'], // @translate
         // Only offered when editing a Theme Builder item template (placement "item").
         'Item fields' => ['itemTitle', 'itemMainImage', 'itemDescription', 'itemDate', 'itemDetails', 'itemOneField', 'itemSubjects', 'itemSets', 'itemCite', 'itemDownload', 'itemPrevNext'], // @translate
     ];

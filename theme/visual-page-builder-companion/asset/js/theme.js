@@ -41,5 +41,44 @@
       if (nav.classList.contains('pb-nav-button')) toggle.setAttribute('aria-expanded', 'false');
     });
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+  /*
+   * Browse filters on phones (Phase 4): the Filters button opens the filters as a
+   * full-screen panel; "Show N results" or Escape closes it. On wide screens the
+   * button is hidden and the filters stay in place (see style.css).
+   */
+  function setFilters(toggle, open) {
+    var panel = document.getElementById(toggle.getAttribute('aria-controls'));
+    if (!panel) return;
+    panel.classList.toggle('is-open', open);
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) {
+      var done = panel.querySelector('.vpb-facets-done');
+      if (done) done.focus(); else panel.focus();
+    } else {
+      toggle.focus();
+    }
+  }
+  function initFilters() {
+    document.addEventListener('click', function (event) {
+      var toggle = event.target.closest && event.target.closest('.vpb-filters-toggle');
+      if (toggle) {
+        setFilters(toggle, toggle.getAttribute('aria-expanded') !== 'true');
+        return;
+      }
+      var done = event.target.closest && event.target.closest('.vpb-facets-done');
+      if (done) {
+        var panel = done.closest('.vpb-facets');
+        var btn = panel && document.querySelector('.vpb-filters-toggle[aria-controls="' + panel.id + '"]');
+        if (btn) setFilters(btn, false);
+      }
+    });
+    document.addEventListener('keydown', function (event) {
+      if (event.key !== 'Escape') return;
+      var open = document.querySelector('.vpb-facets.is-open');
+      var btn = open && document.querySelector('.vpb-filters-toggle[aria-controls="' + open.id + '"]');
+      if (btn) setFilters(btn, false);
+    });
+  }
+  function startAll() { init(); initFilters(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', startAll); else startAll();
 })();
