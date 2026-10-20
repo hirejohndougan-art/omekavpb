@@ -93,8 +93,8 @@ class Store
         $starters = Screens::starters($screen);
         if ($starters) {
             // The starter blocks: the required ones are in place from the start.
-            $api->update('site_pages', $page->id(), ['o:block' => array_map(function ($layout) {
-                return ['o:layout' => $layout, 'o:data' => [], 'o:attachment' => []];
+            $api->update('site_pages', $page->id(), ['o:block' => array_map(function ($layout) use ($site) {
+                return ['o:layout' => $layout, 'o:data' => Screens::starterData($layout, $site->slug()), 'o:attachment' => []];
             }, $starters)], [], ['isPartial' => true]);
             $page = $api->read('site_pages', $page->id())->getContent();
         }

@@ -43,7 +43,7 @@ class Screens
         'browse-item-sets' => ['specialSearchBox', 'results', 'pagination'],
         'item-set' => ['itemSetHeader', 'results', 'pagination'],
         'media' => ['media-viewer'],
-        'not-found' => ['specialSearchBox'],
+        'not-found' => ['specialSearchBox', 'specialButtons'],
     ];
 
     /** Screens that take a record (an item, media or item set); the others are page-wide. */
@@ -63,6 +63,18 @@ class Screens
     public static function label(string $screen): string
     {
         return self::SCREENS[$screen]['label'] ?? $screen;
+    }
+
+    /**
+     * The settings a starter block begins with. Most start empty; a link home needs
+     * the site's address, so it is set here.
+     */
+    public static function starterData(string $layout, string $siteSlug): array
+    {
+        if ($layout === 'specialButtons') {
+            return ['buttons' => [['text' => 'Back to the home page', 'url' => '/s/' . $siteSlug, 'style' => 'primary']]]; // @translate
+        }
+        return [];
     }
 
     /** Layout names a new template for the screen starts with (empty when none). */
