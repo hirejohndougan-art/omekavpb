@@ -44,6 +44,7 @@ class Module extends AbstractModule
         // The module's classes aren't autoloaded until it's active.
         require_once __DIR__ . '/src/PageHistory.php';
         PageHistory::createTable($services->get('Omeka\Connection'));
+        Search\Index::createTables($services->get('Omeka\Connection'));
     }
 
     /**
@@ -56,6 +57,8 @@ class Module extends AbstractModule
         // Page history goes with the module (the pages themselves stay).
         require_once __DIR__ . '/src/PageHistory.php';
         PageHistory::dropTable($services->get('Omeka\Connection'));
+        // The search index goes too. Omeka's own search keeps working without it.
+        Search\Index::dropTables($services->get('Omeka\Connection'));
         $dir = OMEKA_PATH . '/files/visual-page-builder';
         foreach (glob($dir . '/calendar-*.json') ?: [] as $file) {
             @unlink($file);
@@ -71,6 +74,43 @@ class Module extends AbstractModule
         if (version_compare($oldVersion, '1.12.0', '<')) {
             require_once __DIR__ . '/src/PageHistory.php';
             PageHistory::createTable($services->get('Omeka\Connection'));
+        }
+        if (version_compare($oldVersion, '2.2.0', '<')) {
+            // The index is filled by a reindex job, started from the search settings.
+            Search\Index::createTables($services->get('Omeka\Connection'));
+        }
+    }
+
+    /** Keeps the search index current when an item is created, changed or deleted. */
+    public function indexItemAfterSave(Event $event): void
+    {
+        $services = $event->getTarget()->getServiceLocator();
+        $conn = $services->get('Omeka\Connection');
+        Search\Index::createTables($conn);
+        // The response holds the saved entity; the index reads a representation.
+        $adapter = $event->getTarget();
+        $item = $adapter->getRepresentation($event->getParam('response')->getContent());
+        Search\Index::indexItem($conn, $item);
+    }
+
+    public function removeItemFromIndex(Event $event): void
+    {
+        $services = $event->getTarget()->getServiceLocator();
+        $conn = $services->get('Omeka\Connection');
+        Search\Index::createTables($conn);
+        Search\Index::removeItem($conn, (int) $event->getParam('request')->getId());
+    }
+
+    /** Batch updates: re-read each changed item and index it again. */
+    public function indexItemsAfterBatch(Event $event): void
+    {
+        $services = $event->getTarget()->getServiceLocator();
+        $conn = $services->get('Omeka\Connection');
+        $api = $services->get('Omeka\ApiManager');
+        Search\Index::createTables($conn);
+        foreach ($event->getParam('request')->getIds() as $id) {
+            $item = $api->read('items', $id)->getContent();
+            Search\Index::indexItem($conn, $item);
         }
     }
 
@@ -109,6 +149,13 @@ class Module extends AbstractModule
         foreach (['Omeka\Api\Adapter\ItemAdapter', 'Omeka\Api\Adapter\ItemSetAdapter'] as $adapter) {
             $sharedEventManager->attach($adapter, 'api.search.query', $filter);
         }
+
+        // VPB Search: keep the item index in step with every item change.
+        $items = 'Omeka\Api\Adapter\ItemAdapter';
+        $sharedEventManager->attach($items, 'api.create.post', [$this, 'indexItemAfterSave']);
+        $sharedEventManager->attach($items, 'api.update.post', [$this, 'indexItemAfterSave']);
+        $sharedEventManager->attach($items, 'api.delete.post', [$this, 'removeItemFromIndex']);
+        $sharedEventManager->attach($items, 'api.batch_update.post', [$this, 'indexItemsAfterBatch']);
 
         $sharedEventManager->attach(
             'Omeka\Controller\SiteAdmin\Page',
