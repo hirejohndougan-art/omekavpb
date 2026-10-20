@@ -150,7 +150,7 @@ async function createPage(slugBase, blocks, extra = {}) {
 
 /** Ids of the seeded fixture resources (see tools/seed.js). */
 async function fixtures() {
-  const items = await api('GET', 'items?sort_by=id&sort_order=asc&per_page=50');
+  const items = await api('GET', 'items?sort_by=id&sort_order=asc&per_page=1000');
   const byTitle = t => items.find(i => i['o:title'] === t);
   const assets = await api('GET', 'assets?per_page=50');
   const need = ['Railroad photo 0', 'Railroad photo 1', 'Railroad photo 2'].map(byTitle);
