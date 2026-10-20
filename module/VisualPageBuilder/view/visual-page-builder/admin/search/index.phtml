@@ -1,0 +1,27 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Search settings: the synonyms list used by VPB Search.
+ *
+ * @var string $synonyms  the saved list, one "term = alternative" per line
+ * @var int $count  how many rules are saved
+ * @var string $csrf
+ */
+$escape = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+$url = $this->url('admin/visual-page-builder-search');
+$this->htmlElement('body')->appendAttribute('class', 'vpb-search-settings');
+?>
+<h2><?php echo $escape($translate('Search settings')); ?></h2>
+<p><?php echo $escape($translate('Synonyms let a visitor find items by another word. Searching for the left-hand word also searches for each word on the right. The rule works one way only.')); ?></p>
+<p><?php echo $escape($translate('One rule per line, for example:')); ?></p>
+<pre>rr = railroad, rail road
+station = depot
+gh&amp;h = Galveston, Houston, Henderson</pre>
+<form method="post" action="<?php echo $escape($url); ?>">
+    <input type="hidden" name="<?php echo $escape(\VisualPageBuilder\Controller\Admin\SearchController::CSRF_NAME); ?>" value="<?php echo $escape($csrf); ?>">
+    <label for="vpb-synonyms"><?php echo $escape($translate('Synonyms')); ?></label>
+    <textarea id="vpb-synonyms" name="synonyms" rows="12" cols="60"><?php echo $escape($synonyms); ?></textarea>
+    <p><?php echo $escape(sprintf($translate('%d rules saved. Changes apply to the next search.'), $count)); ?></p>
+    <input type="submit" value="<?php echo $escape($translate('Save')); ?>">
+</form>

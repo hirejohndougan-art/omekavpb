@@ -9,6 +9,7 @@ return [
         ],
         'invokables' => [
             'VisualPageBuilder\Controller\Site\Search' => Controller\Site\SearchController::class,
+            'VisualPageBuilder\Controller\Admin\Search' => Controller\Admin\SearchController::class,
             'VisualPageBuilder\Controller\Admin\Menu' => Controller\Admin\MenuController::class,
             'VisualPageBuilder\Controller\Admin\Region' => Controller\Admin\RegionController::class,
             'VisualPageBuilder\Controller\Admin\Pages' => Controller\Admin\PagesController::class,
@@ -82,6 +83,18 @@ return [
                             'defaults' => [
                                 '__NAMESPACE__' => 'VisualPageBuilder\Controller\Admin',
                                 'controller' => 'Menu',
+                                'action' => 'index',
+                            ],
+                        ],
+                    ],
+                    // Search settings (VPB Search synonyms), for the whole installation.
+                    'visual-page-builder-search' => [
+                        'type' => \Laminas\Router\Http\Literal::class,
+                        'options' => [
+                            'route' => '/vpb-search-settings',
+                            'defaults' => [
+                                '__NAMESPACE__' => 'VisualPageBuilder\Controller\Admin',
+                                'controller' => 'Search',
                                 'action' => 'index',
                             ],
                         ],
