@@ -44,7 +44,16 @@ class ItemsController extends AbstractActionController
         $perPage = max(5, min(100, (int) $manager->get('Omeka\Settings')->get('vpb_items_per_page', 25)));
 
         $params = ['page' => $page, 'per_page' => $perPage, 'sort_by' => 'modified', 'sort_order' => 'desc'];
-        if ($q !== '') {
+        // A search goes through the VPB Search index when it is ready (staff see every item, drafts
+        // included), in best-match order. Otherwise, or with a quick filter, Omeka's own search runs.
+        $indexOrder = null;
+        if ($q !== '' && $quick === '' && \VisualPageBuilder\Search\Index::ready($conn, $manager->get('Omeka\Settings'))) {
+            $synonyms = \VisualPageBuilder\Search\Synonyms::fromText((string) $manager->get('Omeka\Settings')->get(\VisualPageBuilder\Search\Index::SYNONYMS_SETTING, ''));
+            $found = \VisualPageBuilder\Search\Search::run($conn, $q, true, $page, $perPage, $synonyms);
+            $indexOrder = array_flip($found['ids']);
+            $params = ['page' => 1, 'per_page' => max(1, count($found['ids'])), 'id' => $found['ids'] ?: [0]];
+            $indexTotal = (int) $found['total'];
+        } elseif ($q !== '') {
             $params['fulltext_search'] = $q;
         }
         if ($setId) {
@@ -74,8 +83,13 @@ class ItemsController extends AbstractActionController
         }
 
         $response = $api->search('items', $params);
+        $content = $response->getContent();
+        if ($indexOrder !== null) {
+            // Keep the index's order (best match first) rather than the API's.
+            usort($content, fn ($a, $b) => ($indexOrder[$a->id()] ?? 0) <=> ($indexOrder[$b->id()] ?? 0));
+        }
         $items = [];
-        foreach ($response->getContent() as $item) {
+        foreach ($content as $item) {
             $media = $item->primaryMedia();
             $items[] = [
                 'id' => $item->id(),
@@ -87,7 +101,7 @@ class ItemsController extends AbstractActionController
                 'draft' => Drafts::isDraft($conn, (int) $item->id()),
             ];
         }
-        $total = (int) $response->getTotalResults();
+        $total = $indexOrder !== null ? $indexTotal : (int) $response->getTotalResults();
         $sets = [];
         foreach ($api->search('item_sets', ['sort_by' => 'title', 'per_page' => 200])->getContent() as $set) {
             $sets[] = ['id' => $set->id(), 'title' => (string) $set->displayTitle()];
