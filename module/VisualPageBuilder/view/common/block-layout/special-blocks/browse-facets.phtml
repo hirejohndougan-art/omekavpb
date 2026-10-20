@@ -43,6 +43,9 @@ $translate = $this->plugin('translate');
             </li>
         <?php endforeach; ?>
         </ul>
+        <?php if (!empty($group['toggle'])): ?>
+        <p class="vpb-facet-more"><a href="<?php echo $escape($group['toggle']['url']); ?>"><?php echo $escape($group['toggle']['label']); ?></a></p>
+        <?php endif; ?>
     </fieldset>
 <?php endforeach; ?>
     <button type="button" class="vpb-facets-done"><?php echo $escape(sprintf($translate('Show %s results'), number_format($total))); ?></button>

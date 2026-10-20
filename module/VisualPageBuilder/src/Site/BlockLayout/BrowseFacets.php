@@ -56,17 +56,20 @@ class BrowseFacets extends AbstractSchemaBlock
         // On an item set's page the collection is fixed to that set, so it isn't offered as a filter.
         $fields = array_diff_key(self::FIELDS, $screen === 'item-set' ? ['item_set' => 1] : []);
 
+        $expanded = self::expandedFields($view);
         $groups = [];
         $active = [];
         foreach ($fields as $field => $label) {
             $options = [];
             $options_all = $result['facetOptions'][$field] ?? [];
             $largest = $options_all ? max(array_column($options_all, 'count')) : 1;
+            $isText = isset(\VisualPageBuilder\Search\Index::TEXT_FIELDS[$field]);
+            $showAll = $isText && in_array($field, $expanded, true);
             $shown = 0;
             foreach ($options_all as $option) {
                 $on = in_array($option['id'], $selected[$field], true);
-                // Text values: the most common ones, and always the chosen ones.
-                if (isset(\VisualPageBuilder\Search\Index::TEXT_FIELDS[$field]) && !$on && $shown >= self::TEXT_SHOWN) {
+                // Text values: the most common ones, and always the chosen ones, unless "Show all" is on.
+                if ($isText && !$showAll && !$on && $shown >= self::TEXT_SHOWN) {
                     continue;
                 }
                 $shown++;
@@ -75,16 +78,24 @@ class BrowseFacets extends AbstractSchemaBlock
                     ? array_values(array_diff($selected[$field], [$option['id']]))
                     : array_values(array_merge($selected[$field], [$option['id']]));
                 $bar = (int) round(100 * $option['count'] / max(1, $largest));
-                $options[] = $option + ['active' => $on, 'url' => self::url($view, $next), 'bar' => $bar];
+                $options[] = $option + ['active' => $on, 'url' => self::url($view, $next, $expanded), 'bar' => $bar];
             }
             if ($options) {
                 // Dates read as bars: each decade's width is its share of the largest decade.
-                $groups[] = ['label' => $view->translate($label), 'options' => $options, 'bars' => $field === 'decade'];
+                $toggle = null;
+                if ($isText && count($options_all) > self::TEXT_SHOWN) {
+                    $others = array_values(array_diff($expanded, [$field]));
+                    $toggle = $showAll
+                        ? ['url' => self::url($view, $selected, $others), 'label' => $view->translate('Show fewer')]
+                        : ['url' => self::url($view, $selected, array_merge($expanded, [$field])),
+                            'label' => sprintf($view->translate('Show all %s'), number_format(count($options_all)))];
+                }
+                $groups[] = ['label' => $view->translate($label), 'options' => $options, 'bars' => $field === 'decade', 'toggle' => $toggle];
             }
             foreach (BrowseQuery::labelsFor($api, $field, $selected[$field], $conn) as $id => $name) {
                 $next = $selected;
                 $next[$field] = array_values(array_diff($selected[$field], [$id]));
-                $active[] = ['label' => $name, 'url' => self::url($view, $next)];
+                $active[] = ['label' => $name, 'url' => self::url($view, $next, $expanded)];
             }
         }
 
@@ -94,7 +105,7 @@ class BrowseFacets extends AbstractSchemaBlock
             'total' => $result['total'],
             'groups' => $groups,
             'active' => $active,
-            'clearUrl' => $active ? self::url($view, []) : null,
+            'clearUrl' => $active ? self::url($view, [], $expanded) : null,
             'blockClass' => static::cssClass(),
         ];
     }
@@ -103,7 +114,7 @@ class BrowseFacets extends AbstractSchemaBlock
      * The address for these filters: the search, sort and page size stay, the filters
      * are exactly the ones given, and paging starts again at page one.
      */
-    public static function url(PhpRenderer $view, array $selected): string
+    public static function url(PhpRenderer $view, array $selected, array $expanded = []): string
     {
         $query = array_intersect_key($view->params()->fromQuery(), array_flip(['q', 'fulltext_search', 'per_page', 'sort']));
         foreach (BrowseQuery::FILTER_PARAMS as $field) {
@@ -111,6 +122,16 @@ class BrowseFacets extends AbstractSchemaBlock
                 $query[$field] = array_values($selected[$field]);
             }
         }
+        if ($expanded) {
+            $query['show_all'] = array_values($expanded);
+        }
         return $view->url(null, [], ['query' => $query], true);
+    }
+
+    /** Text fields whose full list is shown ("Show all"), from the address bar. */
+    public static function expandedFields(PhpRenderer $view): array
+    {
+        $asked = (array) $view->params()->fromQuery('show_all', []);
+        return array_values(array_intersect(array_keys(\VisualPageBuilder\Search\Index::TEXT_FIELDS), array_map('strval', $asked)));
     }
 }
