@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 namespace VisualPageBuilder\Templates;
 
+use Doctrine\DBAL\Connection;
 use Omeka\Api\Manager as ApiManager;
 use Omeka\Api\Representation\SitePageRepresentation;
 use Omeka\Api\Representation\SiteRepresentation;
@@ -140,6 +141,37 @@ class Store
         $meta['status'] = $status === 'live' ? 'live' : 'draft';
         self::saveMeta($api, $page, $meta);
         return [];
+    }
+
+    /**
+     * Puts back the required blocks a template is missing, at the end of its
+     * layout (the person moves them where they want). Returns the layouts added.
+     *
+     * Omeka numbers the blocks of a partial update from 1, so the existing
+     * blocks keep their positions and the new ones tie with them. The positions
+     * are set afterwards: existing blocks in their order, then the new ones.
+     */
+    public static function restoreRequired(ApiManager $api, Connection $conn, SitePageRepresentation $page): array
+    {
+        $meta = self::meta($page);
+        $missing = Required::missing((string) ($meta['screen'] ?? ''), self::blockTypes($page));
+        if (!$missing) {
+            return [];
+        }
+        $pageId = (int) $page->id();
+        $existing = array_map(fn ($block) => (int) $block->id(), array_values($page->blocks()));
+        $slug = $page->site()->slug();
+        $api->update('site_pages', $pageId, ['o:block' => array_map(function ($layout) use ($slug) {
+            return ['o:layout' => $layout, 'o:data' => Screens::starterData($layout, $slug), 'o:attachment' => []];
+        }, $missing)], [], ['isPartial' => true]);
+
+        $all = array_map('intval', $conn->fetchFirstColumn('SELECT id FROM site_page_block WHERE page_id = ?', [$pageId]));
+        $added = array_values(array_diff($all, $existing));
+        sort($added);
+        foreach (array_merge($existing, $added) as $position => $blockId) {
+            $conn->executeStatement('UPDATE site_page_block SET position = ? WHERE id = ?', [$position + 1, $blockId]);
+        }
+        return $missing;
     }
 
     /** Position in the list (a Theme Builder reorder); other templates keep their order. */

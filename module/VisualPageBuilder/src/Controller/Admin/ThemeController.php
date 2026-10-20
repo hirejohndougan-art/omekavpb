@@ -91,6 +91,7 @@ class ThemeController extends AbstractActionController
                 case 'duplicate':
                 case 'status':
                 case 'move':
+                case 'restore':
                     return $this->changeTemplate($site, $action, $post);
             }
         } catch (\InvalidArgumentException $e) {
@@ -142,6 +143,17 @@ class ThemeController extends AbstractActionController
             }
         } elseif ($action === 'move') {
             $this->move($site, $template, ($post['direction'] ?? '') === 'up' ? -1 : 1);
+        } elseif ($action === 'restore') {
+            $conn = $this->getEvent()->getApplication()->getServiceManager()->get('Omeka\Connection');
+            $added = Store::restoreRequired($this->manager(), $conn, $template['page']);
+            if ($added) {
+                $labels = array_map(function ($k) {
+                    return ucwords(str_replace('-', ' ', $k));
+                }, $added);
+                $this->messenger()->addSuccess(sprintf($this->translate('Put back: %s. They are at the end of the template; move them where you want them.'), implode(', ', $labels))); // @translate
+            } else {
+                $this->messenger()->addSuccess($this->translate('No required blocks were missing.')); // @translate
+            }
         }
         return $this->back($site);
     }

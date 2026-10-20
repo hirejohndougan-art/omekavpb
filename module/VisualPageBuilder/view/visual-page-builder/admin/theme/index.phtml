@@ -60,6 +60,12 @@ echo $this->pageTitle(sprintf($translate('Theme Builder: %s'), $site->title()), 
         <span class="vpb-theme-state <?php echo $t['status'] === 'live' ? 'is-live' : 'is-draft'; ?>"><?php echo $escape($t['status'] === 'live' ? $translate('Live') : $translate('Draft')); ?></span>
         <?php if ($t['missing']): ?>
         <span class="vpb-theme-missing"><?php echo $escape($translate('Missing:')); ?> <?php echo $escape(implode(', ', array_map(function ($k) { return ucwords(str_replace('-', ' ', $k)); }, $t['missing']))); ?></span>
+        <form method="post" class="vpb-theme-inline">
+            <input type="hidden" name="vpb_theme_csrf" value="<?php echo $escape($csrf); ?>">
+            <input type="hidden" name="vpb_action" value="restore">
+            <input type="hidden" name="template_id" value="<?php echo (int) $t['id']; ?>">
+            <button type="submit"><?php echo $escape($translate('Put back')); ?></button>
+        </form>
         <?php endif; ?>
         <form method="post" class="vpb-theme-inline">
             <input type="hidden" name="vpb_theme_csrf" value="<?php echo $escape($csrf); ?>">
