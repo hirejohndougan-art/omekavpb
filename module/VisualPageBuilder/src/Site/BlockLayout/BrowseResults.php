@@ -56,6 +56,7 @@ class BrowseResults extends AbstractSchemaBlock
         return [
             'cards' => $cards,
             'total' => $result['total'],
+            'noun' => $result['noun'],
             'query' => $result['query'],
             'suggestion' => $result['suggestion'],
             'suggestionUrl' => $result['suggestion'] !== null ? $view->url(null, [], ['query' => ['q' => $result['suggestion']]], true) : null,

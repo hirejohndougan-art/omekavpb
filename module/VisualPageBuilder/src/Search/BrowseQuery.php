@@ -3,6 +3,7 @@
 namespace VisualPageBuilder\Search;
 
 use Laminas\View\Renderer\PhpRenderer;
+use VisualPageBuilder\Templates\CurrentScreen;
 use Omeka\Api\Representation\SiteRepresentation;
 
 
@@ -13,6 +14,9 @@ use Omeka\Api\Representation\SiteRepresentation;
  *
  * Results blocks and Pagination blocks on the same page both need the answer,
  * so it is worked out once per request and remembered here.
+ *
+ * On the Browse item sets screen the same parameters find item sets (no facets,
+ * since the index only covers items).
  *
  * Address parameters: q, page, per_page (12, 24 or 48), item_set[] and class[].
  */
@@ -51,14 +55,15 @@ class BrowseQuery
     }
 
     /**
-     * The matching items for this request on this site.
+     * The matching items (or item sets, on the item set screen) for this request on this site.
      *
-     * @return array{items: \Omeka\Api\Representation\ItemRepresentation[], total: int, page: int, per_page: int, pages: int, query: string, suggestion: ?string, mode: string}
+     * @return array{items: array, total: int, page: int, per_page: int, pages: int, query: string, suggestion: ?string, mode: string, noun: string}
      */
     public static function run(PhpRenderer $view, SiteRepresentation $site): array
     {
         $state = self::fromRequest($view);
-        $key = $site->id() . '|' . json_encode($state);
+        $screen = CurrentScreen::get() ?? 'browse-items';
+        $key = $site->id() . '|' . $screen . '|' . json_encode($state);
         if (isset(self::$answers[$key])) {
             return self::$answers[$key];
         }
@@ -69,7 +74,20 @@ class BrowseQuery
         $settings = $services->get('Omeka\Settings');
         $siteId = (int) $site->id();
 
-        if (Index::ready($conn, $settings)) {
+        if ($screen === 'browse-item-sets') {
+            $params = ['page' => $state['page'], 'per_page' => $state['per_page'], 'sort_by' => 'title', 'site_id' => $siteId];
+            if ($state['q'] !== '') {
+                $params['fulltext_search'] = $state['q'];
+            }
+            $response = $api->search('item_sets', $params);
+            $answer = [
+                'items' => $response->getContent(),
+                'total' => (int) $response->getTotalResults(),
+                'suggestion' => null,
+                'mode' => 'api',
+                'noun' => 'item sets',
+            ];
+        } elseif (Index::ready($conn, $settings)) {
             $synonyms = Synonyms::fromText((string) $settings->get(Index::SYNONYMS_SETTING, ''));
             $result = Search::run($conn, $state['q'], false, $state['page'], $state['per_page'], $synonyms, $state['facets'], $siteId);
             $items = self::items($api, $result['ids']);
@@ -78,6 +96,7 @@ class BrowseQuery
                 'total' => $result['total'],
                 'suggestion' => $result['suggestion'],
                 'mode' => 'index',
+                'noun' => 'items',
             ];
         } else {
             // The index is missing, empty, or being rebuilt: use Omeka's own search.
@@ -97,6 +116,7 @@ class BrowseQuery
                 'total' => (int) $response->getTotalResults(),
                 'suggestion' => null,
                 'mode' => 'fallback',
+                'noun' => 'items',
             ];
         }
 

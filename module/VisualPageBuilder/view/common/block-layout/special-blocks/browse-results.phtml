@@ -4,6 +4,7 @@
  *
  * @var array $cards
  * @var int $total
+ * @var string $noun  'items' or 'item sets'
  * @var string $query
  * @var string|null $suggestion
  * @var string|null $suggestionUrl
@@ -12,17 +13,20 @@
  */
 $escape = $this->plugin('escapeHtml');
 $translate = $this->plugin('translate');
+$isSets = $noun === 'item sets';
+$noun = $isSets ? $translate('item sets') : $translate('items');
+$label = $total === 1 ? ($isSets ? $translate('item set') : $translate('item')) : $noun;
 ?>
 <div class="special-blocks <?php echo $escape($blockClass); ?> vpb-results vpb-results-<?php echo $escape($layout); ?>">
 <?php if (!$cards): ?>
     <p class="vpb-results-empty">
-        <?php echo $escape($translate('No items match your search.')); ?>
+        <?php echo $escape(sprintf($translate('No %s match your search.'), $noun)); ?>
         <?php if ($suggestion && $suggestionUrl): ?>
         <?php echo $escape($translate('Did you mean')); ?> <a href="<?php echo $escape($suggestionUrl); ?>"><?php echo $escape($suggestion); ?></a>?
         <?php endif; ?>
     </p>
 <?php else: ?>
-    <p class="vpb-results-count"><?php echo $escape(sprintf($translate('%s items'), number_format($total))); ?></p>
+    <p class="vpb-results-count"><?php echo $escape(sprintf($translate('%s %s'), number_format($total), $label)); ?></p>
     <ul class="vpb-results-items">
     <?php foreach ($cards as $card): ?>
         <li class="vpb-result">
