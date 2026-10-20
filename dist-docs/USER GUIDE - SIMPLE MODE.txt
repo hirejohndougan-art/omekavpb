@@ -1,0 +1,132 @@
+VISUAL PAGE BUILDER for Omeka S
+USER GUIDE: Simple mode (for volunteers)
+========================================================================
+
+This guide is for people who add and check items in the Omeka admin.
+Simple mode is the default. It shows plain words and only the screens
+you need. Your site manager can switch on Expert mode if you need the
+Omeka screens; see "Simple and Expert" at the end.
+
+
+------------------------------------------------------------------------
+THE SIDEBAR
+------------------------------------------------------------------------
+
+Home         The starting page: recent work and the search report.
+Items        Find and open items in the collection.
+Add an item  Add something new, step by step (see below).
+Files        Pictures and documents attached to items.
+Item sets    Groups of items.
+Import       Bring in items from a spreadsheet (when it is set up).
+Settings     Search words that mean the same thing (see "Search words").
+People       Who can sign in and what they can do.
+Questions    The labels and help text on the Add an item form.
+Glossary     Plain explanations of the words used in this admin.
+
+The page you are on is shown in bold in the sidebar.
+
+
+------------------------------------------------------------------------
+ADDING AN ITEM
+------------------------------------------------------------------------
+
+Choose "Add an item" in the sidebar. There are three steps. You can
+leave at any point; nothing is public until you publish it.
+
+Step 1: Files
+  Choose one or more pictures or documents from your computer and
+  press "Add files and continue". You can skip this step with "Skip for
+  now" and add files later from the item's Files tab.
+
+Step 2: Describe
+  Fill in the title (required), then any of: description, creator,
+  date, subject and place. Each question has a short note underneath.
+  The preview on the side shows how the item will look as you type.
+  Press "Save and continue".
+
+Step 3: Where it shows
+  Tick each site the item should appear on. Then choose one:
+    Publish         The item is public on the ticked sites.
+    Keep as draft   The item is saved but not public (staff only).
+    Save only       The item is saved as it is now. Nothing is made
+                    public by this button.
+
+Publish needs a title. When you finish, the item opens on its own screen.
+
+
+------------------------------------------------------------------------
+FINDING AND CHANGING AN ITEM
+------------------------------------------------------------------------
+
+Items shows the collection. Type words in the search box to narrow it.
+Press an item's title to open it. The item screen has four tabs:
+
+  Details        The title, description and other facts. Change them and
+                 press "Save details". A blank title is not saved, so the
+                 old title stays.
+  Where it shows The sites the item shows on, and the Public tick.
+                 Press "Save where it shows".
+  Files          The pictures and documents. Add a file, remove one, or
+                 press "Make main image" on the one you want.
+  History        Earlier versions of the item. Press "Restore this
+                 version" to go back to one. Each change keeps the
+                 version it replaces.
+
+Actions at the bottom of the item screen:
+  Duplicate  Makes a copy of the item. The copy is a draft, staff only.
+  Delete     Removes the item. Tick "I understand: deleting cannot be
+             undone from here" first, then press "Delete this item".
+
+
+------------------------------------------------------------------------
+THE QUESTIONS LABELS
+------------------------------------------------------------------------
+
+The labels and help text you see on the Add an item form come from
+Questions. Your site manager can change the wording there. Title is
+always required.
+
+
+------------------------------------------------------------------------
+SEARCH WORDS
+------------------------------------------------------------------------
+
+On the Settings page, under Search synonyms, each line says words that
+mean the same thing, written as:
+
+    rr = railroad
+    station = depot
+
+Someone who searches for "rr" will also find items that say "railroad".
+The rule works one way only: searching "railroad" does not find "rr"
+unless you also add a line for it. Only the lines with an equals sign
+are used. Only a global administrator can change Settings.
+
+
+------------------------------------------------------------------------
+THE SEARCH REPORT
+------------------------------------------------------------------------
+
+Home shows the words people searched for on the public site in the
+last 30 days: the most common ones, and the ones that found nothing.
+If a word keeps finding nothing, consider adding it as a search word
+or adding the missing item.
+
+
+------------------------------------------------------------------------
+SIMPLE AND EXPERT
+------------------------------------------------------------------------
+
+Expert mode adds the Omeka screens to the sidebar, shows the Omeka ID
+of each item, and shows the Dublin Core code (for example dcterms:title)
+beside each question. It
+is switched on from the bottom of the sidebar, separately for each
+person. Switch back to Simple at any time.
+
+
+------------------------------------------------------------------------
+GETTING HELP
+------------------------------------------------------------------------
+
+Open Glossary in the sidebar for the meaning of words such as draft,
+public and main picture. For anything else, ask the site manager.
