@@ -6,6 +6,7 @@ use Laminas\View\Renderer\PhpRenderer;
 use Omeka\Api\Representation\SiteRepresentation;
 use VisualPageBuilder\Schema\Schema;
 use VisualPageBuilder\Search\BrowseQuery;
+use VisualPageBuilder\Site\BlockLayout\BrowseFacets;
 
 /**
  * The items that match the visitor's search or filters, as a grid or a list,
@@ -41,6 +42,29 @@ class BrowseResults extends AbstractSchemaBlock
         ];
     }
 
+    /**
+     * The no-results helper: the names of the filters in use, and the link that
+     * removes the narrowest one. Null when there is nothing to suggest.
+     */
+    protected static function helper(PhpRenderer $view, array $result): ?array
+    {
+        if (empty($result['helper'])) {
+            return null;
+        }
+        $api = $view->getHelperPluginManager()->getServiceLocator()->get('Omeka\ApiManager');
+        $names = [];
+        foreach (['item_set', 'class'] as $field) {
+            $names = array_merge($names, array_values(BrowseQuery::labelsFor($api, $field, $result['selected'][$field])));
+        }
+        $removed = BrowseQuery::labelsFor($api, $result['helper']['field'], [$result['helper']['id']]);
+        return [
+            'names' => $names,
+            'removed' => $removed[$result['helper']['id']] ?? '',
+            'count' => $result['helper']['count'],
+            'url' => BrowseFacets::url($view, $result['helper']['facets']),
+        ];
+    }
+
     protected function viewVars(PhpRenderer $view, array $data, SiteRepresentation $site, string $blockKey): array
     {
         $result = BrowseQuery::run($view, $site);
@@ -60,6 +84,7 @@ class BrowseResults extends AbstractSchemaBlock
             'query' => $result['query'],
             'suggestion' => $result['suggestion'],
             'suggestionUrl' => $result['suggestion'] !== null ? $view->url(null, [], ['query' => [$result['param'] => $result['suggestion']]], true) : null,
+            'helper' => self::helper($view, $result),
             'layout' => $data['layout'] === 'list' ? 'list' : 'grid',
             'blockClass' => static::cssClass(),
         ];

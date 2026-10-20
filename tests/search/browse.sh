@@ -52,5 +52,7 @@ check "Sort is drawn" "$(page '' | grep -c 'vpb-sort"')" "1"
 check "an unknown sort falls back to best match" "$(page 'sort=bogus' | grep -o 'aria-current="true">Best match' | wc -l)" "1"
 check "a sort keeps the search on its links" "$(page 'q=lighthouse&sort=title' | grep -c 'sort=oldest&amp;q=lighthouse\|q=lighthouse&amp;sort=oldest\|sort=oldest')" "1"
 
+check "no results with filters offers to remove the narrowest one" "$(page 'item_set%5B%5D=771&class%5B%5D=99999' | grep -c 'vpb-results-helper')" "1"
+
 echo "browse checks: $pass passed, $fail failed"
 [ "$fail" -eq 0 ]

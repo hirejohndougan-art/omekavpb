@@ -112,7 +112,11 @@ class BrowseQuery
                 'mode' => 'index',
                 'noun' => 'items',
                 'facetOptions' => self::facetLabels($api, Search::facetCounts($conn, $state['q'], false, $synonyms, $state['facets'], $siteId)),
+                'helper' => null,
             ];
+            if ($result['total'] === 0 && ($state['facets']['item_set'] || $state['facets']['class'])) {
+                $answer['helper'] = self::noResultsHelper($api, $conn, $state, $synonyms, $siteId);
+            }
         } else {
             // The index is missing, empty, or being rebuilt: use Omeka's own search.
             $params = ['page' => $state['page'], 'per_page' => $state['per_page'], 'sort_by' => 'title', 'site_id' => $siteId];
@@ -147,6 +151,29 @@ class BrowseQuery
         ];
         self::$answers[$key] = $answer;
         return $answer;
+    }
+
+    /**
+     * When filters find nothing: the filter whose removal gives the most results
+     * (so "No results with Schools + 1890s. Remove 1890s?"), or null when removing
+     * any one filter still finds nothing.
+     *
+     * @return array{field: string, id: int, count: int, facets: array}|null
+     */
+    protected static function noResultsHelper($api, $conn, array $state, ?Synonyms $synonyms, int $siteId): ?array
+    {
+        $best = null;
+        foreach (['item_set', 'class'] as $field) {
+            foreach ($state['facets'][$field] as $id) {
+                $without = $state['facets'];
+                $without[$field] = array_values(array_diff($without[$field], [$id]));
+                $count = Search::run($conn, $state['q'], false, 1, 1, $synonyms, $without, $siteId)['total'];
+                if ($count > 0 && ($best === null || $count > $best['count'])) {
+                    $best = ['field' => $field, 'id' => (int) $id, 'count' => $count, 'facets' => $without];
+                }
+            }
+        }
+        return $best;
     }
 
     /**

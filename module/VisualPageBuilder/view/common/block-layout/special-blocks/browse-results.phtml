@@ -8,6 +8,7 @@
  * @var string $query
  * @var string|null $suggestion
  * @var string|null $suggestionUrl
+ * @var array|null $helper  {names, removed, count, url}
  * @var string $layout
  * @var string $blockClass
  */
@@ -25,6 +26,13 @@ $label = $total === 1 ? ($isSets ? $translate('item set') : $translate('item')) 
         <?php echo $escape($translate('Did you mean')); ?> <a href="<?php echo $escape($suggestionUrl); ?>"><?php echo $escape($suggestion); ?></a>?
         <?php endif; ?>
     </p>
+    <?php if ($helper): ?>
+    <p class="vpb-results-helper">
+        <?php echo $escape(sprintf($translate('No results with %s.'), implode(' + ', $helper['names']))); ?>
+        <a href="<?php echo $escape($helper['url']); ?>"><?php echo $escape($helper['removed'] !== '' ? sprintf($translate('Remove %s?'), $helper['removed']) : $translate('Remove this filter?')); ?></a>
+        <?php echo $escape(sprintf($translate('(%s results)'), number_format($helper['count']))); ?>
+    </p>
+    <?php endif; ?>
 <?php else: ?>
     <p class="vpb-results-count"><?php echo $escape(sprintf($translate('%s %s'), number_format($total), $label)); ?><?php if ($query !== ''): ?> <?php echo $escape(sprintf($translate('for “%s”'), $query)); ?><?php endif; ?></p>
     <ul class="vpb-results-items">
