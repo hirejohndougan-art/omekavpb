@@ -1,0 +1,66 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+namespace VisualPageBuilder\Site\BlockLayout;
+
+use Laminas\View\Renderer\PhpRenderer;
+use Omeka\Api\Representation\SiteRepresentation;
+use VisualPageBuilder\Schema\Schema;
+use VisualPageBuilder\Search\BrowseQuery;
+
+/**
+ * The items that match the visitor's search or filters, as a grid or a list,
+ * with a line saying how many there are. Required on the browse screens.
+ */
+class BrowseResults extends AbstractSchemaBlock
+{
+    const DESCRIPTION = 'The items a visitor is browsing or searching for, as a grid or a list, with the number of matches. Use it on Browse items, Search results and Item sets.'; // @translate
+
+    const GOOD_FOR = 'Every browse page. Keep it on the page: the Check page asks for it.'; // @translate
+
+    const TEMPLATE = 'browse-results';
+
+    public function getLabel()
+    {
+        return 'Results'; // @translate
+    }
+
+    public function schema(): array
+    {
+        return [
+            [
+                'key' => 'layout', 'type' => Schema::TYPE_SELECT, 'group' => 'Display',
+                'label' => 'Show as', // @translate
+                'options' => ['grid' => 'Grid', 'list' => 'List'], // @translate
+                'default' => 'grid',
+            ],
+            [
+                'key' => 'show_description', 'type' => Schema::TYPE_CHECKBOX, 'group' => 'Display',
+                'label' => 'Show each item\'s description', // @translate
+                'default' => false,
+            ],
+        ];
+    }
+
+    protected function viewVars(PhpRenderer $view, array $data, SiteRepresentation $site, string $blockKey): array
+    {
+        $result = BrowseQuery::run($view, $site);
+        $cards = [];
+        foreach ($result['items'] as $item) {
+            $cards[] = [
+                'title' => $item->displayTitle(),
+                'url' => $item->siteUrl($site->slug()),
+                'thumb' => $item->thumbnailDisplayUrl('square'),
+                'description' => $data['show_description'] ? $item->displayDescription() : null,
+            ];
+        }
+        return [
+            'cards' => $cards,
+            'total' => $result['total'],
+            'query' => $result['query'],
+            'suggestion' => $result['suggestion'],
+            'suggestionUrl' => $result['suggestion'] !== null ? $view->url(null, [], ['query' => ['q' => $result['suggestion']]], true) : null,
+            'layout' => $data['layout'] === 'list' ? 'list' : 'grid',
+            'blockClass' => static::cssClass(),
+        ];
+    }
+}

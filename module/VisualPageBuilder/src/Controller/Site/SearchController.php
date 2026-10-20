@@ -4,7 +4,6 @@ namespace VisualPageBuilder\Controller\Site;
 
 use Laminas\Mvc\Controller\AbstractActionController;
 use VisualPageBuilder\Search\Index;
-use VisualPageBuilder\Search\ReindexJob;
 use VisualPageBuilder\Search\Search;
 use VisualPageBuilder\Search\Synonyms;
 
@@ -42,7 +41,7 @@ class SearchController extends AbstractActionController
         // Only this site's items: the site comes from the URL (/s/:site-slug).
         $siteId = (int) $this->currentSite()->id();
 
-        $index = $this->indexReady($conn, $settings);
+        $index = Index::ready($conn, $settings);
         if ($index) {
             $synonyms = Synonyms::fromText((string) $settings->get(Index::SYNONYMS_SETTING, ''));
             $result = Search::run($conn, $query, false, $page, $perPage, $synonyms, $facets, $siteId);
@@ -91,18 +90,6 @@ class SearchController extends AbstractActionController
         $response->getHeaders()->addHeaderLine('Content-Type', 'application/json; charset=utf-8');
         $response->setContent(json_encode($data, JSON_UNESCAPED_UNICODE));
         return $response;
-    }
-
-    /** True when the index exists, has rows, and is not being rebuilt right now. */
-    private function indexReady($conn, $settings): bool
-    {
-        if ($settings->get(ReindexJob::REBUILDING_SETTING, false)) {
-            return false;
-        }
-        if (!Index::exists($conn)) {
-            return false;
-        }
-        return (bool) $conn->fetchOne('SELECT 1 FROM ' . Index::DOC . ' LIMIT 1');
     }
 
     /**

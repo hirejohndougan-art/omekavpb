@@ -39,6 +39,8 @@ return [
             'vpbSiteRegion' => View\Helper\VpbSiteRegion::class,
             // The Theme Builder template for an item page (Companion Theme).
             'vpbTemplate' => View\Helper\VpbTemplate::class,
+            // The Theme Builder template for a page-wide screen, such as Browse items (Companion Theme).
+            'vpbScreen' => View\Helper\VpbScreen::class,
         ],
         // Replaces Omeka's page layout helper so sections can show true
         // columns. Pages this module never touched are passed straight

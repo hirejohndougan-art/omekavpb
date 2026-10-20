@@ -1,0 +1,34 @@
+<?php
+/**
+ * Previous and next links, and the page numbers.
+ *
+ * @var int $page
+ * @var int $pages
+ * @var string|null $previousUrl
+ * @var string|null $nextUrl
+ * @var array $numbers
+ * @var string $blockClass
+ */
+$escape = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+if ($pages <= 1) {
+    return;
+}
+?>
+<nav class="special-blocks <?php echo $escape($blockClass); ?> vpb-pagination" aria-label="<?php echo $escape($translate('Pages')); ?>">
+    <?php if ($previousUrl): ?>
+    <a class="vpb-pagination-previous" href="<?php echo $escape($previousUrl); ?>" rel="prev"><?php echo $escape($translate('Previous')); ?></a>
+    <?php endif; ?>
+    <ol class="vpb-pagination-numbers">
+    <?php foreach ($numbers as $number): ?>
+        <?php if ($number === null): ?>
+        <li class="vpb-pagination-gap" aria-hidden="true">…</li>
+        <?php else: ?>
+        <li><a href="<?php echo $escape($number['url']); ?>"<?php echo $number['current'] ? ' aria-current="page"' : ''; ?>><?php echo $escape($number['number']); ?></a></li>
+        <?php endif; ?>
+    <?php endforeach; ?>
+    </ol>
+    <?php if ($nextUrl): ?>
+    <a class="vpb-pagination-next" href="<?php echo $escape($nextUrl); ?>" rel="next"><?php echo $escape($translate('Next')); ?></a>
+    <?php endif; ?>
+</nav>

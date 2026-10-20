@@ -1,0 +1,42 @@
+<?php
+/**
+ * The items that match a browse or search request.
+ *
+ * @var array $cards
+ * @var int $total
+ * @var string $query
+ * @var string|null $suggestion
+ * @var string|null $suggestionUrl
+ * @var string $layout
+ * @var string $blockClass
+ */
+$escape = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+?>
+<div class="special-blocks <?php echo $escape($blockClass); ?> vpb-results vpb-results-<?php echo $escape($layout); ?>">
+<?php if (!$cards): ?>
+    <p class="vpb-results-empty">
+        <?php echo $escape($translate('No items match your search.')); ?>
+        <?php if ($suggestion && $suggestionUrl): ?>
+        <?php echo $escape($translate('Did you mean')); ?> <a href="<?php echo $escape($suggestionUrl); ?>"><?php echo $escape($suggestion); ?></a>?
+        <?php endif; ?>
+    </p>
+<?php else: ?>
+    <p class="vpb-results-count"><?php echo $escape(sprintf($translate('%s items'), number_format($total))); ?></p>
+    <ul class="vpb-results-items">
+    <?php foreach ($cards as $card): ?>
+        <li class="vpb-result">
+            <a class="vpb-result-link" href="<?php echo $escape($card['url']); ?>">
+                <?php if ($card['thumb']): ?>
+                <img class="vpb-result-image" src="<?php echo $escape($card['thumb']); ?>" alt="" loading="lazy">
+                <?php endif; ?>
+                <span class="vpb-result-title"><?php echo $escape($card['title']); ?></span>
+            </a>
+            <?php if (!empty($card['description'])): ?>
+            <p class="vpb-result-description"><?php echo $escape($card['description']); ?></p>
+            <?php endif; ?>
+        </li>
+    <?php endforeach; ?>
+    </ul>
+<?php endif; ?>
+</div>

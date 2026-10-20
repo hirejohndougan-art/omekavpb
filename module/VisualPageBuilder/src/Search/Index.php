@@ -86,6 +86,18 @@ class Index
         ) === 1;
     }
 
+    /** True when the index exists, has rows, and is not being rebuilt right now. */
+    public static function ready(Connection $conn, $settings): bool
+    {
+        if ($settings->get(ReindexJob::REBUILDING_SETTING, false)) {
+            return false;
+        }
+        if (!self::exists($conn)) {
+            return false;
+        }
+        return (bool) $conn->fetchOne('SELECT 1 FROM ' . self::DOC . ' LIMIT 1');
+    }
+
     /** Replace one item's rows with a fresh reading of it. */
     public static function indexItem(Connection $conn, ItemRepresentation $item): void
     {

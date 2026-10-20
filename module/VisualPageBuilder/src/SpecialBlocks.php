@@ -84,6 +84,9 @@ class SpecialBlocks
         'itemCite' => Site\BlockLayout\ItemCite::class,
         'itemDownload' => Site\BlockLayout\ItemDownload::class,
         'itemPrevNext' => Site\BlockLayout\ItemPrevNext::class,
+        // The results and page links of the browse screens (Theme Builder, Phase 4).
+        'results' => Site\BlockLayout\BrowseResults::class,
+        'pagination' => Site\BlockLayout\BrowsePagination::class,
     ];
 
     /**
@@ -102,6 +105,8 @@ class SpecialBlocks
         'Reuse' => ['specialSharedSection'], // @translate
         // Only offered in headers and footers (where the palette shows them all together).
         'Header and footer' => ['specialLogo', 'specialSiteTitle', 'specialSiteMenu', 'specialCopyright'], // @translate
+        // Only offered when editing a Theme Builder browse or search template.
+        'Browse pages' => ['results', 'pagination'], // @translate
         // Only offered when editing a Theme Builder item template (placement "item").
         'Item fields' => ['itemTitle', 'itemMainImage', 'itemDescription', 'itemDate', 'itemDetails', 'itemOneField', 'itemSubjects', 'itemSets', 'itemCite', 'itemDownload', 'itemPrevNext'], // @translate
     ];
