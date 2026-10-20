@@ -98,7 +98,8 @@ $sideLinks = [
     'admin/visual-page-builder-glossary' => 'Glossary',
 ];
 foreach ($sideLinks as $route => $label): ?>
-                        <li><a href="<?php echo $escape($this->url($route)); ?>"<?php echo $route === $this->vpbCurrent ? ' aria-current="page"' : ''; ?>><?php echo $escape($translate($label)); ?></a></li>
+                        <?php // The sidebar's Add an item always opens the step-by-step form (and resets a saved classic choice), since Omeka's full form has no way back. ?>
+                        <li><a href="<?php echo $escape($route === 'admin/visual-page-builder-add' ? $this->url($route, [], ['query' => ['form' => 'friendly']], true) : $this->url($route)); ?>"<?php echo $route === $this->vpbCurrent ? ' aria-current="page"' : ''; ?>><?php echo $escape($translate($label)); ?></a></li>
 <?php endforeach; ?>
                     </ul>
                     <?php if ($this->vpbMode === 'expert'): ?>
