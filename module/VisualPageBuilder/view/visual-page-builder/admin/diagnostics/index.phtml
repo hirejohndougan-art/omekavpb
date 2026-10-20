@@ -1,0 +1,61 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Diagnostics: create or turn off the token that lets Claude read the
+ * plugin's report. The token is shown once, here.
+ *
+ * @var bool $enabled  a token is set
+ * @var string $created  when the token was made (ISO 8601)
+ * @var ?string $newToken  the token just made; shown once and never stored
+ * @var string $csrf
+ * @var string $csrfName
+ */
+$escape = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+$this->headStyle()->appendStyle('
+.vpb-diag-box{max-width:52rem;border:1px solid #dfdfdf;border-radius:4px;padding:1rem 1.2rem;background:#fff;margin:0 0 1.2rem}
+.vpb-diag-token{font-family:monospace;word-break:break-all;background:#f5f5f5;padding:.5rem .6rem;border-radius:3px}
+.vpb-diag-note{font-size:.9rem;color:#676767}
+');
+echo $this->pageTitle($translate('Diagnostics'), 1, $translate('Visual Builder'));
+echo $this->partial('visual-page-builder/admin/library/_nav', ['current' => '']);
+?>
+<p class="vpb-diag-note"><?php echo $escape($translate('A read-only report of the plugin: installed versions, tables, search index, recent import and index jobs, and the latest errors in the log. It holds no tokens, contact details or page content.')); ?></p>
+
+<?php if ($newToken): ?>
+<div class="vpb-diag-box" role="status">
+    <p><strong><?php echo $escape($translate('Your diagnostics token')); ?></strong></p>
+    <p class="vpb-diag-token"><?php echo $escape($newToken); ?></p>
+    <p class="vpb-diag-note"><?php echo $escape($translate('Copy it now. It is shown only once and is not stored, so a new one must be made if it is lost.')); ?></p>
+</div>
+<?php endif; ?>
+
+<div class="vpb-diag-box">
+    <p>
+        <?php if ($enabled): ?>
+            <strong><?php echo $escape($translate('The report is on.')); ?></strong>
+            <?php if ($created): ?>
+                <span class="vpb-diag-note"><?php echo $escape(sprintf($translate('Token made %s.'), $created)); ?></span>
+            <?php endif; ?>
+        <?php else: ?>
+            <strong><?php echo $escape($translate('The report is off.')); ?></strong>
+            <span class="vpb-diag-note"><?php echo $escape($translate('Make a token to turn it on. Without one, the report address is not found.')); ?></span>
+        <?php endif; ?>
+    </p>
+    <form method="post" style="display:inline">
+        <input type="hidden" name="<?php echo $escape($csrfName); ?>" value="<?php echo $escape($csrf); ?>">
+        <button type="submit" name="vpb_diagnostics_action" value="create"><?php echo $escape($enabled ? $translate('Make a new token') : $translate('Make a token')); ?></button>
+    </form>
+    <?php if ($enabled): ?>
+    <form method="post" style="display:inline">
+        <input type="hidden" name="<?php echo $escape($csrfName); ?>" value="<?php echo $escape($csrf); ?>">
+        <button type="submit" name="vpb_diagnostics_action" value="revoke"><?php echo $escape($translate('Turn the report off')); ?></button>
+    </form>
+    <?php endif; ?>
+</div>
+
+<div class="vpb-diag-box">
+    <p><strong><?php echo $escape($translate('How to read it')); ?></strong></p>
+    <p class="vpb-diag-note"><?php echo $escape($translate('Send the token in an Authorization header, Bearer followed by the token, to the report address for this site. A missing or wrong token gets a refusal; an unknown address gets not found.')); ?></p>
+    <p class="vpb-diag-token"><?php echo $escape($this->url('visual-page-builder-diagnostics-report', [], ['force_canonical' => true])); ?></p>
+</div>

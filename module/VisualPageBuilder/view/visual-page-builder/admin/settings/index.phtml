@@ -25,6 +25,7 @@ echo $this->pageTitle($translate('Settings'), 1, $translate('Visual Builder'));
 echo $this->partial('visual-page-builder/admin/library/_nav', ['current' => '']);
 ?>
 <p class="vpb-set-note"><?php echo $escape($translate('These settings apply to the whole installation. Only a global administrator can change them.')); ?></p>
+<p class="vpb-set-note"><a href="<?php echo $escape($this->url('admin/visual-page-builder-diagnostics')); ?>"><?php echo $escape($translate('Diagnostics: a read-only report for support')); ?></a></p>
 <form method="post" class="vpb-set-form">
     <input type="hidden" name="<?php echo $escape(\VisualPageBuilder\Controller\Admin\SettingsController::CSRF_NAME); ?>" value="<?php echo $escape($csrf); ?>">
 

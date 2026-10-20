@@ -26,6 +26,8 @@ class Module extends AbstractModule
         $acl->allow(null, ['VisualPageBuilder\Controller\Admin\Builder', 'VisualPageBuilder\Controller\Admin\Menu', 'VisualPageBuilder\Controller\Admin\Region', 'VisualPageBuilder\Controller\Admin\Pages']);
         // The public search endpoint (VPB Search) is open to every visitor, logged in or not.
         $acl->allow(null, 'VisualPageBuilder\Controller\Site\Search', 'search');
+        // The diagnostics report is open to a request that carries the diagnostics token; the controller checks the token.
+        $acl->allow(null, 'VisualPageBuilder\Controller\Admin\Diagnostics', 'report');
         $this->landOnHome($event);
         $this->useFriendlyLayout($event);
     }

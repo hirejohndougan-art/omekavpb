@@ -23,6 +23,7 @@ return [
             'VisualPageBuilder\Controller\Admin\Region' => Controller\Admin\RegionController::class,
             'VisualPageBuilder\Controller\Admin\Pages' => Controller\Admin\PagesController::class,
             'VisualPageBuilder\Controller\Admin\Theme' => Controller\Admin\ThemeController::class,
+            'VisualPageBuilder\Controller\Admin\Diagnostics' => Controller\Admin\DiagnosticsController::class,
         ],
     ],
     'service_manager' => [
@@ -63,6 +64,18 @@ return [
     ],
     'router' => [
         'routes' => [
+            // Diagnostics: the read-only report, for a request that carries the diagnostics token.
+            'visual-page-builder-diagnostics-report' => [
+                'type' => \Laminas\Router\Http\Literal::class,
+                'options' => [
+                    'route' => '/vpb-diagnostics',
+                    'defaults' => [
+                        '__NAMESPACE__' => 'VisualPageBuilder\Controller\Admin',
+                        'controller' => 'Diagnostics',
+                        'action' => 'report',
+                    ],
+                ],
+            ],
             // Public: the search endpoint under each site (VPB Search).
             'site' => [
                 'child_routes' => [
@@ -238,6 +251,18 @@ return [
                             'defaults' => [
                                 '__NAMESPACE__' => 'VisualPageBuilder\Controller\Admin',
                                 'controller' => 'People',
+                                'action' => 'index',
+                            ],
+                        ],
+                    ],
+                    // Diagnostics: the admin page that creates or turns off the report token.
+                    'visual-page-builder-diagnostics' => [
+                        'type' => \Laminas\Router\Http\Literal::class,
+                        'options' => [
+                            'route' => '/vpb-diagnostics',
+                            'defaults' => [
+                                '__NAMESPACE__' => 'VisualPageBuilder\Controller\Admin',
+                                'controller' => 'Diagnostics',
                                 'action' => 'index',
                             ],
                         ],
