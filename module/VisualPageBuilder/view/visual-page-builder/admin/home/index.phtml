@@ -24,6 +24,7 @@ $this->headStyle()->appendStyle('
 .vpb-home-muted{color:#676767;font-size:.9rem}
 ');
 echo $this->pageTitle($translate('Home'), 1, $translate('Visual Builder'));
+echo $this->partial('visual-page-builder/admin/library/_nav', ['current' => '']);
 ?>
 <p class="vpb-home-greet"><?php echo $escape($translate($greeting)); ?><?php echo $name !== '' ? ', ' . $escape($name) : ''; ?>.</p>
 

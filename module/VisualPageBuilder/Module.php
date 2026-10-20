@@ -27,7 +27,37 @@ class Module extends AbstractModule
         // The public search endpoint (VPB Search) is open to every visitor, logged in or not.
         $acl->allow(null, 'VisualPageBuilder\Controller\Site\Search', 'search');
         $this->landOnHome($event);
+        $this->useFriendlyLayout($event);
     }
+
+    /** The Phase 6 screens use the friendly admin layout: a VPB sidebar in place of Omeka's. */
+    private function useFriendlyLayout(MvcEvent $event): void
+    {
+        $event->getApplication()->getEventManager()->attach(MvcEvent::EVENT_ROUTE, function (MvcEvent $e) {
+            $match = $e->getRouteMatch();
+            $name = $match ? (string) $match->getMatchedRouteName() : '';
+            if (!in_array($name, self::FRIENDLY_ROUTES, true)) {
+                return null;
+            }
+            $viewModel = $e->getViewModel();
+            $viewModel->setTemplate('visual-page-builder/admin/layout');
+            $viewModel->setVariable('vpbCurrent', $name);
+            return null;
+        }, -1000); // after Omeka sets its own layout
+    }
+
+    /** Routes that use the friendly admin layout. */
+    private const FRIENDLY_ROUTES = [
+        'admin/visual-page-builder-home',
+        'admin/visual-page-builder-items',
+        'admin/visual-page-builder-item',
+        'admin/visual-page-builder-files',
+        'admin/visual-page-builder-item-sets',
+        'admin/visual-page-builder-import',
+        'admin/visual-page-builder-settings',
+        'admin/visual-page-builder-people',
+        'admin/visual-page-builder-glossary',
+    ];
 
     /**
      * People land on Home after signing in: the admin front page (/admin) sends a

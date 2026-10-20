@@ -38,6 +38,7 @@ $this->headStyle()->appendStyle('
 .vpb-item-state.is-draft{background:#f4ecd8;color:#6b4f12}
 ');
 echo $this->pageTitle($title !== '' ? $title : $translate('Untitled'), 1, $translate('Items'));
+echo $this->partial('visual-page-builder/admin/library/_nav', ['current' => '']);
 ?>
 <p>
     <span class="vpb-item-state<?php echo $draft ? ' is-draft' : ''; ?>"><?php echo $escape($draft ? $translate('Draft') : ($public ? $translate('Public') : $translate('Staff only'))); ?></span>

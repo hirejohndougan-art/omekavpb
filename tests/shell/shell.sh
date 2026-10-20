@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Friendly admin shell (Phase 6): signing in lands on Home, the top-bar search finds items, the
-# help panel links to the glossary, and other admin pages are not redirected. Makes its own item
+# Friendly admin shell (Phase 6): signing in lands on Home, the sidebar marks the current screen,
+# the top-bar search finds items, the help panel links to the glossary, and other admin pages are
+# not redirected. Makes its own item
 # through the API and removes it.
 BASE=${BASE:-http://127.0.0.1:8080}
 JAR=${JAR:-/tmp/jar.txt}
@@ -25,6 +26,11 @@ printf '%s' "$LIST" | grep -q 'Words used here' && check ok "the help panel link
 curl -s -b "$JAR" "$BASE/admin/vpb-glossary" | grep -q 'Staff only' && check ok "the glossary explains staff only" || check no "the glossary explains staff only"
 
 curl -s -b "$JAR" "$BASE/admin/vpb-items?q=VPBTEST+shell+zebra" | grep -q 'VPBTEST shell zebra' && check ok "the top-bar search finds an item" || check no "the top-bar search finds an item"
+
+SIDE=$(curl -s -b "$JAR" "$BASE/admin/vpb-items")
+printf '%s' "$SIDE" | grep -q 'class="vpb-side"' && check ok "the screens have the sidebar" || check no "the screens have the sidebar"
+printf '%s' "$SIDE" | grep -q 'href="[^"]*vpb-items" aria-current="page"' && check ok "the sidebar marks the current screen" || check no "the sidebar marks the current screen"
+printf '%s' "$SIDE" | grep -q 'item list' && check ok "the sidebar links to Omeka's own screens" || check no "the sidebar links to Omeka's own screens"
 
 echo "$pass passed, $fail failed"
 [ "$fail" -eq 0 ]

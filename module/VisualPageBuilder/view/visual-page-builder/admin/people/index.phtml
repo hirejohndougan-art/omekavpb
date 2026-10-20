@@ -25,6 +25,7 @@ $this->headStyle()->appendStyle('
 .vpb-visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 ');
 echo $this->pageTitle($translate('People'), 1, $translate('Visual Builder'));
+echo $this->partial('visual-page-builder/admin/library/_nav', ['current' => '']);
 ?>
 <h2><?php echo $escape($translate('What each role can do')); ?></h2>
 <dl class="vpb-people-roles">

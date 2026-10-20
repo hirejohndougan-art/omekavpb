@@ -20,6 +20,7 @@ $this->headStyle()->appendStyle('
 .vpb-set-save{grid-column:1/-1}
 ');
 echo $this->pageTitle($translate('Settings'), 1, $translate('Visual Builder'));
+echo $this->partial('visual-page-builder/admin/library/_nav', ['current' => '']);
 ?>
 <p class="vpb-set-note"><?php echo $escape($translate('These settings apply to the whole installation. Only a global administrator can change them.')); ?></p>
 <form method="post" class="vpb-set-form">

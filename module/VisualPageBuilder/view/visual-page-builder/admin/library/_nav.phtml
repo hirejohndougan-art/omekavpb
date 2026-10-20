@@ -1,26 +1,14 @@
 <?php
 // SPDX-License-Identifier: GPL-2.0-or-later
 /**
- * The top bar of the friendly admin: links between its screens, a search box for items, and a
- * help panel with a link to the glossary. @var string $current
+ * The top row of the friendly admin: a search box for items, and a help panel with a link to the
+ * glossary. The links between screens are in the sidebar (admin/layout.phtml). @var string $current (unused)
  */
 $escape = $this->plugin('escapeHtml');
 $translate = $this->plugin('translate');
-$links = [
-    'admin/visual-page-builder-home' => 'Home',
-    'admin/visual-page-builder-items' => 'Items',
-    'admin/visual-page-builder-files' => 'Files',
-    'admin/visual-page-builder-item-sets' => 'Item sets',
-    'admin/visual-page-builder-import' => 'Import',
-    'admin/visual-page-builder-settings' => 'Settings',
-    'admin/visual-page-builder-people' => 'People',
-];
 $q = (string) ($this->query ?? '');
 ?>
-<nav class="vpb-lib-nav" aria-label="<?php echo $escape($translate('Visual Builder sections')); ?>">
-<?php foreach ($links as $route => $label): ?>
-    <a href="<?php echo $escape($this->url($route)); ?>"<?php echo $route === $current ? ' aria-current="page"' : ''; ?>><?php echo $escape($translate($label)); ?></a>
-<?php endforeach; ?>
+<div class="vpb-topbar">
     <form method="get" action="<?php echo $escape($this->url('admin/visual-page-builder-items')); ?>" class="vpb-topbar-search" role="search">
         <label class="vpb-visually-hidden" for="vpb-topbar-q"><?php echo $escape($translate('Search items')); ?></label>
         <input type="search" id="vpb-topbar-q" name="q" value="<?php echo $escape($q); ?>" placeholder="<?php echo $escape($translate('Search items')); ?>">
@@ -34,14 +22,13 @@ $q = (string) ($this->query ?? '');
             <p><a href="<?php echo $escape($this->url('admin/visual-page-builder-glossary')); ?>"><?php echo $escape($translate('Words used here, explained')); ?></a></p>
         </div>
     </details>
-</nav>
+</div>
 <style>
-.vpb-lib-nav{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin:0 0 1rem}
-.vpb-lib-nav > a,.vpb-lib-nav > details > summary{padding:.3rem .8rem;border:1px solid #dfdfdf;border-radius:999px;color:inherit;text-decoration:none;background:#fff;cursor:pointer}
-.vpb-lib-nav > a[aria-current=page]{background:#1f4d3f;border-color:#1f4d3f;color:#fff}
-.vpb-topbar-search{display:flex;gap:.3rem;margin-left:auto}
-.vpb-topbar-search input[type=search]{min-width:12rem}
+.vpb-topbar{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;justify-content:flex-end;margin:0 0 1rem}
+.vpb-topbar-search{display:flex;gap:.3rem}
+.vpb-topbar-search input[type=search]{min-width:14rem}
 .vpb-help{position:relative}
+.vpb-help > summary{padding:.3rem .8rem;border:1px solid #dfdfdf;border-radius:999px;background:#fff;cursor:pointer}
 .vpb-help-body{position:absolute;right:0;z-index:5;width:18rem;background:#fff;border:1px solid #dfdfdf;border-radius:4px;padding:.8rem 1rem;box-shadow:0 4px 12px rgba(0,0,0,.08)}
 .vpb-help-body p{margin:.4rem 0}
 </style>
