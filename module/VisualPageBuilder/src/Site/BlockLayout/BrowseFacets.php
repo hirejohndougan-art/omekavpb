@@ -79,6 +79,7 @@ class BrowseFacets extends AbstractSchemaBlock
 
         $expanded = self::expandedFields($view);
         $letters = self::activeLetters($view);
+        $finds = self::activeFinds($view);
         $textShown = FacetSettings::textShown($data);
         $groups = [];
         $active = [];
@@ -93,11 +94,18 @@ class BrowseFacets extends AbstractSchemaBlock
             if ($letter !== null) {
                 $options_all = array_values(array_filter($options_all, fn ($o) => self::initial($o['label']) === $letter));
             }
+            // The search box (find[field]) keeps only the values whose text contains what was typed.
+            $find = $isText ? ($finds[$field] ?? '') : '';
+            $totalValues = count($options_all);
+            if ($find !== '') {
+                $options_all = array_values(array_filter($options_all, fn ($o) => stripos((string) $o['label'], $find) !== false));
+            }
             if ($isText) {
                 $options_all = FacetSettings::ordered($options_all, $data);
             }
             $largest = $options_all ? max(array_column($options_all, 'count')) : 1;
-            $showAll = $isText && in_array($field, $expanded, true);
+            // A search shows every match, so "Show all" is not needed while one is in use.
+            $showAll = $isText && ($find !== '' || in_array($field, $expanded, true));
             $shown = 0;
             foreach ($options_all as $option) {
                 $on = in_array($option['id'], $selected[$field], true);
@@ -137,18 +145,27 @@ class BrowseFacets extends AbstractSchemaBlock
             if ($field === 'item_set' && $options) {
                 $options = ItemSetTree::arrange($api, $options);
             }
-            if ($show && ($options || $letter !== null || $dropdown)) {
+            if ($show && ($options || $letter !== null || $dropdown || $find !== '')) {
                 // Dates read as bars: each decade's width is its share of the largest decade.
                 $toggle = null;
-                if ($isText && !$dropdown && count($options_all) > $textShown) {
+                if ($isText && !$dropdown && $find === '' && count($options_all) > $textShown) {
                     $others = array_values(array_diff($expanded, [$field]));
                     $toggle = $showAll
                         ? ['url' => self::url($view, $selected, $others, $letters), 'label' => $view->translate('Show fewer')]
                         : ['url' => self::url($view, $selected, array_merge($expanded, [$field]), $letters),
                             'label' => sprintf($view->translate('Show all %s'), number_format(count($options_all)))];
                 }
+                // Long text lists get a search box: find[field] narrows the list to the values that contain the text.
+                $search = null;
+                if ($isText && !$dropdown && ($totalValues > $textShown || $find !== '')) {
+                    $others = $finds;
+                    unset($others[$field]);
+                    $search = ['field' => $field, 'term' => $find, 'hidden' => self::hiddenFields($view, $selected, $expanded, $letters, $others),
+                        'action' => $view->url(null, [], [], true),
+                        'clear' => $find !== '' ? self::url($view, $selected, $expanded, $letters, $others) : null];
+                }
                 $groups[] = ['label' => $view->translate($label), 'options' => $options, 'bars' => $field === 'decade',
-                    'toggle' => $toggle, 'letters' => $letterLinks, 'dropdown' => $dropdown];
+                    'toggle' => $toggle, 'letters' => $letterLinks, 'dropdown' => $dropdown, 'search' => $search];
             }
             foreach (BrowseQuery::labelsFor($api, $field, $selected[$field], $conn) as $id => $name) {
                 $next = $selected;
@@ -187,9 +204,13 @@ class BrowseFacets extends AbstractSchemaBlock
      * The address for these filters: the search, sort and page size stay, the filters
      * are exactly the ones given, and paging starts again at page one.
      */
-    public static function url(PhpRenderer $view, array $selected, array $expanded = [], array $letters = []): string
+    public static function url(PhpRenderer $view, array $selected, array $expanded = [], array $letters = [], ?array $finds = null): string
     {
         $query = array_intersect_key($view->params()->fromQuery(), array_flip(['q', 'fulltext_search', 'per_page', 'sort']));
+        $finds = $finds ?? self::activeFinds($view);
+        if ($finds) {
+            $query['find'] = $finds;
+        }
         foreach (BrowseQuery::FILTER_PARAMS as $field) {
             if (!empty($selected[$field])) {
                 $query[$field] = array_values($selected[$field]);
@@ -226,7 +247,7 @@ class BrowseFacets extends AbstractSchemaBlock
      *
      * @return array<int, array{0: string, 1: string}> [name, value] pairs
      */
-    public static function hiddenFields(PhpRenderer $view, array $selected, array $expanded, array $letters): array
+    public static function hiddenFields(PhpRenderer $view, array $selected, array $expanded, array $letters, ?array $finds = null): array
     {
         $fields = [];
         foreach (array_intersect_key($view->params()->fromQuery(), array_flip(['q', 'fulltext_search', 'per_page', 'sort'])) as $name => $value) {
@@ -243,7 +264,24 @@ class BrowseFacets extends AbstractSchemaBlock
         foreach ($letters as $field => $letter) {
             $fields[] = ['letter[' . $field . ']', $letter];
         }
+        foreach ($finds ?? self::activeFinds($view) as $field => $term) {
+            $fields[] = ['find[' . $field . ']', $term];
+        }
         return $fields;
+    }
+
+    /** The search text typed for each text field, from the address bar (find[subject]=river). */
+    public static function activeFinds(PhpRenderer $view): array
+    {
+        $asked = (array) $view->params()->fromQuery('find', []);
+        $out = [];
+        foreach (array_keys(\VisualPageBuilder\Search\Index::TEXT_FIELDS) as $field) {
+            $term = trim((string) ($asked[$field] ?? ''));
+            if ($term !== '') {
+                $out[$field] = mb_substr($term, 0, 60);
+            }
+        }
+        return $out;
     }
 
     /** The A–Z letter chosen for each text field, from the address bar (letter[subject]=V). */

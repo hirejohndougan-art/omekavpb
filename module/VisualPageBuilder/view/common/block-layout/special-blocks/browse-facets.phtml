@@ -40,6 +40,19 @@ $translate = $this->plugin('translate');
         <?php endforeach; ?>
         </p>
         <?php endif; ?>
+        <?php if (!empty($group['search'])): ?>
+        <form method="get" action="<?php echo $escape($group['search']['action']); ?>" class="vpb-facet-find">
+            <?php foreach ($group['search']['hidden'] as $pair): ?>
+            <input type="hidden" name="<?php echo $escape($pair[0]); ?>" value="<?php echo $escape($pair[1]); ?>">
+            <?php endforeach; ?>
+            <label for="vpb-find-<?php echo $escape($group['search']['field']); ?>"><?php echo $escape($translate('Find in this list')); ?></label>
+            <input type="search" id="vpb-find-<?php echo $escape($group['search']['field']); ?>" name="find[<?php echo $escape($group['search']['field']); ?>]" value="<?php echo $escape($group['search']['term']); ?>">
+            <button type="submit"><?php echo $escape($translate('Find')); ?></button>
+            <?php if (!empty($group['search']['clear'])): ?>
+            <a href="<?php echo $escape($group['search']['clear']); ?>"><?php echo $escape($translate('Clear search')); ?></a>
+            <?php endif; ?>
+        </form>
+        <?php endif; ?>
         <?php if (!empty($group['dropdown'])): ?>
         <form method="get" action="<?php echo $escape($group['dropdown']['action']); ?>" class="vpb-facet-select">
             <?php foreach ($group['dropdown']['hidden'] as $pair): ?>

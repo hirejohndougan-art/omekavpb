@@ -35,6 +35,8 @@ What visitors see:
   can be removed, and "Clear all filters" removes them all.
   Subject, creator and place have a row of letters (A to Z) for long
   lists. Choosing a letter shows only the values that start with it.
+  Long lists also have a "Find in this list" box. It keeps only the values
+  that contain the words typed, and "Clear search" removes it.
   "Show all" opens the full list, and "Show fewer" closes it.
   Date shows decades as bars. "Apply years" uses the From and To boxes.
 
