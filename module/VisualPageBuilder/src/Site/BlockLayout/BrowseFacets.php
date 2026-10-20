@@ -5,6 +5,7 @@ namespace VisualPageBuilder\Site\BlockLayout;
 use Laminas\View\Renderer\PhpRenderer;
 use Omeka\Api\Representation\SiteRepresentation;
 use VisualPageBuilder\Search\BrowseQuery;
+use VisualPageBuilder\Search\ItemSetTree;
 use VisualPageBuilder\Templates\CurrentScreen;
 
 /**
@@ -86,6 +87,10 @@ class BrowseFacets extends AbstractSchemaBlock
                     : array_values(array_merge($selected[$field], [$option['id']]));
                 $bar = (int) round(100 * $option['count'] / max(1, $largest));
                 $options[] = $option + ['active' => $on, 'url' => self::url($view, $next, $expanded, $letters), 'bar' => $bar];
+            }
+            // Collections nest: parents come first, children are indented under them.
+            if ($field === 'item_set' && $options) {
+                $options = ItemSetTree::arrange($api, $options);
             }
             if ($options || $letter !== null) {
                 // Dates read as bars: each decade's width is its share of the largest decade.

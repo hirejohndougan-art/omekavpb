@@ -22,7 +22,11 @@ const lit = (property_id, v) => [{ property_id, type: 'literal', '@value': v }];
 (async () => {
   const termId = async (term) => (await (await fetch(`${BASE}/api/properties?term=${term}&${AUTH}`)).json())[0]['o:id'];
   const title = await termId('dcterms:title'), date = await termId('dcterms:date'), desc = await termId('dcterms:description');
-  const set = await api('POST', 'item_sets', { 'dcterms:title': lit(title, `${WORD} collection`), 'o:is_public': true });
+  // A parent collection with no items of its own, and the child collection (with items) part of it.
+  const isPartOf = await termId('dcterms:isPartOf');
+  const parentSet = await api('POST', 'item_sets', { 'dcterms:title': lit(title, `${WORD} parent collection`), 'o:is_public': true });
+  const set = await api('POST', 'item_sets', { 'dcterms:title': lit(title, `${WORD} collection`), 'o:is_public': true,
+    'dcterms:isPartOf': [{ property_id: isPartOf, type: 'resource', 'value_resource_id': parentSet['o:id'] }] });
   const cls = (await (await fetch(`${BASE}/api/resource_classes?term=dcterms:BibliographicResource&${AUTH}`)).json())[0]['o:id'];
   const make = (n, extra) => api('POST', 'items', Object.assign({ 'o:is_public': true, 'o:resource_class': { 'o:id': cls }, 'dcterms:title': lit(title, `${WORD} item ${n}`) }, extra));
   const a = await make(0, { 'o:item_set': [{ 'o:id': set['o:id'] }], 'dcterms:date': lit(date, '1923'), 'dcterms:description': lit(desc, 'A described photograph') });
@@ -42,6 +46,11 @@ const lit = (property_id, v) => [{ property_id, type: 'literal', '@value': v }];
     check('Description group is offered', legends.includes('Description'));
     check('the Description choice counts one item', (await page.locator('.vpb-facet', { hasText: 'Description' }).locator('li', { hasText: 'Has a description' }).locator('.vpb-facet-count').textContent()).trim() === '1');
     check('the Collection choice names the new set', await page.locator('.vpb-facet', { hasText: 'Collection' }).locator('.vpb-facet-label', { hasText: `${WORD} collection` }).count() === 1);
+    const collection = page.locator('.vpb-facet', { hasText: 'Collection' });
+    check('the parent collection is shown as a plain label', await collection.locator('.vpb-facet-parent', { hasText: `${WORD} parent collection` }).count() === 1);
+    check('the parent has no link of its own', await collection.locator('li', { hasText: `${WORD} parent collection` }).locator('a').count() === 0);
+    const childStyle = await collection.locator('li', { hasText: `${WORD} collection` }).getAttribute('style');
+    check('the child collection is indented under its parent', /padding-left/.test(childStyle || ''));
     check('the Date group offers a decade bar', await page.locator('.vpb-facet', { hasText: 'Date' }).locator('.vpb-facet-bar').count() >= 1);
 
     // Type: pressing a class shows it under Filtered by (its label is looked up, not its title).
@@ -59,6 +68,7 @@ const lit = (property_id, v) => [{ property_id, type: 'literal', '@value': v }];
     await browser.close();
     for (const id of ids) await fetch(`${BASE}/api/items/${id}?${AUTH}`, { method: 'DELETE' });
     await fetch(`${BASE}/api/item_sets/${set['o:id']}?${AUTH}`, { method: 'DELETE' });
+    await fetch(`${BASE}/api/item_sets/${parentSet['o:id']}?${AUTH}`, { method: 'DELETE' });
   }
   console.log(failures ? `filter-groups FAILED (${failures})` : 'filter-groups checks passed');
   process.exit(failures ? 1 : 0);

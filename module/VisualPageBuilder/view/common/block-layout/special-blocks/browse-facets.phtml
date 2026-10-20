@@ -41,12 +41,16 @@ $translate = $this->plugin('translate');
         <?php endif; ?>
         <ul>
         <?php foreach ($group['options'] as $option): ?>
-            <li>
+            <li<?php if (isset($option['depth']) && $option['depth'] > 0): ?> style="padding-left: <?php echo (float) $option['depth'] * 1.1; ?>rem"<?php endif; ?>>
+                <?php if (!empty($option['url'])): ?>
                 <a href="<?php echo $escape($option['url']); ?>" aria-pressed="<?php echo $option['active'] ? 'true' : 'false'; ?>">
                     <?php if ($group['bars']): ?><span class="vpb-facet-bar" aria-hidden="true" style="width: <?php echo (int) $option['bar']; ?>%"></span><?php endif; ?>
                     <span class="vpb-facet-label"><?php echo $escape($option['label']); ?></span>
                     <span class="vpb-facet-count"><?php echo $escape(number_format($option['count'])); ?></span>
                 </a>
+                <?php else: ?>
+                <span class="vpb-facet-parent"><span class="vpb-facet-label"><?php echo $escape($option['label']); ?></span></span>
+                <?php endif; ?>
             </li>
         <?php endforeach; ?>
         </ul>
