@@ -1,0 +1,26 @@
+<?php
+/**
+ * The item set's name and description. Outside an item set page it draws nothing;
+ * in the visual editor's preview it shows its sample.
+ *
+ * @var array $data
+ * @var string|null $title
+ * @var string|null $description
+ * @var bool $isPreview
+ * @var string $sample
+ * @var string $blockClass
+ */
+$escape = $this->plugin('escapeHtml');
+if ($title === null) {
+    if ($isPreview) {
+        echo '<p class="special-blocks-item-sample">' . $escape($sample) . '</p>';
+    }
+    return;
+}
+?>
+<div class="special-blocks <?php echo $escape($blockClass); ?> vpb-item-set-header">
+    <h2 class="vpb-item-set-title"><?php echo $escape($title); ?></h2>
+    <?php if ($description): ?>
+    <div class="vpb-item-set-description"><?php echo $escape($description); ?></div>
+    <?php endif; ?>
+</div>
