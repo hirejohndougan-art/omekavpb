@@ -101,7 +101,7 @@ class Module extends AbstractModule
         $services = $event->getTarget()->getServiceLocator();
         $conn = $services->get('Omeka\Connection');
         Search\Index::createTables($conn);
-        Search\Index::removeItem($conn, (int) $event->getParam('request')->getId());
+        Search\Index::forgetItem($conn, (int) $event->getParam('request')->getId());
     }
 
     /** Batch updates: re-read each changed item and index it again. */

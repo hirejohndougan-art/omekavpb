@@ -271,6 +271,23 @@ class Index
         );
     }
 
+    /**
+     * An item is deleted: remove its rows, and forget the spellings of any word
+     * no other item still has, so "Did you mean" never suggests a word the
+     * catalog no longer contains. (indexItem() uses removeItem() alone, because
+     * an edited item re-adds the same words straight away.)
+     */
+    public static function forgetItem(Connection $conn, int $itemId): void
+    {
+        $stems = $conn->fetchFirstColumn('SELECT DISTINCT term FROM ' . self::TERM . ' WHERE item_id = ?', [$itemId]);
+        self::removeItem($conn, $itemId);
+        foreach ($stems as $stem) {
+            if (!$conn->fetchOne('SELECT 1 FROM ' . self::TERM . ' WHERE term = ? LIMIT 1', [$stem])) {
+                $conn->delete(self::WORD, ['stem' => $stem]);
+            }
+        }
+    }
+
     public static function removeItem(Connection $conn, int $itemId): void
     {
         $conn->delete(self::TERM, ['item_id' => $itemId]);

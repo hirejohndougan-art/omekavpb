@@ -47,6 +47,15 @@ $subject = propertyId($api, 'dcterms:subject');
 $date = propertyId($api, 'dcterms:date');
 $spatial = propertyId($api, 'dcterms:spatial');
 
+// The test has its own site, so the rest of the install's items don't change the counts.
+foreach ($api->search('sites', ['slug' => 'vpbtest-search'])->getContent() as $old) {
+    $api->delete('sites', $old->id());
+}
+$site = $api->create('sites', [
+    'o:title' => 'VPBTEST search', 'o:slug' => 'vpbtest-search', 'o:theme' => 'default', 'o:is_public' => true,
+])->getContent();
+$siteId = (int) $site->id();
+
 // Clean up from an earlier run, by title prefix.
 foreach ($api->search('items', ['property' => [['property' => $title, 'type' => 'in', 'text' => 'VPBTEST']]])->getContent() as $old) {
     $api->delete('items', $old->id());
@@ -94,8 +103,8 @@ $oral = $make([
 
 $syn = Synonyms::fromText("rr = railroad\nstation = depot");
 
-$public = fn (string $q, array $facets = []) => Search::run($conn, $q, false, 1, 50, $syn, $facets);
-$staffRun = fn (string $q) => Search::run($conn, $q, true, 1, 50, $syn);
+$public = fn (string $q, array $facets = []) => Search::run($conn, $q, false, 1, 50, $syn, $facets, $siteId);
+$staffRun = fn (string $q) => Search::run($conn, $q, true, 1, 50, $syn, [], $siteId);
 
 // Items are indexed as they are saved (listeners).
 $indexed = (int) $conn->fetchOne('SELECT COUNT(*) FROM ' . Index::DOC . ' WHERE item_id IN (?,?,?,?,?)',
@@ -104,6 +113,10 @@ check('all five new items are indexed on save', $indexed === 5, (string) $indexe
 check('staff-only item is marked private', (int) $conn->fetchOne(
     'SELECT is_public FROM ' . Index::DOC . ' WHERE item_id = ?', [$staff->id()]) === 0);
 
+// Only this run's items go in the test site (its own item_site rows).
+foreach ($api->search('items', ['property' => [['property' => $title, 'type' => 'in', 'text' => 'VPBTEST']]])->getContent() as $it) {
+    $conn->executeStatement('INSERT IGNORE INTO item_site (item_id, site_id) VALUES (?, ?)', [$it->id(), $siteId]);
+}
 // Plurals: "depots" finds "depot" items, and never the staff-only one for the public.
 $r = $public('depots');
 check('depots finds the two public depot items', $r['total'] === 2, (string) $r['total']);
@@ -147,7 +160,7 @@ check('item set facet narrows to the set', $r['total'] === 1 && $r['ids'] === [$
 $valueId = fn (string $field, string $label) => (int) $conn->fetchOne(
     'SELECT id FROM ' . Index::FACET_VALUE . ' WHERE field = ? AND label = ?', [$field, $label]);
 $railroad = $valueId('subject', 'Railroad');
-$counts = Search::facetCounts($conn, 'depot', false, $syn, [], null);
+$counts = Search::facetCounts($conn, 'depot', false, $syn, [], $siteId);
 check('a subject value is counted for the matching items', $railroad > 0 && ($counts['subject'][$railroad] ?? 0) === 1,
     (string) ($counts['subject'][$railroad] ?? 'none'));
 $r = $public('depot', ['subject' => [$railroad]]);
@@ -159,7 +172,7 @@ check('text facet labels come from the value table', Index::valueLabels($conn, '
 check('a text value is not offered under another field', Index::valueLabels($conn, 'place', [$railroad]) === []);
 
 // Yes/no facet: has a description. The depot has one; the interior photo doesn't.
-$counts = Search::facetCounts($conn, 'depot', false, $syn, [], null);
+$counts = Search::facetCounts($conn, 'depot', false, $syn, [], $siteId);
 check('the yes/no facet counts items with a description', ($counts['has_description'][1] ?? 0) === 1, (string) ($counts['has_description'][1] ?? 'none'));
 $r = $public('depot', ['has_description' => [1]]);
 check('the yes/no facet narrows to items with a description', $r['total'] === 1 && $r['ids'] === [$depot->id()], (string) $r['total']);
@@ -170,15 +183,23 @@ check('the yes/no facet is labelled', \VisualPageBuilder\Search\BrowseQuery::lab
 $conn->executeStatement('UPDATE ' . Index::DOC . ' SET added = ? WHERE item_id = ?', ['2020-01-01 00:00:00', $depot->id()]);
 $conn->executeStatement('UPDATE ' . Index::DOC . ' SET added = ? WHERE item_id = ?', ['2019-01-01 00:00:00', $interior->id()]);
 $conn->executeStatement('UPDATE ' . Index::DOC . ' SET added = ? WHERE item_id = ?', ['2021-01-01 00:00:00', $oral->id()]);
-$recent = Search::run($conn, 'vpbtest', false, 1, 50, $syn, [], null, 'recent');
+$recent = Search::run($conn, 'vpbtest', false, 1, 50, $syn, [], $siteId, 'recent');
 check('recently added puts the newest item first', $recent['ids'] === [$oral->id(), $depot->id(), $interior->id()],
     'ids=' . implode(',', $recent['ids']));
+
+// A word from an item that is deleted is forgotten, so "Did you mean" can't suggest it.
+$gone = $make(['o:is_public' => true, 'dcterms:title' => [lit($title, 'VPBTEST zqxgone')]]);
+$before = (int) $conn->fetchOne('SELECT COUNT(*) FROM ' . Index::WORD . " WHERE stem LIKE 'zqxgon%'");
+$api->delete('items', $gone->id());
+$after = (int) $conn->fetchOne('SELECT COUNT(*) FROM ' . Index::WORD . " WHERE stem LIKE 'zqxgon%'");
+check('a deleted item\'s unique word is forgotten', $before === 1 && $after === 0, "before=$before after=$after");
 
 // Clean up.
 foreach ([$depot, $interior, $staff, $oral] as $item) {
     $api->delete('items', $item->id());
 }
 $api->delete('item_sets', $set->id());
+$api->delete('sites', $siteId);
 
 echo "Search integration checks: $pass passed";
 if ($fail) {
