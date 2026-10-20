@@ -113,11 +113,22 @@ check('no stored value hides nothing', Devices::fromValue('') === []);
 check('devices read in desktop, tablet, phone order', Devices::fromValue('phone,tablet') === ['tablet', 'phone']);
 check('unknown device names are ignored', Devices::fromValue('tablet,watch') === ['tablet']);
 check('spaces around names are ignored', Devices::fromValue(' phone ') === ['phone']);
-$wrapped = Devices::withClasses('<div class="block block-html" style="grid-column: 1 / 7"><p>x</p></div>', ['tablet', 'phone']);
+$wrapped = Devices::decorate('<div class="block block-html" style="grid-column: 1 / 7"><p>x</p></div>', ['tablet', 'phone']);
 check('device classes go on the block wrapper', $wrapped === '<div class="block vpb-hide-tablet vpb-hide-phone block-html" style="grid-column: 1 / 7"><p>x</p></div>', $wrapped);
 check('wrapper keeps its own inline style', strpos($wrapped, 'grid-column: 1 / 7') !== false);
-check('a block with no hidden devices is unchanged', Devices::withClasses('<div class="block x">a</div>', []) === '<div class="block x">a</div>');
-check('a block without a wrapper gets one', Devices::withClasses('<p>a</p>', ['desktop']) === '<div class="vpb-hide-desktop"><p>a</p></div>');
+check('a block with no settings is unchanged', Devices::decorate('<div class="block x">a</div>', []) === '<div class="block x">a</div>');
+check('a block without a wrapper gets one', Devices::decorate('<p>a</p>', ['desktop']) === '<div class="vpb-hide-desktop"><p>a</p></div>');
+
+// Padding on tablet and phone
+check('padding is a number of px from 0 to 64', Devices::padValue('12') === 12 && Devices::padValue(8) === 8);
+check('padding above 64 is capped', Devices::padValue('99') === 64);
+check('blank or negative padding means the theme default', Devices::padValue('') === null && Devices::padValue('-4') === null && Devices::padValue(null) === null);
+check('non-numeric padding is ignored', Devices::padValue('12px') === null);
+$padded = Devices::decorate('<div class="block block-html"><p>x</p></div>', [], ['tablet' => '12', 'phone' => null]);
+check('tablet padding marks the wrapper and sets its custom property', $padded === '<div class="block vpb-has-pad-tablet block-html" style="--vpb-pad-tablet:12px"><p>x</p></div>', $padded);
+$both = Devices::decorate('<div class="block block-html" style="color:red">x</div>', ['desktop'], ['phone' => 6]);
+check('hidden and padded together, with the existing style kept', $both === '<div class="block vpb-hide-desktop vpb-has-pad-phone block-html" style="--vpb-pad-phone:6px;color:red">x</div>', $both);
+check('padding with no wrapper gets a wrapper with the custom property', Devices::decorate('<p>a</p>', [], ['tablet' => 4]) === '<div class="vpb-has-pad-tablet" style="--vpb-pad-tablet:4px"><p>a</p></div>');
 
 // --- Report -------------------------------------------------------------
 $total = $pass + count($fail);

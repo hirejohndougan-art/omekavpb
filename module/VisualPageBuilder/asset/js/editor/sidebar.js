@@ -138,6 +138,9 @@ function renderProps() {
     l.appendChild(segField('Text alignment', [['', 'Default'], ['left', 'Left'], ['center', 'Center'], ['right', 'Right']], b.align || '', function (v) { b.align = v; }));
   }
   l.appendChild(padField(b, 'f-pad'));
+  // Padding on smaller screens, for this block only (blank: same as desktop).
+  l.appendChild(F.devPadField(b, 'tablet', 'f-pad-tablet'));
+  l.appendChild(F.devPadField(b, 'phone', 'f-pad-phone'));
   p.appendChild(l);
   var s2 = h('div', { class: 'p-sec' }, [h('h3', { text: 'Style' })]);
   s2.appendChild(bgField(b, 'f-bg'));

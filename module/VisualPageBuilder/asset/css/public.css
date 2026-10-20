@@ -75,6 +75,12 @@
 @media screen and (min-width: 601px) and (max-width: 896px) { .vpb-hide-tablet { display: none !important; } }
 @media screen and (max-width: 600px) { .vpb-hide-phone { display: none !important; } }
 
+/* Padding for one device (layout data "vpb_pad_tablet" / "vpb_pad_phone"): the
+   wrapper carries the value as a custom property, so it overrides the theme's
+   padding on that device only. */
+@media screen and (min-width: 601px) and (max-width: 896px) { .vpb-has-pad-tablet { padding: var(--vpb-pad-tablet) !important; } }
+@media screen and (max-width: 600px) { .vpb-has-pad-phone { padding: var(--vpb-pad-phone) !important; } }
+
 /* ---------- Printing (v1.12.0) ---------- */
    Printed pages keep the content: menus, buttons, search boxes, map
    controls, and players drop out; link addresses are printed after the
