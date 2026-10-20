@@ -18,7 +18,7 @@ const H = require('../lib/harness');
   const ed = await H.openEditor(pageId);
   const { d, w } = ed;
   const heads = () => [...d.querySelectorAll('.pal-sub')].map(b => b.textContent.replace(/\d+$/, '').replace(/^[\u25BE\u25B8]/, '').trim());
-  t.eq(heads(), ['From your collection', 'Telling history', 'Maps', 'Recordings and documents', 'Visiting and events', 'Getting involved', 'Finding your way', 'Reuse'], 'on a page: eight groups, in order (header and footer blocks aren\u2019t offered here)');
+  t.eq(heads(), ['From your collection', 'Telling history', 'Maps', 'Recordings and documents', 'Visiting and events', 'Getting involved', 'Finding your way', 'Reuse', 'Browse pages', 'Media'], 'on a page: ten groups, in order (header and footer blocks aren\u2019t offered here)');
   const labelsUnder = name => { const head = [...d.querySelectorAll('.pal-sub')].find(b => b.textContent.includes(name)); const grid = d.getElementById(head.getAttribute('aria-controls')); return grid ? [...grid.querySelectorAll('.pal-label')].map(x => x.textContent) : []; };
   t.eq(labelsUnder('Maps'), ['Map of places', 'Story map'], 'Maps: Map of places and Story map together');
   const fyw = labelsUnder('Finding your way');

@@ -181,8 +181,8 @@ async function login(email, password) {
 /** Ids of the Special Blocks fixtures (see tools/seed.js). */
 async function specialFixtures() {
   const site = async (slug) => (await api('GET', 'sites?slug=' + slug))[0];
-  const items = await api('GET', 'items?per_page=100');
-  const sets = await api('GET', 'item_sets?per_page=100');
+  const items = await api('GET', 'items?per_page=1000');
+  const sets = await api('GET', 'item_sets?per_page=1000');
   const itemId = (t) => (items.find(i => i['o:title'] === t) || {})['o:id'];
   const setId = (t) => (sets.find(i => i['o:title'] === t) || {})['o:id'];
   const out = {
