@@ -12,6 +12,7 @@ $escape = $this->plugin('escapeHtml');
 $translate = $this->plugin('translate');
 $csrfName = \VisualPageBuilder\Controller\Admin\PeopleController::CSRF_NAME;
 $this->headStyle()->appendStyle('
+.vpb-people-scroll{overflow-x:auto;max-width:100%}
 .vpb-people-table{width:100%;border-collapse:collapse;background:#fff;max-width:64rem}
 .vpb-people-table th,.vpb-people-table td{text-align:left;padding:.5rem .6rem;border-top:1px solid #efefef;vertical-align:middle}
 .vpb-people-table th{border-top:0;font-size:.9rem;color:#676767}
@@ -38,6 +39,7 @@ echo $this->partial('visual-page-builder/admin/library/_nav', ['current' => ''])
 </dl>
 
 <h2><?php echo $escape($translate('Accounts')); ?></h2>
+<div class="vpb-people-scroll">
 <table class="vpb-people-table">
     <thead><tr><th><?php echo $escape($translate('Name')); ?></th><th><?php echo $escape($translate('Email')); ?></th><th><?php echo $escape($translate('Role')); ?></th></tr></thead>
     <tbody>
@@ -66,6 +68,7 @@ echo $this->partial('visual-page-builder/admin/library/_nav', ['current' => ''])
     <?php endforeach; ?>
     </tbody>
 </table>
+</div>
 
 <h2><?php echo $escape($translate('Invite someone')); ?></h2>
 <p class="vpb-people-you"><?php echo $escape($translate('They get Omeka’s activation email and set their own password.')); ?></p>

@@ -16,7 +16,7 @@ post() { curl -s -b "$JAR" -o /dev/null -w '%{http_code}' -X POST "$BASE/admin/v
 FILES=$(get vpb-files)
 printf '%s' "$FILES" | grep -q "Its item" && check ok "the files screen lists files with their items" || check no "the files screen lists files with their items"
 IMG=$(get "vpb-files?kind=images")
-printf '%s' "$IMG" | grep -q 'aria-pressed="true">Images' && check ok "the Images kind is chosen" || check no "the Images kind is chosen"
+printf '%s' "$IMG" | grep -q 'aria-current="true">Images' && check ok "the Images kind is chosen" || check no "the Images kind is chosen"
 [ "$(db "SELECT COUNT(*) FROM media WHERE media_type LIKE 'image/%'")" -gt 0 ] && printf '%s' "$IMG" | grep -q "Its item" && check ok "images are listed" || check no "images are listed"
 AUD=$(get "vpb-files?kind=audio")
 printf '%s' "$AUD" | grep -q "audio/" && check ok "the Audio kind lists audio files" || check no "the Audio kind lists audio files"

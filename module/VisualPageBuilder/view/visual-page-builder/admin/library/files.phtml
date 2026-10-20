@@ -18,7 +18,7 @@ $this->headStyle()->appendStyle('
 .vpb-lib-nav a[aria-current=page]{background:#1f4d3f;border-color:#1f4d3f;color:#fff}
 .vpb-lib-kinds{display:flex;flex-wrap:wrap;gap:.4rem;margin:0 0 1rem}
 .vpb-lib-kinds a{padding:.2rem .6rem;border:1px solid #bbb;border-radius:999px;color:inherit;text-decoration:none;font-size:.9rem}
-.vpb-lib-kinds a[aria-pressed=true]{background:#eef4f2;border-color:#1f4d3f;font-weight:600}
+.vpb-lib-kinds a[aria-current=true]{background:#eef4f2;border-color:#1f4d3f;font-weight:600}
 .vpb-lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(10rem,1fr));gap:.8rem}
 .vpb-lib-card{background:#fff;border:1px solid #dfdfdf;border-radius:4px;padding:.5rem;font-size:.9rem;display:flex;flex-direction:column;gap:.35rem}
 .vpb-lib-card img{width:100%;aspect-ratio:1/1;object-fit:cover;background:#eee;border-radius:3px}
@@ -30,7 +30,7 @@ echo $this->partial('visual-page-builder/admin/library/_nav', ['current' => 'adm
 ?>
 <nav class="vpb-lib-kinds" aria-label="<?php echo $escape($translate('Kind of file')); ?>">
 <?php foreach ($kinds as $key => $info): ?>
-    <a href="<?php echo $escape($this->url('admin/visual-page-builder-files', [], ['query' => ['kind' => $key]], true)); ?>" aria-pressed="<?php echo $key === $kind ? 'true' : 'false'; ?>"><?php echo $escape($translate($info['label'])); ?></a>
+    <a href="<?php echo $escape($this->url('admin/visual-page-builder-files', [], ['query' => ['kind' => $key]], true)); ?>" aria-current="<?php echo $key === $kind ? 'true' : 'false'; ?>"><?php echo $escape($translate($info['label'])); ?></a>
 <?php endforeach; ?>
 </nav>
 <p><?php echo $escape(sprintf($translate('%s files'), number_format($total))); ?></p>
