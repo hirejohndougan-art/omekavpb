@@ -138,6 +138,20 @@ check('phone text size marks the wrapper and sets its custom property', $sized =
 $all = Devices::decorate('<div class="block block-html" style="color:red">x</div>', ['tablet'], ['phone' => 6], ['tablet' => 120]);
 check('hidden, padded and sized together', $all === '<div class="block vpb-hide-tablet vpb-has-text-tablet vpb-has-pad-phone block-html" style="--vpb-text-tablet:120;--vpb-pad-phone:6px;color:red">x</div>', $all);
 
+// --- Filters block settings ---------------------------------------------
+use VisualPageBuilder\Search\FacetSettings;
+check('a group with no setting in the data is shown', FacetSettings::shown('subject', []));
+check('a group switched off is hidden', !FacetSettings::shown('subject', ['show_subject' => '']));
+check('a group switched on is shown', FacetSettings::shown('subject', ['show_subject' => '1']));
+check('the date setting controls the decade group', !FacetSettings::shown('decade', ['show_date' => '']));
+check('a field with no setting (the expanded list keys) is shown', FacetSettings::shown('unknown', []));
+check('text values list ten by default', FacetSettings::textShown([]) === 10);
+check('text values list between 1 and 100', FacetSettings::textShown(['text_shown' => 0]) === 1 && FacetSettings::textShown(['text_shown' => 500]) === 100);
+check('text values list the number given', FacetSettings::textShown(['text_shown' => '25']) === 25);
+$opts = [['label' => 'Schools', 'count' => 9], ['label' => 'Farms', 'count' => 4], ['label' => 'depots', 'count' => 1]];
+check('count order keeps the order it came in', array_column(FacetSettings::ordered($opts, []), 'label') === ['Schools', 'Farms', 'depots']);
+check('A to Z order sorts without regard to case', array_column(FacetSettings::ordered($opts, ['text_order' => 'az']), 'label') === ['depots', 'Farms', 'Schools']);
+
 // --- Report -------------------------------------------------------------
 $total = $pass + count($fail);
 echo "PHP tests: $pass of $total passed\n";

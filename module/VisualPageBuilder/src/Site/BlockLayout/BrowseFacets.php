@@ -5,7 +5,9 @@ namespace VisualPageBuilder\Site\BlockLayout;
 use Laminas\View\Renderer\PhpRenderer;
 use Omeka\Api\Representation\SiteRepresentation;
 use VisualPageBuilder\Search\BrowseQuery;
+use VisualPageBuilder\Search\FacetSettings;
 use VisualPageBuilder\Search\ItemSetTree;
+use VisualPageBuilder\Schema\Schema;
 use VisualPageBuilder\Templates\CurrentScreen;
 
 /**
@@ -34,8 +36,8 @@ class BrowseFacets extends AbstractSchemaBlock
         'has_description' => 'Description',
     ]; // @translate
 
-    /** Text fields list this many values (most items first) plus any chosen ones; the rest need "Show more", not built yet. */
-    const TEXT_SHOWN = 10;
+    /** Text fields list this many values (most items first) plus any chosen ones; the rest sit behind "Show all". */
+    const TEXT_SHOWN = FacetSettings::TEXT_SHOWN;
 
     public function getLabel()
     {
@@ -44,7 +46,20 @@ class BrowseFacets extends AbstractSchemaBlock
 
     public function schema(): array
     {
-        return [];
+        return [
+            ['key' => 'show_collection', 'type' => Schema::TYPE_CHECKBOX, 'group' => 'Fields', 'default' => true, 'label' => 'Collection'], // @translate
+            ['key' => 'show_type', 'type' => Schema::TYPE_CHECKBOX, 'group' => 'Fields', 'default' => true, 'label' => 'Type'], // @translate
+            ['key' => 'show_subject', 'type' => Schema::TYPE_CHECKBOX, 'group' => 'Fields', 'default' => true, 'label' => 'Subject'], // @translate
+            ['key' => 'show_creator', 'type' => Schema::TYPE_CHECKBOX, 'group' => 'Fields', 'default' => true, 'label' => 'Creator'], // @translate
+            ['key' => 'show_place', 'type' => Schema::TYPE_CHECKBOX, 'group' => 'Fields', 'default' => true, 'label' => 'Place'], // @translate
+            ['key' => 'show_date', 'type' => Schema::TYPE_CHECKBOX, 'group' => 'Fields', 'default' => true, 'label' => 'Date, with the years'], // @translate
+            ['key' => 'show_images', 'type' => Schema::TYPE_CHECKBOX, 'group' => 'Fields', 'default' => true, 'label' => 'Images'], // @translate
+            ['key' => 'show_description', 'type' => Schema::TYPE_CHECKBOX, 'group' => 'Fields', 'default' => true, 'label' => 'Description'], // @translate
+            ['key' => 'text_order', 'type' => Schema::TYPE_SELECT, 'group' => 'Display', 'default' => 'count', 'label' => 'Subjects, creators and places in',
+                'options' => ['count' => 'Most items first', 'az' => 'A to Z']], // @translate
+            ['key' => 'text_shown', 'type' => Schema::TYPE_NUMBER, 'group' => 'Display', 'default' => 10, 'min' => 1, 'max' => 100,
+                'label' => 'Values listed before "Show all"'], // @translate
+        ];
     }
 
     protected function viewVars(PhpRenderer $view, array $data, SiteRepresentation $site, string $blockKey): array
@@ -59,6 +74,7 @@ class BrowseFacets extends AbstractSchemaBlock
 
         $expanded = self::expandedFields($view);
         $letters = self::activeLetters($view);
+        $textShown = FacetSettings::textShown($data);
         $groups = [];
         $active = [];
         foreach ($fields as $field => $label) {
@@ -66,10 +82,14 @@ class BrowseFacets extends AbstractSchemaBlock
             $options_all = $result['facetOptions'][$field] ?? [];
             $isText = isset(\VisualPageBuilder\Search\Index::TEXT_FIELDS[$field]);
             $letter = $isText ? ($letters[$field] ?? null) : null;
+            $show = FacetSettings::shown($field, $data);
             // The A–Z row lists every letter that starts a value, so it is built before the letter narrows the values.
             $letterLinks = $isText ? self::letterLinks($view, $field, $options_all, $selected, $expanded, $letters) : [];
             if ($letter !== null) {
                 $options_all = array_values(array_filter($options_all, fn ($o) => self::initial($o['label']) === $letter));
+            }
+            if ($isText) {
+                $options_all = FacetSettings::ordered($options_all, $data);
             }
             $largest = $options_all ? max(array_column($options_all, 'count')) : 1;
             $showAll = $isText && in_array($field, $expanded, true);
@@ -77,7 +97,7 @@ class BrowseFacets extends AbstractSchemaBlock
             foreach ($options_all as $option) {
                 $on = in_array($option['id'], $selected[$field], true);
                 // Text values: the most common ones, and always the chosen ones, unless "Show all" is on.
-                if ($isText && !$showAll && !$on && $shown >= self::TEXT_SHOWN) {
+                if ($isText && !$showAll && !$on && $shown >= $textShown) {
                     continue;
                 }
                 $shown++;
@@ -92,10 +112,10 @@ class BrowseFacets extends AbstractSchemaBlock
             if ($field === 'item_set' && $options) {
                 $options = ItemSetTree::arrange($api, $options);
             }
-            if ($options || $letter !== null) {
+            if ($show && ($options || $letter !== null)) {
                 // Dates read as bars: each decade's width is its share of the largest decade.
                 $toggle = null;
-                if ($isText && count($options_all) > self::TEXT_SHOWN) {
+                if ($isText && count($options_all) > $textShown) {
                     $others = array_values(array_diff($expanded, [$field]));
                     $toggle = $showAll
                         ? ['url' => self::url($view, $selected, $others, $letters), 'label' => $view->translate('Show fewer')]
@@ -127,6 +147,7 @@ class BrowseFacets extends AbstractSchemaBlock
 
         return [
             'years' => $years,
+            'showYears' => FacetSettings::shown('decade', $data),
             'show' => $result['mode'] === 'index' && $screen !== 'browse-item-sets',
             'panelId' => 'vpb-facets-' . preg_replace('/[^A-Za-z0-9_-]/', '', $blockKey),
             'total' => $result['total'],
