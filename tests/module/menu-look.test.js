@@ -92,6 +92,8 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     t.ok(home.body.className.includes('pb-menu-side'), 'vertical styles put the theme’s header down the side');
     // Draft preview: only for the editor, only with ?vpb_menu_draft=1.
     b = await openBuilder(cookie);
+    // The builder posts its own draft 350 ms after it loads; let that land first.
+    await wait(800);
     t.ok(b.d.querySelector('iframe.mb-frame'), 'with the Companion Theme, the preview is the site itself');
     const dr = await post(draftUrl, { csrf: b.cfg.csrf, navigation: [{ type: 'url', data: { label: 'Draft link', url: 'https://example.org/' }, links: [] }], style: 'pills', colors: { bar: '#8a2f1d' } });
     t.ok(dr.status === 200 && /vpb_menu_draft=1/.test(dr.body.url), 'the unsaved menu is kept as a draft: ' + (dr.body && dr.body.url));
