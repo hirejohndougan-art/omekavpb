@@ -7,7 +7,7 @@ KEY=${VPB_API_KEY:-testkey}; CRED=${VPB_API_CRED:-testcred}
 A="key_identity=$KEY&key_credential=$CRED"
 pass=0; fail=0
 check() { if [ "$1" = ok ]; then pass=$((pass+1)); echo "ok   $2"; else fail=$((fail+1)); echo "FAIL $2"; fi; }
-ID=$(curl -s -X POST "$BASE/api/site_pages?$A" -H 'Content-Type: application/json' -d '{"o:site":{"o:id":1},"o:title":"VPBTEST dropdown check","o:slug":"vpbtest-dropdown-check","o:is_public":true,"o:block":[{"o:layout":"facets","o:data":{"text_style":"dropdown"}},{"o:layout":"results"}]}' | grep -o '"o:id":[0-9]*' | head -1 | cut -d: -f2)
+ID=$(curl -s -X POST "$BASE/api/site_pages?$A" -H 'Content-Type: application/json' -d '{"o:site":{"o:id":1},"o:title":"VPBTEST dropdown check","o:slug":"vpbtest-dropdown-check","o:is_public":true,"o:block":[{"o:layout":"facets","o:data":{"text_style":"dropdown"}},{"o:layout":"results"}]}' | grep -o "\"o:id\":[0-9]*" | head -1 | cut -d: -f3)
 [ -n "$ID" ] && check ok "test page made" || { check no "test page made"; exit 1; }
 trap 'curl -s -o /dev/null -X DELETE "$BASE/api/site_pages/$ID?$A"' EXIT
 URL="$BASE/s/dhs/page/vpbtest-dropdown-check"
