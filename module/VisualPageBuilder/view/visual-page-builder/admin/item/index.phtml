@@ -1,0 +1,152 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * One item (Phase 6): Details, Where it shows, Files and History, and the item's actions.
+ *
+ * @var \Omeka\Api\Representation\ItemRepresentation $item
+ * @var int $id
+ * @var string $tab
+ * @var string $title
+ * @var bool $public
+ * @var bool $draft
+ * @var array $values  FIELDS keys to text (one value per line)
+ * @var array $sets  [id, title, on]
+ * @var array $sites  [id, title, on]
+ * @var array $files  [id, title, type]
+ * @var array $snapshots  [id, saved, when]
+ * @var string $csrf
+ */
+$escape = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+$csrfName = \VisualPageBuilder\Controller\Admin\ItemController::CSRF_NAME;
+$tabUrl = fn ($name) => $this->url('admin/visual-page-builder-item', ['item-id' => $id], ['query' => ['tab' => $name]], true);
+$tabs = ['details' => 'Details', 'where' => 'Where it shows', 'files' => 'Files', 'history' => 'History'];
+$this->headStyle()->appendStyle('
+.vpb-item-tabs{display:flex;flex-wrap:wrap;gap:.4rem;margin:0 0 1rem}
+.vpb-item-tabs a{padding:.3rem .8rem;border:1px solid #dfdfdf;border-radius:999px;color:inherit;text-decoration:none;background:#fff}
+.vpb-item-tabs a[aria-current=page]{background:#1f4d3f;border-color:#1f4d3f;color:#fff}
+.vpb-item-form{max-width:44rem;display:grid;gap:.8rem}
+.vpb-item-form label{display:block;font-weight:600}
+.vpb-item-form input[type=text],.vpb-item-form textarea{width:100%;font-weight:400}
+.vpb-item-hint{font-size:.85rem;color:#676767;font-weight:400}
+.vpb-item-box{background:#fff;border:1px solid #dfdfdf;border-radius:4px;padding:.8rem 1rem;max-width:44rem;margin:0 0 1rem}
+.vpb-item-list{list-style:none;margin:0;padding:0}
+.vpb-item-list li{padding:.4rem 0;border-top:1px solid #efefef;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+.vpb-item-list li:first-child{border-top:0}
+.vpb-item-inline{display:inline}
+.vpb-item-state{font-size:.85rem;padding:.1rem .5rem;border-radius:3px;background:#eee}
+.vpb-item-state.is-draft{background:#f4ecd8;color:#6b4f12}
+');
+echo $this->pageTitle($title !== '' ? $title : $translate('Untitled'), 1, $translate('Items'));
+?>
+<p>
+    <span class="vpb-item-state<?php echo $draft ? ' is-draft' : ''; ?>"><?php echo $escape($draft ? $translate('Draft') : ($public ? $translate('Public') : $translate('Staff only'))); ?></span>
+    <a href="<?php echo $escape($this->url('admin/visual-page-builder-items')); ?>"><?php echo $escape($translate('Back to Items')); ?></a>
+</p>
+
+<nav class="vpb-item-tabs" aria-label="<?php echo $escape($translate('Item sections')); ?>">
+<?php foreach ($tabs as $key => $label): ?>
+    <a href="<?php echo $escape($tabUrl($key)); ?>"<?php echo $key === $tab ? ' aria-current="page"' : ''; ?>><?php echo $escape($translate($label)); ?></a>
+<?php endforeach; ?>
+</nav>
+
+<?php if ($tab === 'details'): ?>
+<form method="post" class="vpb-item-form">
+    <input type="hidden" name="<?php echo $escape($csrfName); ?>" value="<?php echo $escape($csrf); ?>">
+    <input type="hidden" name="vpb_action" value="details">
+    <input type="hidden" name="tab" value="details">
+    <label><?php echo $escape($translate('Title')); ?><input type="text" name="title" value="<?php echo $escape($values['title']); ?>"></label>
+    <label><?php echo $escape($translate('Description')); ?><textarea name="description" rows="4"><?php echo $escape($values['description']); ?></textarea></label>
+    <label><?php echo $escape($translate('Date')); ?><input type="text" name="date" value="<?php echo $escape($values['date']); ?>"></label>
+    <label><?php echo $escape($translate('Creator')); ?><span class="vpb-item-hint"> <?php echo $escape($translate('One per line')); ?></span><textarea name="creator" rows="2"><?php echo $escape($values['creator']); ?></textarea></label>
+    <label><?php echo $escape($translate('Subjects')); ?><span class="vpb-item-hint"> <?php echo $escape($translate('One per line')); ?></span><textarea name="subject" rows="2"><?php echo $escape($values['subject']); ?></textarea></label>
+    <label><?php echo $escape($translate('Places')); ?><span class="vpb-item-hint"> <?php echo $escape($translate('One per line')); ?></span><textarea name="place" rows="2"><?php echo $escape($values['place']); ?></textarea></label>
+    <div><button type="submit"><?php echo $escape($translate('Save details')); ?></button></div>
+</form>
+
+<?php elseif ($tab === 'where'): ?>
+<form method="post" class="vpb-item-form">
+    <input type="hidden" name="<?php echo $escape($csrfName); ?>" value="<?php echo $escape($csrf); ?>">
+    <input type="hidden" name="vpb_action" value="where">
+    <input type="hidden" name="tab" value="where">
+    <fieldset class="vpb-item-box">
+        <legend><?php echo $escape($translate('Visibility')); ?></legend>
+        <label style="font-weight:400"><input type="checkbox" name="is_public" value="1"<?php echo $public ? ' checked' : ''; ?>> <?php echo $escape($translate('Public (visitors can see it)')); ?></label>
+    </fieldset>
+    <fieldset class="vpb-item-box">
+        <legend><?php echo $escape($translate('Item sets')); ?></legend>
+        <?php foreach ($sets as $set): ?>
+        <label style="font-weight:400"><input type="checkbox" name="item_sets[]" value="<?php echo (int) $set['id']; ?>"<?php echo $set['on'] ? ' checked' : ''; ?>> <?php echo $escape($set['title']); ?></label>
+        <?php endforeach; ?>
+    </fieldset>
+    <fieldset class="vpb-item-box">
+        <legend><?php echo $escape($translate('Sites')); ?></legend>
+        <?php foreach ($sites as $site): ?>
+        <label style="font-weight:400"><input type="checkbox" name="sites[]" value="<?php echo (int) $site['id']; ?>"<?php echo $site['on'] ? ' checked' : ''; ?>> <?php echo $escape($site['title']); ?></label>
+        <?php endforeach; ?>
+    </fieldset>
+    <div><button type="submit"><?php echo $escape($translate('Save where it shows')); ?></button></div>
+</form>
+
+<?php elseif ($tab === 'files'): ?>
+<?php if (!$files): ?>
+<p><?php echo $escape($translate('This item has no files. It shows its placeholder on the public site.')); ?></p>
+<?php else: ?>
+<ul class="vpb-item-list">
+<?php foreach ($files as $file): ?>
+    <li>
+        <span><?php echo $escape($file['title'] !== '' ? $file['title'] : $translate('Untitled')); ?></span>
+        <span class="vpb-item-hint"><?php echo $escape($file['type']); ?></span>
+        <form method="post" class="vpb-item-inline">
+            <input type="hidden" name="<?php echo $escape($csrfName); ?>" value="<?php echo $escape($csrf); ?>">
+            <input type="hidden" name="vpb_action" value="remove_file">
+            <input type="hidden" name="tab" value="files">
+            <input type="hidden" name="media_id" value="<?php echo (int) $file['id']; ?>">
+            <button type="submit"><?php echo $escape($translate('Remove')); ?></button>
+        </form>
+    </li>
+<?php endforeach; ?>
+</ul>
+<?php endif; ?>
+<p class="vpb-item-hint"><?php echo $escape($translate('Adding files and choosing the main image come next.')); ?></p>
+
+<?php elseif ($tab === 'history'): ?>
+<?php if (!$snapshots): ?>
+<p><?php echo $escape($translate('No earlier versions yet. Each change keeps the version it replaces.')); ?></p>
+<?php else: ?>
+<ul class="vpb-item-list">
+<?php foreach ($snapshots as $snapshot): ?>
+    <li>
+        <span><?php echo $escape($snapshot['when']); ?></span>
+        <form method="post" class="vpb-item-inline">
+            <input type="hidden" name="<?php echo $escape($csrfName); ?>" value="<?php echo $escape($csrf); ?>">
+            <input type="hidden" name="vpb_action" value="restore">
+            <input type="hidden" name="tab" value="history">
+            <input type="hidden" name="revision_id" value="<?php echo (int) $snapshot['id']; ?>">
+            <button type="submit"><?php echo $escape($translate('Restore this version')); ?></button>
+        </form>
+    </li>
+<?php endforeach; ?>
+</ul>
+<?php endif; ?>
+<?php endif; ?>
+
+<section class="vpb-item-box" aria-labelledby="vpb-item-actions" style="margin-top:1.5rem">
+    <h2 id="vpb-item-actions" style="font-size:1.05rem"><?php echo $escape($translate('Actions')); ?></h2>
+    <form method="post" class="vpb-item-inline">
+        <input type="hidden" name="<?php echo $escape($csrfName); ?>" value="<?php echo $escape($csrf); ?>">
+        <input type="hidden" name="tab" value="<?php echo $escape($tab); ?>">
+        <?php if ($draft): ?>
+        <button type="submit" name="vpb_action" value="publish"><?php echo $escape($translate('Publish')); ?></button>
+        <?php elseif (!$public): ?>
+        <button type="submit" name="vpb_action" value="keep_draft"><?php echo $escape($translate('Keep as draft')); ?></button>
+        <?php endif; ?>
+        <button type="submit" name="vpb_action" value="duplicate"><?php echo $escape($translate('Duplicate')); ?></button>
+    </form>
+    <form method="post" class="vpb-item-inline" style="margin-left:1rem">
+        <input type="hidden" name="<?php echo $escape($csrfName); ?>" value="<?php echo $escape($csrf); ?>">
+        <input type="hidden" name="tab" value="<?php echo $escape($tab); ?>">
+        <label><input type="checkbox" name="confirm_delete" value="1"> <?php echo $escape($translate('I understand: deleting cannot be undone from here')); ?></label>
+        <button type="submit" name="vpb_action" value="delete"><?php echo $escape($translate('Delete this item')); ?></button>
+    </form>
+</section>

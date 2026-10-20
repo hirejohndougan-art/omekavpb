@@ -83,7 +83,7 @@ class ItemsController extends AbstractActionController
                 'public' => (bool) $item->isPublic(),
                 'modified' => $item->modified() ? $item->modified()->format('M j, Y') : '',
                 'thumbnail' => $media ? $media->thumbnailUrl('square') : null,
-                'url' => $item->adminUrl(),
+                'url' => $this->url()->fromRoute('admin/visual-page-builder-item', ['item-id' => $item->id()], [], true),
                 'draft' => Drafts::isDraft($conn, (int) $item->id()),
             ];
         }

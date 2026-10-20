@@ -16,6 +16,7 @@ return [
             'VisualPageBuilder\Controller\Admin\Import' => Controller\Admin\ImportController::class,
             'VisualPageBuilder\Controller\Admin\Home' => Controller\Admin\HomeController::class,
             'VisualPageBuilder\Controller\Admin\Items' => Controller\Admin\ItemsController::class,
+            'VisualPageBuilder\Controller\Admin\Item' => Controller\Admin\ItemController::class,
             'VisualPageBuilder\Controller\Admin\Menu' => Controller\Admin\MenuController::class,
             'VisualPageBuilder\Controller\Admin\Region' => Controller\Admin\RegionController::class,
             'VisualPageBuilder\Controller\Admin\Pages' => Controller\Admin\PagesController::class,
@@ -103,6 +104,19 @@ return [
                             'defaults' => [
                                 '__NAMESPACE__' => 'VisualPageBuilder\Controller\Admin',
                                 'controller' => 'Search',
+                                'action' => 'index',
+                            ],
+                        ],
+                    ],
+                    // One item (Phase 6): Details, Where it shows, Files, History, actions.
+                    'visual-page-builder-item' => [
+                        'type' => \Laminas\Router\Http\Segment::class,
+                        'options' => [
+                            'route' => '/vpb-item/:item-id',
+                            'constraints' => ['item-id' => '[0-9]+'],
+                            'defaults' => [
+                                '__NAMESPACE__' => 'VisualPageBuilder\Controller\Admin',
+                                'controller' => 'Item',
                                 'action' => 'index',
                             ],
                         ],
