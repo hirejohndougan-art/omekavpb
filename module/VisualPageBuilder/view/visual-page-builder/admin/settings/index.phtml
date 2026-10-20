@@ -61,6 +61,13 @@ echo $this->partial('visual-page-builder/admin/library/_nav', ['current' => ''])
     </fieldset>
 
     <div class="vpb-set-save">
+    <fieldset>
+        <legend><?php echo $escape($translate('Search synonyms')); ?></legend>
+        <p class="vpb-set-hint"><?php echo $escape($translate('Searching for the left-hand word also finds the words on the right. One rule per line, for example: rr = railroad, rail road. The rule works one way only.')); ?></p>
+        <label for="vpb-synonyms" class="sr-only"><?php echo $escape($translate('Synonyms')); ?></label>
+        <textarea id="vpb-synonyms" name="synonyms" rows="8"><?php echo $escape($values['synonyms']); ?></textarea>
+    </fieldset>
+
         <button type="submit"><?php echo $escape($translate('Save settings')); ?></button>
     </div>
 </form>

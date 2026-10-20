@@ -54,6 +54,7 @@ class SettingsController extends AbstractActionController
         }
         return new ViewModel([
             'values' => $values,
+            'synonyms' => (string) $settings->get(\VisualPageBuilder\Search\Index::SYNONYMS_SETTING, ''),
             'kinds' => $this->chosenKinds(),
             'fileKinds' => self::FILE_KINDS,
             'csrf' => (new Csrf(['name' => self::CSRF_NAME]))->getHash(),
@@ -76,6 +77,10 @@ class SettingsController extends AbstractActionController
         $settings->set('vpb_items_per_page', max(5, min(100, $perPage)));
         $settings->set('vpb_show_cite', !empty($post['vpb_show_cite']));
         $settings->set('vpb_show_download', !empty($post['vpb_show_download']));
+        if (isset($post['synonyms'])) {
+            // Search synonyms are kept here now (they used to be on the Search screen).
+            $settings->set(\VisualPageBuilder\Search\Index::SYNONYMS_SETTING, \VisualPageBuilder\Search\Synonyms::clean((string) $post['synonyms']));
+        }
 
         // File kinds: at least one must stay on.
         $chosen = array_values(array_intersect(array_keys(self::FILE_KINDS), (array) ($post['kinds'] ?? [])));

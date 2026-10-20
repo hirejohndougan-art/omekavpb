@@ -14,6 +14,22 @@ class Synonyms
     private array $map = [];
 
     /** Parse the Settings text. Blank lines and lines without "=" are ignored. */
+    /**
+     * Keep only the lines that look like "term = alternative"; the rest are dropped.
+     * The Settings screen and the old Search screen both save through this.
+     */
+    public static function clean(string $text): string
+    {
+        $lines = [];
+        foreach (preg_split('/\r\n|\r|\n/', $text) as $line) {
+            $line = trim($line);
+            if ($line !== '' && strpos($line, '=') !== false) {
+                $lines[] = $line;
+            }
+        }
+        return implode("\n", $lines);
+    }
+
     public static function fromText(string $text): self
     {
         $s = new self();

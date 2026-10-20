@@ -18,10 +18,5 @@ $this->htmlElement('body')->appendAttribute('class', 'vpb-search-settings');
 <pre>rr = railroad, rail road
 station = depot
 gh&amp;h = Galveston, Houston, Henderson</pre>
-<form method="post" action="<?php echo $escape($url); ?>">
-    <input type="hidden" name="<?php echo $escape(\VisualPageBuilder\Controller\Admin\SearchController::CSRF_NAME); ?>" value="<?php echo $escape($csrf); ?>">
-    <label for="vpb-synonyms"><?php echo $escape($translate('Synonyms')); ?></label>
-    <textarea id="vpb-synonyms" name="synonyms" rows="12" cols="60"><?php echo $escape($synonyms); ?></textarea>
-    <p><?php echo $escape(sprintf($translate('%d rules saved. Changes apply to the next search.'), $count)); ?></p>
-    <input type="submit" value="<?php echo $escape($translate('Save')); ?>">
-</form>
+<p><a href="<?php echo $escape($this->url('admin/visual-page-builder-settings')); ?>"><?php echo $escape($translate('Edit synonyms in Settings')); ?></a></p>
+<pre><?php echo $escape($synonyms); ?></pre>
