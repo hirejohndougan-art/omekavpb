@@ -22,7 +22,18 @@ class BrowseFacets extends AbstractSchemaBlock
     const TEMPLATE = 'browse-facets';
 
     /** Field name => the label shown to visitors. */
-    const FIELDS = ['item_set' => 'Collection', 'class' => 'Type', 'decade' => 'Date', 'has_images' => 'Images']; // @translate
+    const FIELDS = [
+        'item_set' => 'Collection',
+        'class' => 'Type',
+        'subject' => 'Subject',
+        'creator' => 'Creator',
+        'place' => 'Place',
+        'decade' => 'Date',
+        'has_images' => 'Images',
+    ]; // @translate
+
+    /** Text fields list this many values (most items first) plus any chosen ones; the rest need "Show more", not built yet. */
+    const TEXT_SHOWN = 10;
 
     public function getLabel()
     {
@@ -39,6 +50,7 @@ class BrowseFacets extends AbstractSchemaBlock
         $result = BrowseQuery::run($view, $site);
         $screen = CurrentScreen::get();
         $api = $view->getHelperPluginManager()->getServiceLocator()->get('Omeka\ApiManager');
+        $conn = $view->getHelperPluginManager()->getServiceLocator()->get('Omeka\Connection');
         $selected = $result['selected'];
         // On an item set's page the collection is fixed to that set, so it isn't offered as a filter.
         $fields = array_diff_key(self::FIELDS, $screen === 'item-set' ? ['item_set' => 1] : []);
@@ -49,8 +61,14 @@ class BrowseFacets extends AbstractSchemaBlock
             $options = [];
             $options_all = $result['facetOptions'][$field] ?? [];
             $largest = $options_all ? max(array_column($options_all, 'count')) : 1;
+            $shown = 0;
             foreach ($options_all as $option) {
                 $on = in_array($option['id'], $selected[$field], true);
+                // Text values: the most common ones, and always the chosen ones.
+                if (isset(\VisualPageBuilder\Search\Index::TEXT_FIELDS[$field]) && !$on && $shown >= self::TEXT_SHOWN) {
+                    continue;
+                }
+                $shown++;
                 $next = $selected;
                 $next[$field] = $on
                     ? array_values(array_diff($selected[$field], [$option['id']]))
@@ -62,7 +80,7 @@ class BrowseFacets extends AbstractSchemaBlock
                 // Dates read as bars: each decade's width is its share of the largest decade.
                 $groups[] = ['label' => $view->translate($label), 'options' => $options, 'bars' => $field === 'decade'];
             }
-            foreach (BrowseQuery::labelsFor($api, $field, $selected[$field]) as $id => $name) {
+            foreach (BrowseQuery::labelsFor($api, $field, $selected[$field], $conn) as $id => $name) {
                 $next = $selected;
                 $next[$field] = array_values(array_diff($selected[$field], [$id]));
                 $active[] = ['label' => $name, 'url' => self::url($view, $next)];

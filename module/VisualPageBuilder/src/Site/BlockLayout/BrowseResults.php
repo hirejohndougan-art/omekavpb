@@ -52,11 +52,12 @@ class BrowseResults extends AbstractSchemaBlock
             return null;
         }
         $api = $view->getHelperPluginManager()->getServiceLocator()->get('Omeka\ApiManager');
+        $conn = $view->getHelperPluginManager()->getServiceLocator()->get('Omeka\Connection');
         $names = [];
         foreach (BrowseQuery::FILTER_PARAMS as $field) {
-            $names = array_merge($names, array_values(BrowseQuery::labelsFor($api, $field, $result['selected'][$field])));
+            $names = array_merge($names, array_values(BrowseQuery::labelsFor($api, $field, $result['selected'][$field], $conn)));
         }
-        $removed = BrowseQuery::labelsFor($api, $result['helper']['field'], [$result['helper']['id']]);
+        $removed = BrowseQuery::labelsFor($api, $result['helper']['field'], [$result['helper']['id']], $conn);
         return [
             'names' => $names,
             'removed' => $removed[$result['helper']['id']] ?? '',

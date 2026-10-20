@@ -11,7 +11,8 @@ use Omeka\Api\Representation\ItemRepresentation;
  *
  *   vpb_search_doc    one row per item: title, searchable text, year range, public flag
  *   vpb_search_term   one row per stemmed word per item, with a field weight
- *   vpb_search_facet  one row per item and facet value (item set, resource class)
+ *   vpb_search_facet  one row per item and facet value (item set, class, decade, images, text values)
+ *   vpb_search_facet_value  the text of each subject, creator and place value, with an id the facet rows use
  *
  * indexItem() replaces an item's rows, so it is safe to call again after every
  * save. Staff-only items are indexed too; Search keeps them out of public results.
@@ -21,9 +22,22 @@ class Index
     public const DOC = 'vpb_search_doc';
     public const TERM = 'vpb_search_term';
     public const FACET = 'vpb_search_facet';
+    public const FACET_VALUE = 'vpb_search_facet_value';
 
-    /** Facet fields: item set and resource class (ids), decade (the decade's first year), and has images (1). */
-    public const FACET_FIELDS = ['item_set', 'class', 'decade', 'has_images'];
+    /**
+     * Facet fields: item set and resource class (ids), decade (the decade's first year),
+     * has images (1), and the text fields (see TEXT_FIELDS).
+     */
+    public const FACET_FIELDS = ['item_set', 'class', 'decade', 'has_images', 'subject', 'creator', 'place'];
+
+    /** Text facet fields: the property each one reads. Their values are stored as ids in FACET_VALUE. */
+    public const TEXT_FIELDS = [
+        'subject' => 'dcterms:subject',
+        'creator' => 'dcterms:creator',
+        'place' => 'dcterms:spatial',
+    ];
+    /** Longest text value kept as a facet label (the index column size). */
+    public const TEXT_LABEL_MAX = 191;
     /** One row per stem: the word as first written in the catalog, for "Did you mean". */
     public const WORD = 'vpb_search_word';
 
@@ -72,11 +86,17 @@ class Index
             PRIMARY KEY (item_id, field, value_id),
             INDEX vpb_sf_value (field, value_id)
         ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci ENGINE = InnoDB');
+        $conn->executeStatement('CREATE TABLE IF NOT EXISTS ' . self::FACET_VALUE . ' (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            field VARCHAR(40) NOT NULL,
+            label VARCHAR(191) NOT NULL,
+            UNIQUE KEY vpb_sfv_label (field, label)
+        ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci ENGINE = InnoDB');
     }
 
     public static function dropTables(Connection $conn): void
     {
-        foreach ([self::WORD, self::FACET, self::TERM, self::DOC] as $table) {
+        foreach ([self::WORD, self::FACET, self::FACET_VALUE, self::TERM, self::DOC] as $table) {
             $conn->executeStatement('DROP TABLE IF EXISTS ' . $table);
         }
     }
@@ -152,6 +172,59 @@ class Index
                 break;
             }
         }
+        // Text facets: each distinct subject, creator and place value, once per item.
+        foreach (self::TEXT_FIELDS as $field => $term) {
+            $labels = [];
+            foreach ($item->value($term, ['all' => true, 'default' => []]) as $value) {
+                $label = self::textLabel((string) $value);
+                if ($label !== null) {
+                    $labels[$label] = true;
+                }
+            }
+            foreach (array_keys($labels) as $label) {
+                $conn->insert(self::FACET, [
+                    'item_id' => $id,
+                    'field' => $field,
+                    'value_id' => self::facetValueId($conn, $field, $label),
+                ]);
+            }
+        }
+    }
+
+    /** A text facet's label: spaces collapsed and trimmed, or null when nothing is left. */
+    public static function textLabel(string $raw): ?string
+    {
+        $label = trim(preg_replace('/\s+/u', ' ', $raw) ?? '');
+        if ($label === '') {
+            return null;
+        }
+        return mb_substr($label, 0, self::TEXT_LABEL_MAX);
+    }
+
+    /** The id of a text value, added the first time it is seen. */
+    public static function facetValueId(Connection $conn, string $field, string $label): int
+    {
+        $id = $conn->fetchOne('SELECT id FROM ' . self::FACET_VALUE . ' WHERE field = ? AND label = ?', [$field, $label]);
+        if ($id === false) {
+            $conn->insert(self::FACET_VALUE, ['field' => $field, 'label' => $label]);
+            $id = $conn->lastInsertId();
+        }
+        return (int) $id;
+    }
+
+    /** Labels for text facet ids: [id => label]. */
+    public static function valueLabels(Connection $conn, string $field, array $ids): array
+    {
+        $ids = array_values(array_unique(array_map('intval', $ids)));
+        if ($ids === []) {
+            return [];
+        }
+        $marks = implode(',', array_fill(0, count($ids), '?'));
+        $rows = $conn->fetchAllKeyValue(
+            'SELECT id, label FROM ' . self::FACET_VALUE . ' WHERE field = ? AND id IN (' . $marks . ')',
+            array_merge([$field], $ids)
+        );
+        return array_map('strval', $rows);
     }
 
     /**

@@ -89,6 +89,13 @@ check('only stopwords gives no terms', $q['terms'] === [] && $q['prefixLast'] ==
 $q = QueryParser::parse('about 1910 Galveston');
 check('about-year is pulled out', $q['years'] === ['start' => 1905, 'end' => 1915] && $q['terms'] === ['galveston']);
 
+// Text facet labels (Index::textLabel)
+use VisualPageBuilder\Search\Index;
+check('a text label is trimmed and its spaces collapsed', Index::textLabel("  Railroads \n and   trains ") === 'Railroads and trains');
+check('a blank text value gives no label', Index::textLabel(" \t ") === null);
+check('a long text label is cut to the index size', strlen(Index::textLabel(str_repeat('a', 300))) === Index::TEXT_LABEL_MAX);
+check('text facet fields are part of the facet list', in_array('subject', Index::FACET_FIELDS, true) && isset(Index::TEXT_FIELDS['place']));
+
 echo "Search checks: $pass passed";
 if ($fail) {
     echo ", " . count($fail) . " failed:\n - " . implode("\n - ", $fail) . "\n";

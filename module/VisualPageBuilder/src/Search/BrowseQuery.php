@@ -29,7 +29,7 @@ class BrowseQuery
     const DEFAULT_PER_PAGE = 24;
 
     /** Address parameters that narrow the results (carried by every browse control). */
-    const FILTER_PARAMS = ['item_set', 'class', 'decade', 'has_images'];
+    const FILTER_PARAMS = ['item_set', 'class', 'decade', 'has_images', 'subject', 'creator', 'place'];
 
     /** Sort choices: relevance (best match), A-Z, oldest and newest first. */
     const SORTS = ['relevance', 'title', 'oldest', 'newest'];
@@ -64,6 +64,9 @@ class BrowseQuery
                 'class' => array_map('intval', (array) $query->get('class', [])),
                 'decade' => array_map('intval', (array) $query->get('decade', [])),
                 'has_images' => array_map('intval', (array) $query->get('has_images', [])),
+                'subject' => array_map('intval', (array) $query->get('subject', [])),
+                'creator' => array_map('intval', (array) $query->get('creator', [])),
+                'place' => array_map('intval', (array) $query->get('place', [])),
             ],
         ];
     }
@@ -116,7 +119,7 @@ class BrowseQuery
                 'suggestion' => $result['suggestion'],
                 'mode' => 'index',
                 'noun' => 'items',
-                'facetOptions' => self::facetLabels($api, Search::facetCounts($conn, $state['q'], false, $synonyms, $state['facets'], $siteId)),
+                'facetOptions' => self::facetLabels($api, $conn, Search::facetCounts($conn, $state['q'], false, $synonyms, $state['facets'], $siteId)),
                 'helper' => null,
             ];
             if ($result['total'] === 0 && array_filter($state['facets'])) {
@@ -188,7 +191,7 @@ class BrowseQuery
      * @param array<string, array<int, int>> $counts [field => [value_id => count]]
      * @return array<string, array<int, array{id: int, label: string, count: int}>>
      */
-    public static function facetLabels($api, array $counts): array
+    public static function facetLabels($api, $conn, array $counts): array
     {
         $out = [];
         foreach ($counts as $field => $values) {
@@ -196,7 +199,7 @@ class BrowseQuery
             if ($values === []) {
                 continue;
             }
-            $labels = self::labelsFor($api, $field, array_keys($values));
+            $labels = self::labelsFor($api, $field, array_keys($values), $conn);
             foreach ($labels as $id => $label) {
                 $out[$field][] = ['id' => $id, 'label' => $label, 'count' => $values[$id]];
             }
@@ -211,15 +214,20 @@ class BrowseQuery
     }
 
     /**
-     * Display names for facet values: [id => label]. Field is 'item_set' or 'class'.
+     * Display names for facet values: [id => label]. Field is 'item_set', 'class',
+     * 'decade', 'has_images', or a text field (subject, creator, place), which
+     * needs the database connection for its labels.
      *
      * @return array<int, string>
      */
-    public static function labelsFor($api, string $field, array $ids): array
+    public static function labelsFor($api, string $field, array $ids, $conn = null): array
     {
         $ids = array_values(array_unique(array_map('intval', $ids)));
         if ($ids === []) {
             return [];
+        }
+        if (isset(Index::TEXT_FIELDS[$field])) {
+            return $conn ? Index::valueLabels($conn, $field, $ids) : [];
         }
         if ($field === 'decade') {
             return array_combine($ids, array_map(fn ($decade) => $decade . 's', $ids));

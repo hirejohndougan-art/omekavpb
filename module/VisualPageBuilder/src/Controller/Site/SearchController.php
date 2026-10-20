@@ -55,7 +55,7 @@ class SearchController extends AbstractActionController
                 'page' => $page,
                 'per_page' => $perPage,
                 'suggestion' => $result['suggestion'],
-                'facets' => BrowseQuery::facetLabels($api, $counts),
+                'facets' => BrowseQuery::facetLabels($api, $conn, $counts),
                 'items' => $items,
             ]);
         }

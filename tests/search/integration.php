@@ -45,6 +45,7 @@ $title = propertyId($api, 'dcterms:title');
 $desc = propertyId($api, 'dcterms:description');
 $subject = propertyId($api, 'dcterms:subject');
 $date = propertyId($api, 'dcterms:date');
+$spatial = propertyId($api, 'dcterms:spatial');
 
 // Clean up from an earlier run, by title prefix.
 foreach ($api->search('items', ['property' => [['property' => $title, 'type' => 'in', 'text' => 'VPBTEST']]])->getContent() as $old) {
@@ -66,6 +67,7 @@ $depot = $make([
     'dcterms:title' => [lit($title, 'VPBTEST Railroad depot at Dickinson')],
     'dcterms:description' => [lit($desc, 'Photograph of the railroad depot')],
     'dcterms:subject' => [lit($subject, 'Railroad')],
+    'dcterms:spatial' => [lit($spatial, 'Dickinson, Texas')],
     'dcterms:date' => [lit($date, '1912')],
 ]);
 $interior = $make([
@@ -140,6 +142,21 @@ check('a deleted item leaves the index', (int) $conn->fetchOne(
 // Facet by item set.
 $r = $public('depot', ['item_set' => [$set->id()]]);
 check('item set facet narrows to the set', $r['total'] === 1 && $r['ids'] === [$depot->id()], (string) $r['total']);
+
+// Text facets: subject and place values are counted and filter the results.
+$valueId = fn (string $field, string $label) => (int) $conn->fetchOne(
+    'SELECT id FROM ' . Index::FACET_VALUE . ' WHERE field = ? AND label = ?', [$field, $label]);
+$railroad = $valueId('subject', 'Railroad');
+$counts = Search::facetCounts($conn, 'depot', false, $syn, [], null);
+check('a subject value is counted for the matching items', $railroad > 0 && ($counts['subject'][$railroad] ?? 0) === 1,
+    (string) ($counts['subject'][$railroad] ?? 'none'));
+$r = $public('depot', ['subject' => [$railroad]]);
+check('subject facet narrows to the item with that subject', $r['total'] === 1 && $r['ids'] === [$depot->id()], (string) $r['total']);
+$place = $valueId('place', 'Dickinson, Texas');
+$r = $public('depot', ['place' => [$place]]);
+check('place facet narrows to the item with that place', $place > 0 && $r['total'] === 1 && $r['ids'] === [$depot->id()], (string) $r['total']);
+check('text facet labels come from the value table', Index::valueLabels($conn, 'subject', [$railroad]) === [$railroad => 'Railroad']);
+check('a text value is not offered under another field', Index::valueLabels($conn, 'place', [$railroad]) === []);
 
 // Clean up.
 foreach ([$depot, $interior, $staff, $oral] as $item) {
