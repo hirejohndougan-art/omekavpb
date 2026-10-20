@@ -37,7 +37,7 @@ if [ -n "$SET_ID" ]; then
   check "item set page answers" "$(curl -s -o /dev/null -w '%{http_code}' "$BASE/s/$SITE/item-set/$SET_ID")" "200"
   check "item set header names the set" "$(curl -s "$BASE/s/$SITE/item-set/$SET_ID" | grep -c 'vpb-item-set-title')" "1"
   check "item set page counts the set's items" \
-    "$(curl -s "$BASE/s/$SITE/item-set/$SET_ID" | grep -o 'vpb-results-count">[0-9,]* [a-z ]*' | grep -o '[0-9,]*' | tr -d ',')" \
+    "$(curl -s "$BASE/s/$SITE/item-set/$SET_ID" | grep -o 'vpb-results-count">[0-9,]* [a-z ]*' | head -1 | grep -o '[0-9,]*' | tr -d ',')" \
     "$(page "item_set%5B%5D=$SET_ID" | grep -o 'vpb-results-count">[0-9,]* [a-z ]*' | grep -o '[0-9,]*' | tr -d ',')"
 fi
 
