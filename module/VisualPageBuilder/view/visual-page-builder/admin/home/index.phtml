@@ -1,0 +1,72 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Home (Phase 6): greeting, quick actions, what needs attention, recent changes, counts.
+ *
+ * @var string $greeting
+ * @var string $name
+ * @var array $counts  items, itemSets, files, pages, private
+ * @var array $attention  noFile, noDate
+ * @var array $recent  [id, title, modified, url]
+ */
+$escape = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+$this->headStyle()->appendStyle('
+.vpb-home-greet{font-size:1.4rem;margin:0 0 1rem}
+.vpb-home-actions{display:flex;flex-wrap:wrap;gap:.5rem;margin:0 0 1.5rem}
+.vpb-home-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(18rem,1fr));gap:1rem;align-items:start}
+.vpb-home-card{background:#fff;border:1px solid #dfdfdf;border-radius:4px;padding:.9rem 1.1rem}
+.vpb-home-card h2{font-size:1.05rem;margin:0 0 .6rem}
+.vpb-home-card dl{display:grid;grid-template-columns:1fr auto;gap:.35rem .8rem;margin:0}
+.vpb-home-card dt{color:#333}
+.vpb-home-card dd{margin:0;font-weight:600;text-align:right}
+.vpb-home-card ul{margin:0;padding-left:1.1rem}
+.vpb-home-muted{color:#676767;font-size:.9rem}
+');
+echo $this->pageTitle($translate('Home'), 1, $translate('Visual Builder'));
+?>
+<p class="vpb-home-greet"><?php echo $escape($translate($greeting)); ?><?php echo $name !== '' ? ', ' . $escape($name) : ''; ?>.</p>
+
+<nav class="vpb-home-actions" aria-label="<?php echo $escape($translate('Quick actions')); ?>">
+    <a class="button" href="<?php echo $escape($this->url('admin/default', ['controller' => 'item', 'action' => 'add'])); ?>"><?php echo $escape($translate('Add an item')); ?></a>
+    <a class="button" href="<?php echo $escape($this->url('admin/visual-page-builder-import')); ?>"><?php echo $escape($translate('Import a spreadsheet')); ?></a>
+    <a class="button" href="<?php echo $escape($this->url('admin/visual-page-builder-files')); ?>"><?php echo $escape($translate('Files')); ?></a>
+    <a class="button" href="<?php echo $escape($this->url('admin/visual-page-builder-item-sets')); ?>"><?php echo $escape($translate('Item sets')); ?></a>
+</nav>
+
+<div class="vpb-home-grid">
+    <section class="vpb-home-card" aria-labelledby="vpb-home-attention">
+        <h2 id="vpb-home-attention"><?php echo $escape($translate('Needs attention')); ?></h2>
+        <dl>
+            <dt><?php echo $escape($translate('Items with no file')); ?></dt>
+            <dd><?php echo $escape(number_format($attention['noFile'])); ?></dd>
+            <dt><?php echo $escape($translate('Items with no date')); ?></dt>
+            <dd><?php echo $escape(number_format($attention['noDate'])); ?></dd>
+        </dl>
+        <p class="vpb-home-muted"><?php echo $escape($translate('Drafts will be listed here once drafts are built.')); ?></p>
+    </section>
+
+    <section class="vpb-home-card" aria-labelledby="vpb-home-recent">
+        <h2 id="vpb-home-recent"><?php echo $escape($translate('Recently changed')); ?></h2>
+        <?php if (!$recent): ?>
+        <p class="vpb-home-muted"><?php echo $escape($translate('Nothing has been changed yet.')); ?></p>
+        <?php else: ?>
+        <ul>
+        <?php foreach ($recent as $item): ?>
+            <li><a href="<?php echo $escape($item['url']); ?>"><?php echo $escape($item['title'] !== '' ? $item['title'] : $translate('Untitled')); ?></a> <span class="vpb-home-muted"><?php echo $escape($item['modified']); ?></span></li>
+        <?php endforeach; ?>
+        </ul>
+        <?php endif; ?>
+    </section>
+
+    <section class="vpb-home-card" aria-labelledby="vpb-home-counts">
+        <h2 id="vpb-home-counts"><?php echo $escape($translate('The collection')); ?></h2>
+        <dl>
+            <dt><?php echo $escape($translate('Items')); ?></dt><dd><?php echo $escape(number_format($counts['items'])); ?></dd>
+            <dt><?php echo $escape($translate('Private items')); ?></dt><dd><?php echo $escape(number_format($counts['private'])); ?></dd>
+            <dt><?php echo $escape($translate('Item sets')); ?></dt><dd><?php echo $escape(number_format($counts['itemSets'])); ?></dd>
+            <dt><?php echo $escape($translate('Files')); ?></dt><dd><?php echo $escape(number_format($counts['files'])); ?></dd>
+            <dt><?php echo $escape($translate('Pages')); ?></dt><dd><?php echo $escape(number_format($counts['pages'])); ?></dd>
+        </dl>
+    </section>
+</div>

@@ -14,6 +14,7 @@ return [
             'VisualPageBuilder\Controller\Admin\People' => Controller\Admin\PeopleController::class,
             'VisualPageBuilder\Controller\Admin\Library' => Controller\Admin\LibraryController::class,
             'VisualPageBuilder\Controller\Admin\Import' => Controller\Admin\ImportController::class,
+            'VisualPageBuilder\Controller\Admin\Home' => Controller\Admin\HomeController::class,
             'VisualPageBuilder\Controller\Admin\Menu' => Controller\Admin\MenuController::class,
             'VisualPageBuilder\Controller\Admin\Region' => Controller\Admin\RegionController::class,
             'VisualPageBuilder\Controller\Admin\Pages' => Controller\Admin\PagesController::class,
@@ -101,6 +102,18 @@ return [
                             'defaults' => [
                                 '__NAMESPACE__' => 'VisualPageBuilder\Controller\Admin',
                                 'controller' => 'Search',
+                                'action' => 'index',
+                            ],
+                        ],
+                    ],
+                    // Home (Phase 6): greeting, what needs attention, recent changes, counts.
+                    'visual-page-builder-home' => [
+                        'type' => \Laminas\Router\Http\Literal::class,
+                        'options' => [
+                            'route' => '/vpb-home',
+                            'defaults' => [
+                                '__NAMESPACE__' => 'VisualPageBuilder\Controller\Admin',
+                                'controller' => 'Home',
                                 'action' => 'index',
                             ],
                         ],
