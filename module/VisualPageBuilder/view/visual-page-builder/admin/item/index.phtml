@@ -97,6 +97,15 @@ echo $this->pageTitle($title !== '' ? $title : $translate('Untitled'), 1, $trans
     <li>
         <span><?php echo $escape($file['title'] !== '' ? $file['title'] : $translate('Untitled')); ?></span>
         <span class="vpb-item-hint"><?php echo $escape($file['type']); ?></span>
+        <?php if ($file['main']): ?><span class="vpb-item-state"><?php echo $escape($translate('Main image')); ?></span><?php else: ?>
+        <form method="post" class="vpb-item-inline">
+            <input type="hidden" name="<?php echo $escape($csrfName); ?>" value="<?php echo $escape($csrf); ?>">
+            <input type="hidden" name="vpb_action" value="set_main">
+            <input type="hidden" name="tab" value="files">
+            <input type="hidden" name="media_id" value="<?php echo (int) $file['id']; ?>">
+            <button type="submit"><?php echo $escape($translate('Make main image')); ?></button>
+        </form>
+        <?php endif; ?>
         <form method="post" class="vpb-item-inline">
             <input type="hidden" name="<?php echo $escape($csrfName); ?>" value="<?php echo $escape($csrf); ?>">
             <input type="hidden" name="vpb_action" value="remove_file">
@@ -108,7 +117,16 @@ echo $this->pageTitle($title !== '' ? $title : $translate('Untitled'), 1, $trans
 <?php endforeach; ?>
 </ul>
 <?php endif; ?>
-<p class="vpb-item-hint"><?php echo $escape($translate('Adding files and choosing the main image come next.')); ?></p>
+<form method="post" enctype="multipart/form-data" class="vpb-item-box" style="margin-top:1rem">
+    <input type="hidden" name="<?php echo $escape($csrfName); ?>" value="<?php echo $escape($csrf); ?>">
+    <input type="hidden" name="vpb_action" value="upload">
+    <input type="hidden" name="tab" value="files">
+    <label style="font-weight:600"><?php echo $escape($translate('Add a file')); ?>
+        <input type="file" name="upload" required>
+    </label>
+    <p class="vpb-item-hint"><?php echo $escape($translate('The file types allowed are set in Settings.')); ?></p>
+    <div><button type="submit"><?php echo $escape($translate('Add file')); ?></button></div>
+</form>
 
 <?php elseif ($tab === 'history'): ?>
 <?php if (!$snapshots): ?>

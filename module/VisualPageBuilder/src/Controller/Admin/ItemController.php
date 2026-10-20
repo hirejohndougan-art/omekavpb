@@ -67,8 +67,9 @@ class ItemController extends AbstractActionController
             $sites[] = ['id' => $site->id(), 'title' => (string) $site->title(), 'on' => in_array((int) $site->id(), $chosenSites, true)];
         }
         $files = [];
+        $mainId = $item->primaryMedia() ? (int) $item->primaryMedia()->id() : 0;
         foreach ($item->media() as $media) {
-            $files[] = ['id' => $media->id(), 'title' => (string) $media->displayTitle(), 'type' => (string) $media->mediaType()];
+            $files[] = ['id' => $media->id(), 'title' => (string) $media->displayTitle(), 'type' => (string) $media->mediaType(), 'main' => (int) $media->id() === $mainId];
         }
         $snapshots = [];
         foreach (ItemHistory::list($conn, $id) as $snapshot) {
@@ -123,6 +124,39 @@ class ItemController extends AbstractActionController
                 $mediaId = (int) ($post['media_id'] ?? 0);
                 $api->delete('media', $mediaId);
                 $this->messenger()->addSuccess('File removed.'); // @translate
+                $tab = 'files';
+                break;
+            case 'upload':
+                $file = $this->params()->fromFiles('upload');
+                if (empty($file) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+                    $this->messenger()->addError('Choose a file to add first.'); // @translate
+                    break;
+                }
+                try {
+                    $api->create('media', [
+                        'o:ingester' => 'upload',
+                        'file_index' => 0,
+                        'o:item' => ['o:id' => $id],
+                    ], ['file' => [0 => $file]]);
+                    $this->messenger()->addSuccess('File added.'); // @translate
+                } catch (\Exception $e) {
+                    // Omeka refuses files whose type is not allowed (Settings > Files); say why.
+                    $this->messenger()->addError('That file was not added: ' . $e->getMessage()); // @translate
+                }
+                $tab = 'files';
+                break;
+            case 'set_main':
+                $mediaId = (int) ($post['media_id'] ?? 0);
+                $owned = false;
+                foreach ($api->read('items', $id)->getContent()->media() as $media) {
+                    $owned = $owned || (int) $media->id() === $mediaId;
+                }
+                if ($owned) {
+                    $api->update('items', $id, ['o:primary_media' => ['o:id' => $mediaId]], [], ['isPartial' => true]);
+                    $this->messenger()->addSuccess('Main image set.'); // @translate
+                } else {
+                    $this->messenger()->addError('That file is not on this item.'); // @translate
+                }
                 $tab = 'files';
                 break;
             case 'keep_draft':
