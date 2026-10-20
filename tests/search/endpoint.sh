@@ -19,5 +19,13 @@ check "per_page is limited to 12, 24 or 48" "$(get 'q=lighthouse&per_page=7' | p
 check "a word typed partly still matches" "$(get 'q=lighthous' | php -r '$d=json_decode(stream_get_contents(STDIN),true); echo $d["total"]>0?"yes":"no";')" "yes"
 check "nonsense finds nothing" "$(get 'q=zzzzqqqq' | json total)" "0"
 
+# A facet count matches the filtered result (data-independent: reads the first facet value).
+FACET_ID=$(get 'q=lighthouse' | php -r '$d=json_decode(stream_get_contents(STDIN),true); echo $d["facets"]["item_set"][0]["id"] ?? "";')
+if [ -n "$FACET_ID" ]; then
+  COUNT=$(get 'q=lighthouse' | php -r '$d=json_decode(stream_get_contents(STDIN),true); echo $d["facets"]["item_set"][0]["count"];')
+  FILTERED=$(get "q=lighthouse&item_set[]=$FACET_ID" | json total)
+  check "facet count equals the filtered total" "$FILTERED" "$COUNT"
+fi
+
 echo "endpoint checks: $pass passed, $fail failed"
 [ "$fail" -eq 0 ]

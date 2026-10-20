@@ -39,11 +39,15 @@ class SearchController extends AbstractActionController
             'class' => array_map('intval', (array) $this->params()->fromQuery('class', [])),
         ];
 
+        // Only this site's items: the site comes from the URL (/s/:site-slug).
+        $siteId = (int) $this->currentSite()->id();
+
         $index = $this->indexReady($conn, $settings);
         if ($index) {
             $synonyms = Synonyms::fromText((string) $settings->get(Index::SYNONYMS_SETTING, ''));
-            $result = Search::run($conn, $query, false, $page, $perPage, $synonyms, $facets);
+            $result = Search::run($conn, $query, false, $page, $perPage, $synonyms, $facets, $siteId);
             $items = $this->titles($conn, $result['ids']);
+            $counts = Search::facetCounts($conn, $query, false, $synonyms, $facets, $siteId);
             return $this->json([
                 'mode' => 'index',
                 'query' => $query,
@@ -51,12 +55,13 @@ class SearchController extends AbstractActionController
                 'page' => $page,
                 'per_page' => $perPage,
                 'suggestion' => $result['suggestion'],
+                'facets' => $this->facetLabels($api, $counts),
                 'items' => $items,
             ]);
         }
 
         // Fallback: Omeka's own search. Only public items come back for visitors.
-        $params = ['page' => $page, 'per_page' => $perPage, 'sort_by' => 'title'];
+        $params = ['page' => $page, 'per_page' => $perPage, 'sort_by' => 'title', 'site_id' => $siteId];
         if ($query !== '') {
             $params['fulltext_search'] = $query;
         }
@@ -98,6 +103,30 @@ class SearchController extends AbstractActionController
             return false;
         }
         return (bool) $conn->fetchOne('SELECT 1 FROM ' . Index::DOC . ' LIMIT 1');
+    }
+
+    /**
+     * Turns counts into a list per field: {id, label, count}, most items first.
+     *
+     * @return array<string, array<int, array{id: int, label: string, count: int}>>
+     */
+    private function facetLabels($api, array $counts): array
+    {
+        $resources = ['item_set' => 'item_sets', 'class' => 'resource_classes'];
+        $out = [];
+        foreach ($counts as $field => $values) {
+            $out[$field] = [];
+            if ($values === []) {
+                continue;
+            }
+            $found = $api->search($resources[$field], ['id' => array_keys($values)])->getContent();
+            foreach ($found as $resource) {
+                $id = (int) $resource->id();
+                $out[$field][] = ['id' => $id, 'label' => (string) $resource->displayTitle(''), 'count' => $values[$id]];
+            }
+            usort($out[$field], fn ($a, $b) => $b['count'] <=> $a['count'] ?: strcmp($a['label'], $b['label']));
+        }
+        return $out;
     }
 
     /** @return array<int, array{id: int, title: string}> in the order given. */

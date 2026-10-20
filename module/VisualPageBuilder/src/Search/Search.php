@@ -15,6 +15,7 @@ class Search
 {
     /**
      * @param array{item_set?: int[], class?: int[]} $facets selected facet values, each field OR-ed, fields AND-ed
+     * @param ?int $siteId only items that belong to this site (Omeka's item_site table)
      * @return array{total: int, ids: int[], suggestion: ?string, parsed: array}
      */
     public static function run(
@@ -24,10 +25,11 @@ class Search
         int $page = 1,
         int $perPage = 12,
         ?Synonyms $synonyms = null,
-        array $facets = []
+        array $facets = [],
+        ?int $siteId = null
     ): array {
         $parsed = QueryParser::parse($raw, $synonyms);
-        [$where, $params] = self::conditions($parsed, $staff, $facets);
+        [$where, $params] = self::conditions($parsed, $staff, $facets, $siteId);
 
         $total = (int) $conn->fetchOne(
             'SELECT COUNT(*) FROM ' . Index::DOC . ' d WHERE ' . $where,
@@ -54,14 +56,55 @@ class Search
     }
 
     /**
+     * Live facet counts (plan section 2): for each facet field, how many matching items
+     * have each value. A field's own selection is left out of its counts, so ticking
+     * one choice doesn't hide its siblings. Returns [field => [value_id => count]].
+     *
+     * @return array<string, array<int, int>>
+     */
+    public static function facetCounts(
+        Connection $conn,
+        string $raw,
+        bool $staff = false,
+        ?Synonyms $synonyms = null,
+        array $facets = [],
+        ?int $siteId = null
+    ): array {
+        $parsed = QueryParser::parse($raw, $synonyms);
+        $counts = [];
+        foreach (['item_set', 'class'] as $field) {
+            $others = $facets;
+            unset($others[$field]);
+            [$where, $params] = self::conditions($parsed, $staff, $others, $siteId);
+            $rows = $conn->fetchAllAssociative(
+                'SELECT f.value_id, COUNT(DISTINCT d.item_id) AS c FROM ' . Index::DOC . ' d'
+                . ' JOIN ' . Index::FACET . ' f ON f.item_id = d.item_id AND f.field = ?'
+                . ' WHERE ' . $where . ' GROUP BY f.value_id',
+                array_merge([$field], $params)
+            );
+            $counts[$field] = [];
+            foreach ($rows as $row) {
+                $counts[$field][(int) $row['value_id']] = (int) $row['c'];
+            }
+        }
+        return $counts;
+    }
+
+    /**
      * The WHERE clause and its parameters.
      *
      * @return array{0: string, 1: array}
      */
-    public static function conditions(array $parsed, bool $staff, array $facets = []): array
+    public static function conditions(array $parsed, bool $staff, array $facets = [], ?int $siteId = null): array
     {
         $clauses = [$staff ? '1 = 1' : 'd.is_public = 1'];
         $params = [];
+
+        // Only items that belong to this site (Omeka's own item-to-site table).
+        if ($siteId !== null) {
+            $clauses[] = 'EXISTS (SELECT 1 FROM item_site s WHERE s.item_id = d.item_id AND s.site_id = ?)';
+            $params[] = $siteId;
+        }
 
         foreach ($parsed['groups'] as $group) {
             $variantClauses = [];
