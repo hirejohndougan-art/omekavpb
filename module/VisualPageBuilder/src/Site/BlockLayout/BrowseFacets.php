@@ -57,13 +57,20 @@ class BrowseFacets extends AbstractSchemaBlock
         $fields = array_diff_key(self::FIELDS, $screen === 'item-set' ? ['item_set' => 1] : []);
 
         $expanded = self::expandedFields($view);
+        $letters = self::activeLetters($view);
         $groups = [];
         $active = [];
         foreach ($fields as $field => $label) {
             $options = [];
             $options_all = $result['facetOptions'][$field] ?? [];
-            $largest = $options_all ? max(array_column($options_all, 'count')) : 1;
             $isText = isset(\VisualPageBuilder\Search\Index::TEXT_FIELDS[$field]);
+            $letter = $isText ? ($letters[$field] ?? null) : null;
+            // The A–Z row lists every letter that starts a value, so it is built before the letter narrows the values.
+            $letterLinks = $isText ? self::letterLinks($view, $field, $options_all, $selected, $expanded, $letters) : [];
+            if ($letter !== null) {
+                $options_all = array_values(array_filter($options_all, fn ($o) => self::initial($o['label']) === $letter));
+            }
+            $largest = $options_all ? max(array_column($options_all, 'count')) : 1;
             $showAll = $isText && in_array($field, $expanded, true);
             $shown = 0;
             foreach ($options_all as $option) {
@@ -78,24 +85,25 @@ class BrowseFacets extends AbstractSchemaBlock
                     ? array_values(array_diff($selected[$field], [$option['id']]))
                     : array_values(array_merge($selected[$field], [$option['id']]));
                 $bar = (int) round(100 * $option['count'] / max(1, $largest));
-                $options[] = $option + ['active' => $on, 'url' => self::url($view, $next, $expanded), 'bar' => $bar];
+                $options[] = $option + ['active' => $on, 'url' => self::url($view, $next, $expanded, $letters), 'bar' => $bar];
             }
-            if ($options) {
+            if ($options || $letter !== null) {
                 // Dates read as bars: each decade's width is its share of the largest decade.
                 $toggle = null;
                 if ($isText && count($options_all) > self::TEXT_SHOWN) {
                     $others = array_values(array_diff($expanded, [$field]));
                     $toggle = $showAll
-                        ? ['url' => self::url($view, $selected, $others), 'label' => $view->translate('Show fewer')]
-                        : ['url' => self::url($view, $selected, array_merge($expanded, [$field])),
+                        ? ['url' => self::url($view, $selected, $others, $letters), 'label' => $view->translate('Show fewer')]
+                        : ['url' => self::url($view, $selected, array_merge($expanded, [$field]), $letters),
                             'label' => sprintf($view->translate('Show all %s'), number_format(count($options_all)))];
                 }
-                $groups[] = ['label' => $view->translate($label), 'options' => $options, 'bars' => $field === 'decade', 'toggle' => $toggle];
+                $groups[] = ['label' => $view->translate($label), 'options' => $options, 'bars' => $field === 'decade',
+                    'toggle' => $toggle, 'letters' => $letterLinks];
             }
             foreach (BrowseQuery::labelsFor($api, $field, $selected[$field], $conn) as $id => $name) {
                 $next = $selected;
                 $next[$field] = array_values(array_diff($selected[$field], [$id]));
-                $active[] = ['label' => $name, 'url' => self::url($view, $next, $expanded)];
+                $active[] = ['label' => $name, 'url' => self::url($view, $next, $expanded, $letters)];
             }
         }
 
@@ -114,7 +122,7 @@ class BrowseFacets extends AbstractSchemaBlock
      * The address for these filters: the search, sort and page size stay, the filters
      * are exactly the ones given, and paging starts again at page one.
      */
-    public static function url(PhpRenderer $view, array $selected, array $expanded = []): string
+    public static function url(PhpRenderer $view, array $selected, array $expanded = [], array $letters = []): string
     {
         $query = array_intersect_key($view->params()->fromQuery(), array_flip(['q', 'fulltext_search', 'per_page', 'sort']));
         foreach (BrowseQuery::FILTER_PARAMS as $field) {
@@ -125,7 +133,58 @@ class BrowseFacets extends AbstractSchemaBlock
         if ($expanded) {
             $query['show_all'] = array_values($expanded);
         }
+        if ($letters) {
+            $query['letter'] = $letters;
+        }
         return $view->url(null, [], ['query' => $query], true);
+    }
+
+    /** The A–Z letter chosen for each text field, from the address bar (letter[subject]=V). */
+    public static function activeLetters(PhpRenderer $view): array
+    {
+        $asked = (array) $view->params()->fromQuery('letter', []);
+        $out = [];
+        foreach (array_keys(\VisualPageBuilder\Search\Index::TEXT_FIELDS) as $field) {
+            $letter = strtoupper((string) ($asked[$field] ?? ''));
+            if (preg_match('/^[A-Z]$/', $letter)) {
+                $out[$field] = $letter;
+            }
+        }
+        return $out;
+    }
+
+    /** The first letter of a value in capitals, or '' when it does not start with a letter. */
+    public static function initial(string $label): string
+    {
+        $first = strtoupper(mb_substr(ltrim($label), 0, 1));
+        return preg_match('/^[A-Z]$/', $first) ? $first : '';
+    }
+
+    /**
+     * The A–Z links for a text field: one for each letter that starts a value, plus
+     * the chosen letter (pressing it again turns it off).
+     */
+    protected static function letterLinks(PhpRenderer $view, string $field, array $options_all, array $selected, array $expanded, array $letters): array
+    {
+        $present = [];
+        foreach ($options_all as $option) {
+            $present[self::initial((string) $option['label'])] = true;
+        }
+        $current = $letters[$field] ?? null;
+        $links = [];
+        foreach (range('A', 'Z') as $letter) {
+            if (!isset($present[$letter]) && $letter !== $current) {
+                continue;
+            }
+            $next = $letters;
+            if ($letter === $current) {
+                unset($next[$field]);
+            } else {
+                $next[$field] = $letter;
+            }
+            $links[] = ['letter' => $letter, 'active' => $letter === $current, 'url' => self::url($view, $selected, $expanded, $next)];
+        }
+        return $links;
     }
 
     /** Text fields whose full list is shown ("Show all"), from the address bar. */

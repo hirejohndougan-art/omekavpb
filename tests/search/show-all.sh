@@ -38,6 +38,15 @@ expanded=$(curl -s "$BASE/s/dhs/item?fulltext_search=$WORD&show_all%5B%5D=subjec
 check "Show all lists every subject" "$(echo "$expanded" | grep -o "subject [0-9][0-9]" | sort -u | wc -l | awk '{print ($1==12)?1:0}')"
 check "the expanded list offers Show fewer" "$(echo "$expanded" | grep -c 'Show fewer' | awk '{print ($1>=1)?1:0}')"
 
+# A–Z row: every subject starts with the word's first letter (V), so V is offered and Z is not.
+check "the text filter has an A-Z row" "$(echo "$page" | grep -c 'vpb-facet-letters' | awk '{print ($1>=1)?1:0}')"
+check "the A-Z row offers V for the subjects" "$(echo "$page" | grep -c '>V</a>' | awk '{print ($1>=1)?1:0}')"
+check "the A-Z row leaves out Z" "$(echo "$page" | grep -c '>Z</a>' | awk '{print ($1==0)?1:0}')"
+letterV=$(curl -s "$BASE/s/dhs/item?fulltext_search=$WORD&letter%5Bsubject%5D=V")
+check "letter V keeps all twelve subjects, with Show all" "$(echo "$letterV" | grep -c 'Show all 12' | awk '{print ($1>=1)?1:0}')"
+letterZ=$(curl -s "$BASE/s/dhs/item?fulltext_search=$WORD&letter%5Bsubject%5D=Z")
+check "letter Z lists no subjects" "$(echo "$letterZ" | grep -o "subject [0-9][0-9]" | wc -l | awk '{print ($1==0)?1:0}')"
+
 for id in $ids; do curl -s -o /dev/null -X DELETE "$BASE/api/items/$id?$AUTH"; done
 echo "$([ $fail = 0 ] && echo 'show-all checks passed' || echo 'show-all checks FAILED')"
 exit $fail

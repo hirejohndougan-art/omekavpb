@@ -32,6 +32,13 @@ $translate = $this->plugin('translate');
 <?php foreach ($groups as $group): ?>
     <fieldset class="vpb-facet">
         <legend><?php echo $escape($group['label']); ?></legend>
+        <?php if (!empty($group['letters'])): ?>
+        <p class="vpb-facet-letters">
+        <?php foreach ($group['letters'] as $letter): ?>
+            <a href="<?php echo $escape($letter['url']); ?>" aria-pressed="<?php echo $letter['active'] ? 'true' : 'false'; ?>"><?php echo $escape($letter['letter']); ?></a>
+        <?php endforeach; ?>
+        </p>
+        <?php endif; ?>
         <ul>
         <?php foreach ($group['options'] as $option): ?>
             <li>
