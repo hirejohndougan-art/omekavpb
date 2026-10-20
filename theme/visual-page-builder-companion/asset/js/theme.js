@@ -46,16 +46,51 @@
    * full-screen panel; "Show N results" or Escape closes it. On wide screens the
    * button is hidden and the filters stay in place (see style.css).
    */
+  /*
+   * While the full-screen panel is open, the page behind it is inert so Tab
+   * cannot reach hidden links; the panel's own ancestors stay live.
+   */
+  function setPageInert(panel, on) {
+    var node = panel;
+    while (node && node !== document.body) {
+      var parent = node.parentElement;
+      if (!parent) break;
+      Array.prototype.forEach.call(parent.children, function (sib) {
+        if (sib === node) return;
+        if (on) sib.setAttribute('inert', ''); else sib.removeAttribute('inert');
+      });
+      node = parent;
+    }
+  }
   function setFilters(toggle, open) {
     var panel = document.getElementById(toggle.getAttribute('aria-controls'));
     if (!panel) return;
     panel.classList.toggle('is-open', open);
     toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    setPageInert(panel, open);
     if (open) {
       var done = panel.querySelector('.vpb-facets-done');
       if (done) done.focus(); else panel.focus();
     } else {
       toggle.focus();
+    }
+  }
+  /* Keeps Tab and Shift+Tab cycling inside the open panel, never the browser bar. */
+  function trapTab(panel, event) {
+    var items = Array.prototype.filter.call(
+      panel.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'),
+      function (el) { return el.offsetParent !== null || el === document.activeElement; }
+    );
+    if (!items.length) { event.preventDefault(); panel.focus(); return; }
+    var first = items[0];
+    var last = items[items.length - 1];
+    var active = document.activeElement;
+    var inside = panel.contains(active);
+    event.preventDefault();
+    if (event.shiftKey) {
+      if (!inside || active === first) last.focus(); else items[items.indexOf(active) - 1].focus();
+    } else {
+      if (!inside || active === last) first.focus(); else items[items.indexOf(active) + 1].focus();
     }
   }
   function initFilters() {
@@ -73,10 +108,14 @@
       }
     });
     document.addEventListener('keydown', function (event) {
-      if (event.key !== 'Escape') return;
       var open = document.querySelector('.vpb-facets.is-open');
-      var btn = open && document.querySelector('.vpb-filters-toggle[aria-controls="' + open.id + '"]');
-      if (btn) setFilters(btn, false);
+      if (!open) return;
+      if (event.key === 'Escape') {
+        var btn = document.querySelector('.vpb-filters-toggle[aria-controls="' + open.id + '"]');
+        if (btn) setFilters(btn, false);
+        return;
+      }
+      if (event.key === 'Tab') trapTab(open, event);
     });
   }
   function startAll() { init(); initFilters(); }
