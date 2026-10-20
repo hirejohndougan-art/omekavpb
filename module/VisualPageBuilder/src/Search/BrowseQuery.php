@@ -171,6 +171,14 @@ class BrowseQuery
             'facetOptions' => [],
         ];
         self::$answers[$key] = $answer;
+        // Staff see the top searches on Home. Logging is best effort: a failure never stops the search.
+        if ($state['q'] !== '' && $screen !== 'item-set') {
+            try {
+                \VisualPageBuilder\SearchLog::record($conn, $state['q'], (int) $answer['total']);
+            } catch (\Throwable $e) {
+                // The log table may be missing (VPB was just updated); the search still works.
+            }
+        }
         return $answer;
     }
 

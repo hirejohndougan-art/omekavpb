@@ -60,6 +60,38 @@ echo $this->pageTitle($translate('Home'), 1, $translate('Visual Builder'));
         <?php endif; ?>
     </section>
 
+    <section class="vpb-home-card" aria-labelledby="vpb-home-report">
+        <h2 id="vpb-home-report"><?php echo $escape($translate('Search report')); ?></h2>
+        <p class="vpb-home-note"><?php echo $escape($translate('Visitor searches in the last 30 days.')); ?></p>
+        <div class="vpb-home-two">
+            <div>
+                <h3><?php echo $escape($translate('Top searches')); ?></h3>
+                <?php if (!$report['found']): ?>
+                <p><?php echo $escape($translate('No searches yet.')); ?></p>
+                <?php else: ?>
+                <ol>
+                <?php foreach ($report['found'] as $row): ?>
+                    <li><?php echo $escape($row['term']); ?> <span class="vpb-home-note">(<?php echo (int) $row['count']; ?>)</span></li>
+                <?php endforeach; ?>
+                </ol>
+                <?php endif; ?>
+            </div>
+            <div>
+                <h3><?php echo $escape($translate('Searches that found nothing')); ?></h3>
+                <?php if (!$report['empty']): ?>
+                <p><?php echo $escape($translate('None. Every search found something.')); ?></p>
+                <?php else: ?>
+                <ul>
+                <?php foreach ($report['empty'] as $row): ?>
+                    <li><?php echo $escape($row['term']); ?> <span class="vpb-home-note">(<?php echo (int) $row['count']; ?>)</span></li>
+                <?php endforeach; ?>
+                </ul>
+                <p class="vpb-home-note"><?php echo $escape($translate('These may be things to catalog next.')); ?></p>
+                <?php endif; ?>
+            </div>
+        </div>
+    </section>
+
     <section class="vpb-home-card" aria-labelledby="vpb-home-counts">
         <h2 id="vpb-home-counts"><?php echo $escape($translate('The collection')); ?></h2>
         <dl>
@@ -71,3 +103,9 @@ echo $this->pageTitle($translate('Home'), 1, $translate('Visual Builder'));
         </dl>
     </section>
 </div>
+<style>
+.vpb-home-two{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+.vpb-home-two h3{font-size:.95rem;margin:.2rem 0 .4rem}
+.vpb-home-note{font-size:.85rem;color:#676767}
+@media (max-width:640px){.vpb-home-two{grid-template-columns:1fr}}
+</style>

@@ -75,6 +75,7 @@ class Module extends AbstractModule
         Search\Index::createTables($services->get('Omeka\Connection'));
         ItemHistory::createTable($services->get('Omeka\Connection'));
         Drafts::createTable($services->get('Omeka\Connection'));
+        SearchLog::createTable($services->get('Omeka\Connection'));
     }
 
     /**
@@ -90,7 +91,9 @@ class Module extends AbstractModule
         require_once __DIR__ . '/src/ItemHistory.php';
         ItemHistory::dropTable($services->get('Omeka\Connection'));
         require_once __DIR__ . '/src/Drafts.php';
+        require_once __DIR__ . '/src/SearchLog.php';
         Drafts::dropTable($services->get('Omeka\Connection'));
+        SearchLog::dropTable($services->get('Omeka\Connection'));
         // The search index goes too. Omeka's own search keeps working without it.
         Search\Index::dropTables($services->get('Omeka\Connection'));
         $dir = OMEKA_PATH . '/files/visual-page-builder';
@@ -117,7 +120,9 @@ class Module extends AbstractModule
         require_once __DIR__ . '/src/ItemHistory.php';
         ItemHistory::createTable($services->get('Omeka\Connection'));
         require_once __DIR__ . '/src/Drafts.php';
+        require_once __DIR__ . '/src/SearchLog.php';
         Drafts::createTable($services->get('Omeka\Connection'));
+        SearchLog::createTable($services->get('Omeka\Connection'));
     }
 
     /** Item history: save the item's values before each change made through the API. */
@@ -136,6 +141,7 @@ class Module extends AbstractModule
     public function forgetDraftOnDelete(Event $event): void
     {
         require_once __DIR__ . '/src/Drafts.php';
+        require_once __DIR__ . '/src/SearchLog.php';
         $services = $event->getTarget()->getServiceLocator();
         Drafts::forget($services->get('Omeka\Connection'), (int) $event->getParam('request')->getId());
     }

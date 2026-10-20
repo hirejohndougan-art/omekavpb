@@ -75,7 +75,10 @@ class HomeController extends AbstractActionController
         }
         $user = $this->identity();
         $hour = (int) (new \DateTimeImmutable('now', new \DateTimeZone('America/Chicago')))->format('G');
+        \VisualPageBuilder\SearchLog::prune($conn);
+        $report = \VisualPageBuilder\SearchLog::report($conn, new \DateTime('-30 days', new \DateTimeZone('UTC')));
         $view = new ViewModel([
+            'report' => $report,
             'greeting' => self::greeting($hour),
             'name' => $user ? (string) $user->getName() : '',
             'counts' => $counts,
