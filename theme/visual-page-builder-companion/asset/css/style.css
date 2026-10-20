@@ -293,3 +293,8 @@ img { max-width: 100%; height: auto; }
 .vpb-facet li a { position: relative; display: flex; justify-content: space-between; gap: 0.5rem; }
 .vpb-facet-bar { position: absolute; left: 0; top: 0; bottom: 0; z-index: 0; background: currentColor; opacity: 0.12; border-radius: 3px; }
 .vpb-facet-label, .vpb-facet-count { position: relative; z-index: 1; }
+
+/* A–Z row for the text filters: the pressed letter is filled. */
+.vpb-facet-letters { display: flex; flex-wrap: wrap; gap: 0.25rem; margin: 0.25rem 0 0.5rem; }
+.vpb-facet-letters a { display: inline-block; min-width: 1.9rem; padding: 0.15rem 0.3rem; border: 1px solid currentColor; border-radius: 3px; text-align: center; text-decoration: none; font-size: 0.9em; }
+.vpb-facet-letters a[aria-pressed="true"] { background: #1f4d3f; border-color: #1f4d3f; color: #fff; }
