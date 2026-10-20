@@ -77,7 +77,7 @@ echo $this->pageTitle($translate('Add an item'), 1, $translate('Items'));
         </form>
 
     <?php elseif ($step === 2): ?>
-        <form method="post" class="vpb-add-box vpb-add-form">
+        <form method="post" id="vpb-describe" class="vpb-add-box vpb-add-form">
             <input type="hidden" name="<?php echo $escape($csrfName); ?>" value="<?php echo $escape($csrf); ?>">
             <input type="hidden" name="vpb_add_action" value="describe">
             <input type="hidden" name="item" value="<?php echo (int) $itemId; ?>">
@@ -135,11 +135,11 @@ echo $this->pageTitle($translate('Add an item'), 1, $translate('Items'));
             </ul>
         </section>
         <section class="vpb-add-box vpb-add-preview" aria-label="<?php echo $escape($translate('Preview')); ?>">
-            <h3><?php echo $escape($values['title'] !== '' ? $values['title'] : $translate('Untitled')); ?></h3>
-            <p class="vpb-add-hint"><?php echo $escape($translate('Preview as of the last save.')); ?></p>
+            <h3 data-preview="title" data-untitled="<?php echo $escape($translate('Untitled')); ?>"><?php echo $escape($values['title'] !== '' ? $values['title'] : $translate('Untitled')); ?></h3>
+            <p class="vpb-add-hint"><?php echo $escape($translate('Shows what you have entered so far.')); ?></p>
             <dl>
-                <dt><?php echo $escape($translate('Creator')); ?></dt><dd><?php echo $escape(str_replace("\n", '; ', $values['creator']) ?: '—'); ?></dd>
-                <dt><?php echo $escape($translate('Date')); ?></dt><dd><?php echo $escape($values['date'] ?: '—'); ?></dd>
+                <dt><?php echo $escape($translate('Creator')); ?></dt><dd data-preview="creator"><?php echo $escape(str_replace("\n", '; ', $values['creator']) ?: '—'); ?></dd>
+                <dt><?php echo $escape($translate('Date')); ?></dt><dd data-preview="date"><?php echo $escape($values['date'] ?: '—'); ?></dd>
                 <dt><?php echo $escape($translate('File')); ?></dt><dd><?php echo $escape($files ? $files[0] : $translate('Placeholder')); ?></dd>
                 <dt><?php echo $escape($translate('Status')); ?></dt><dd><?php echo $escape($draft ? $translate('Draft') : $translate('Public')); ?></dd>
             </dl>
@@ -147,3 +147,25 @@ echo $this->pageTitle($translate('Add an item'), 1, $translate('Items'));
     </aside>
 </div>
 <?php endif; ?>
+<script>
+// Live preview (Phase 7): the preview follows the Describe form as you type. Without
+// JavaScript the preview still updates on each save.
+(function () {
+  var form = document.getElementById('vpb-describe');
+  if (!form) { return; }
+  var put = function (key, text) {
+    var el = document.querySelector('[data-preview="' + key + '"]');
+    if (el) { el.textContent = text; }
+  };
+  var lines = function (text) {
+    return text.split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean).join('; ');
+  };
+  form.addEventListener('input', function () {
+    var title = form.elements.title.value.trim();
+    var heading = document.querySelector('[data-preview="title"]');
+    put('title', title || (heading ? heading.getAttribute('data-untitled') : ''));
+    put('creator', lines(form.elements.creator.value) || '\u2014');
+    put('date', form.elements.date.value.trim() || '\u2014');
+  });
+})();
+</script>
