@@ -110,7 +110,7 @@ echo $this->partial('visual-page-builder/admin/library/_nav', ['current' => $rou
     <?php foreach ($items as $item): ?>
         <div class="vpb-items-card">
             <?php if ($item['thumbnail']): ?><img src="<?php echo $escape($item['thumbnail']); ?>" alt=""><?php endif; ?>
-            <label><input type="checkbox" class="vpb-items-pick" name="ids[]" value="<?php echo (int) $item['id']; ?>"> <a href="<?php echo $escape($item['url']); ?>"><?php echo $escape($item['title'] !== '' ? $item['title'] : $translate('Untitled')); ?></a></label>
+            <label><input type="checkbox" class="vpb-items-pick" name="ids[]" value="<?php echo (int) $item['id']; ?>"> <a href="<?php echo $escape($item['url']); ?>"><?php echo $escape($item['title'] !== '' ? $item['title'] : $translate('Untitled')); ?></a><?php if (!empty($expert)): ?> <span class="vpb-items-tag">#<?php echo (int) $item['id']; ?></span><?php endif; ?></label>
             <span>
                 <span class="vpb-items-tag"><?php echo $escape($item['public'] ? $translate('Public') : $translate('Staff only')); ?></span>
                 <?php if ($item['draft']): ?><span class="vpb-items-tag is-draft"><?php echo $escape($translate('Draft')); ?></span><?php endif; ?>
@@ -125,7 +125,7 @@ echo $this->partial('visual-page-builder/admin/library/_nav', ['current' => $rou
         <?php foreach ($items as $item): ?>
             <tr>
                 <td><input type="checkbox" class="vpb-items-pick" name="ids[]" value="<?php echo (int) $item['id']; ?>" aria-label="<?php echo $escape($translate('Choose')); ?> <?php echo $escape($item['title']); ?>"></td>
-                <td><a href="<?php echo $escape($item['url']); ?>"><?php echo $escape($item['title'] !== '' ? $item['title'] : $translate('Untitled')); ?></a></td>
+                <td><a href="<?php echo $escape($item['url']); ?>"><?php echo $escape($item['title'] !== '' ? $item['title'] : $translate('Untitled')); ?></a><?php if (!empty($expert)): ?> <span class="vpb-items-tag">#<?php echo (int) $item['id']; ?></span><?php endif; ?></td>
                 <td><span class="vpb-items-tag"><?php echo $escape($item['public'] ? $translate('Public') : $translate('Staff only')); ?></span> <?php if ($item['draft']): ?><span class="vpb-items-tag is-draft"><?php echo $escape($translate('Draft')); ?></span><?php endif; ?></td>
                 <td><?php echo $escape($item['modified']); ?></td>
             </tr>
