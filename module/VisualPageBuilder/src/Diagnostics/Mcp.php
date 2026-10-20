@@ -9,7 +9,7 @@ namespace VisualPageBuilder\Diagnostics;
 class Mcp
 {
     private const PROTOCOL = '2025-06-18';
-    private const SERVER = ['name' => 'visual-page-builder-diagnostics', 'version' => '2.9.2'];
+    private const SERVER = ['name' => 'visual-page-builder-diagnostics', 'version' => '2.9.3'];
 
     /** Tool name => [description, which part of the report it returns]. */
     private const TOOLS = [

@@ -59,6 +59,7 @@ class SettingsController extends AbstractActionController
             'fileKinds' => self::FILE_KINDS,
             'csrf' => (new Csrf(['name' => self::CSRF_NAME]))->getHash(),
             'rebuilding' => (bool) $this->settings()->get(\VisualPageBuilder\Search\ReindexJob::REBUILDING_SETTING, false),
+            'indexEmpty' => $this->indexEmpty(),
         ]);
     }
 
@@ -141,6 +142,15 @@ class SettingsController extends AbstractActionController
         if (!$user || $user->getRole() !== 'global_admin') {
             throw new PermissionDeniedException('Only a global administrator can change these settings.'); // @translate
         }
+    }
+
+    /** True when the collection has items but the search index holds none (search is not working yet). */
+    private function indexEmpty(): bool
+    {
+        $conn = $this->getEvent()->getApplication()->getServiceManager()->get('Omeka\Connection');
+        $items = (int) $conn->fetchOne('SELECT COUNT(*) FROM item');
+        $docs = (int) $conn->fetchOne('SELECT COUNT(*) FROM ' . \VisualPageBuilder\Search\Index::DOC);
+        return $items > 0 && $docs === 0;
     }
 
     private function settings()

@@ -9,6 +9,7 @@
  * @var string $csrf
  * @var string $synonyms  search synonyms as saved
  * @var bool $rebuilding  a full index rebuild is running
+ * @var bool $indexEmpty  items exist but the search index holds none
  */
 $escape = $this->plugin('escapeHtml');
 $translate = $this->plugin('translate');
@@ -83,6 +84,9 @@ echo $this->partial('visual-page-builder/admin/library/_nav', ['current' => ''])
         <p class="vpb-set-hint"><?php echo $escape($translate('Search finds items from an index that is updated each time an item is saved. Items added before this module was installed need a full rebuild. It runs in the background and can take a while for a large collection.')); ?></p>
         <?php if ($rebuilding): ?>
         <p class="vpb-set-hint"><strong><?php echo $escape($translate('A rebuild is running now. Visitors get Omeka\'s search until it finishes.')); ?></strong></p>
+        <?php endif; ?>
+        <?php if (!empty($indexEmpty) && !$rebuilding): ?>
+        <p class="vpb-set-hint"><strong><?php echo $escape($translate('The search index is empty, so visitors get Omeka\'s basic search with no filters. Press Rebuild the search index.')); ?></strong></p>
         <?php endif; ?>
         <button type="submit"<?php echo $rebuilding ? ' disabled' : ''; ?>><?php echo $escape($translate('Rebuild the search index')); ?></button>
     </fieldset>

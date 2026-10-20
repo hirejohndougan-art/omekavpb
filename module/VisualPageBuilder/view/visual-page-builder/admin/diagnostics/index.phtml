@@ -58,4 +58,6 @@ echo $this->partial('visual-page-builder/admin/library/_nav', ['current' => ''])
     <p><strong><?php echo $escape($translate('How to read it')); ?></strong></p>
     <p class="vpb-diag-note"><?php echo $escape($translate('Send the token in an Authorization header, Bearer followed by the token, to the report address for this site. A missing or wrong token gets a refusal; an unknown address gets not found.')); ?></p>
     <p class="vpb-diag-token"><?php echo $escape($this->url('visual-page-builder-diagnostics-report', [], ['force_canonical' => true])); ?></p>
+    <p class="vpb-diag-note"><?php echo $escape($translate('To connect Claude as a tool server, use this address with the same token in the Authorization header. It offers read-only tools for the site state, warnings, jobs, index and logs.')); ?></p>
+    <p class="vpb-diag-token"><?php echo $escape($this->url('visual-page-builder-diagnostics-mcp', [], ['force_canonical' => true])); ?></p>
 </div>
