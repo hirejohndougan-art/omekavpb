@@ -44,7 +44,7 @@ fi
 
 FILTERS=$(page '' | grep -c 'class="vpb-facet"')
 check "Filters block is drawn on Browse items" "$([ "$FILTERS" -ge 1 ] && echo yes || echo no)" "yes"
-SETS_PRESSED=$(page 'item_set%5B%5D=771' | grep -c 'aria-pressed="true"')
+SETS_PRESSED=$(page 'item_set%5B%5D=771' | grep -c 'aria-current="true"')
 check "a chosen collection is marked and listed as a filter in use" "$([ "$SETS_PRESSED" -ge 1 ] && page 'item_set%5B%5D=771' | grep -q 'Remove Light set' && echo yes || echo no)" "yes"
 check "Results per page is drawn" "$(page '' | grep -c 'vpb-per-page"')" "1"
 

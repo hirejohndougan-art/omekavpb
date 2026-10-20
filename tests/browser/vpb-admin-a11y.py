@@ -28,6 +28,8 @@ SCREENS = [
 ]
 if ITEM:
     SCREENS.append(('one item', f'/admin/vpb-item/{ITEM}'))
+# The public search page, with its facets and the phone Filters panel (Phase 4).
+SCREENS.append(('public search', '/s/dhs/item?fulltext_search=depot'))
 
 BAD = {'serious', 'critical'}
 failed = False

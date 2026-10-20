@@ -36,7 +36,7 @@ $translate = $this->plugin('translate');
         <?php if (!empty($group['letters'])): ?>
         <p class="vpb-facet-letters">
         <?php foreach ($group['letters'] as $letter): ?>
-            <a href="<?php echo $escape($letter['url']); ?>" aria-pressed="<?php echo $letter['active'] ? 'true' : 'false'; ?>"><?php echo $escape($letter['letter']); ?></a>
+            <a href="<?php echo $escape($letter['url']); ?>" aria-current="<?php echo $letter['active'] ? 'true' : 'false'; ?>"><?php echo $escape($letter['letter']); ?></a>
         <?php endforeach; ?>
         </p>
         <?php endif; ?>
@@ -59,7 +59,7 @@ $translate = $this->plugin('translate');
         <?php foreach ($group['options'] as $option): ?>
             <li<?php if (isset($option['depth']) && $option['depth'] > 0): ?> style="padding-left: <?php echo (float) $option['depth'] * 1.1; ?>rem"<?php endif; ?>>
                 <?php if (!empty($option['url'])): ?>
-                <a href="<?php echo $escape($option['url']); ?>" aria-pressed="<?php echo $option['active'] ? 'true' : 'false'; ?>">
+                <a href="<?php echo $escape($option['url']); ?>" aria-current="<?php echo $option['active'] ? 'true' : 'false'; ?>">
                     <?php if ($group['bars']): ?><span class="vpb-facet-bar" aria-hidden="true" style="width: <?php echo (int) $option['bar']; ?>%"></span><?php endif; ?>
                     <span class="vpb-facet-label"><?php echo $escape($option['label']); ?></span>
                     <span class="vpb-facet-count"><?php echo $escape(number_format($option['count'])); ?></span>

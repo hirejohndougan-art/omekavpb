@@ -35,7 +35,7 @@ async function api(method, path, body) {
     await page.waitForLoadState('domcontentloaded');
     console.log('url:', decodeURIComponent(page.url()));
     console.log('subject values left:', (await page.locator('.vpb-facet-label').allTextContents()).filter(t => /Ferry|Mill|Depot|Harbor|Quarry/.test(t)));
-    console.log('pressed:', await page.locator('.vpb-facet-letters a[aria-pressed="true"]').allTextContents());
+    console.log('pressed:', await page.locator('.vpb-facet-letters a[aria-current="true"]').allTextContents());
   } finally {
     await browser.close();
     for (const id of ids) await fetch(`${BASE}/api/items/${id}?${AUTH}`, { method: 'DELETE' });
