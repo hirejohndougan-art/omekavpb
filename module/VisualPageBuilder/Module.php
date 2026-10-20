@@ -28,6 +28,7 @@ class Module extends AbstractModule
         $acl->allow(null, 'VisualPageBuilder\Controller\Site\Search', 'search');
         // The diagnostics report is open to a request that carries the diagnostics token; the controller checks the token.
         $acl->allow(null, 'VisualPageBuilder\Controller\Admin\Diagnostics', 'report');
+        $acl->allow(null, 'VisualPageBuilder\Controller\Admin\Diagnostics', 'mcp');
         $this->landOnHome($event);
         $this->useFriendlyLayout($event);
     }

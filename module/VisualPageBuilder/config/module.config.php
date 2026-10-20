@@ -65,6 +65,17 @@ return [
     'router' => [
         'routes' => [
             // Diagnostics: the read-only report, for a request that carries the diagnostics token.
+            'visual-page-builder-diagnostics-mcp' => [
+                'type' => \Laminas\Router\Http\Literal::class,
+                'options' => [
+                    'route' => '/vpb-diagnostics/mcp',
+                    'defaults' => [
+                        '__NAMESPACE__' => 'VisualPageBuilder\\Controller\\Admin',
+                        'controller' => 'Diagnostics',
+                        'action' => 'mcp',
+                    ],
+                ],
+            ],
             'visual-page-builder-diagnostics-report' => [
                 'type' => \Laminas\Router\Http\Literal::class,
                 'options' => [

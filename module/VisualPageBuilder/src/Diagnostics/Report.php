@@ -50,7 +50,8 @@ class Report
         $index = $this->index($conn, $settings);
         $jobs = $this->jobs($conn);
         $errors = $this->recentErrors();
-        $warnings = $this->warnings($modules, $tables, $index, $jobs, $errors);
+        $site = $this->site($conn);
+        $warnings = $this->warnings($modules, $tables, $index, $jobs, $errors, $site);
 
         return [
             'generated_at' => gmdate('c'),
@@ -63,6 +64,7 @@ class Report
             'index' => $index,
             'jobs' => $jobs,
             'recent_errors' => $errors,
+            'site' => $site,
             'warnings' => $warnings,
         ];
     }
@@ -167,7 +169,63 @@ class Report
         return array_map(fn ($line) => $this->clip($line), $lines);
     }
 
-    private function warnings(array $modules, array $tables, array $index, array $jobs, array $errors): array
+    /**
+     * Site-wide state: every Omeka module and its state, every site, PHP and
+     * database versions, PHP extensions the plugin needs, the folders Omeka and
+     * the plugin write to, and counts. No credentials and no user details.
+     */
+    private function site(Connection $conn): array
+    {
+        $modules = [];
+        foreach ($conn->fetchAllAssociative('SELECT id, version, is_active FROM module ORDER BY id') as $row) {
+            $modules[$row['id']] = [
+                'version' => $row['version'],
+                'state' => $row['is_active'] ? 'active' : 'inactive',
+            ];
+        }
+        $sites = [];
+        foreach ($conn->fetchAllAssociative('SELECT id, slug, title, theme, is_public FROM site ORDER BY id') as $row) {
+            $sites[] = [
+                'id' => (int) $row['id'],
+                'slug' => $row['slug'],
+                'title' => $row['title'],
+                'theme' => $row['theme'],
+                'public' => (bool) $row['is_public'],
+                'item_sets' => (int) $conn->fetchOne('SELECT COUNT(*) FROM site_item_set WHERE site_id = ?', [$row['id']]),
+            ];
+        }
+        $extensions = [];
+        foreach (['pdo_mysql', 'mbstring', 'intl', 'gd', 'fileinfo', 'zip', 'json', 'curl', 'dom', 'xml'] as $name) {
+            $extensions[$name] = extension_loaded($name);
+        }
+        $folders = [];
+        foreach (['files' => OMEKA_PATH . '/files', 'logs' => OMEKA_PATH . '/logs', 'temp' => sys_get_temp_dir()] as $name => $path) {
+            $folders[$name] = is_dir($path) && is_writable($path);
+        }
+        $roles = [];
+        foreach ($conn->fetchAllAssociative('SELECT role, COUNT(*) AS n FROM user GROUP BY role') as $row) {
+            $roles[$row['role']] = (int) $row['n'];
+        }
+        return [
+            'database' => (string) $conn->fetchOne('SELECT VERSION()'),
+            'modules' => $modules,
+            'sites' => $sites,
+            'counts' => [
+                'items' => (int) $conn->fetchOne('SELECT COUNT(*) FROM item'),
+                'media' => (int) $conn->fetchOne('SELECT COUNT(*) FROM media'),
+                'item_sets' => (int) $conn->fetchOne('SELECT COUNT(*) FROM item_set'),
+                'pages' => (int) $conn->fetchOne('SELECT COUNT(*) FROM site_page'),
+                'users_by_role' => $roles,
+            ],
+            'extensions' => $extensions,
+            'folders' => $folders,
+            'php_memory_limit' => ini_get('memory_limit'),
+            'max_upload' => ini_get('upload_max_filesize'),
+            'post_max_size' => ini_get('post_max_size'),
+        ];
+    }
+
+    private function warnings(array $modules, array $tables, array $index, array $jobs, array $errors, array $site): array
     {
         $warnings = [];
         if (empty($modules['VisualPageBuilder']['active'])) {
@@ -196,6 +254,21 @@ class Report
         }
         if ($errors) {
             $warnings[] = 'Omeka\'s log has recent errors (see recent_errors).';
+        }
+        foreach ($site['extensions'] as $name => $loaded) {
+            if (!$loaded) {
+                $warnings[] = "PHP extension $name is not loaded.";
+            }
+        }
+        foreach ($site['folders'] as $name => $ok) {
+            if (!$ok) {
+                $warnings[] = "The $name folder is not writable.";
+            }
+        }
+        foreach ($site['modules'] as $name => $module) {
+            if ($module['state'] === 'needs_upgrade' || $module['state'] === 'not_installed') {
+                $warnings[] = "Module $name is " . str_replace('_', ' ', $module['state']) . '.';
+            }
         }
         return $warnings;
     }

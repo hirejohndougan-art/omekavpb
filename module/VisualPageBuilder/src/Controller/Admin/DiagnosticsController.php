@@ -6,6 +6,7 @@ use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\Validator\Csrf;
 use Laminas\View\Model\ViewModel;
 use Omeka\Mvc\Exception\PermissionDeniedException;
+use VisualPageBuilder\Diagnostics\Mcp;
 use VisualPageBuilder\Diagnostics\Report;
 
 /**
@@ -70,6 +71,52 @@ class DiagnosticsController extends AbstractActionController
         }
         $services = $this->getEvent()->getApplication()->getServiceManager();
         return $this->json(200, (new Report($services))->build());
+    }
+
+    /**
+     * The same report as an MCP server (JSON-RPC over HTTP, POST only): read-only
+     * tools for Claude. Carries the same token.
+     */
+    public function mcpAction()
+    {
+        $settings = $this->settings();
+        $hash = (string) $settings->get(self::HASH_SETTING, '');
+        if ($hash === '') {
+            return $this->json(404, ['error' => 'Not found.']);
+        }
+        $token = $this->token();
+        if ($token === '' || !hash_equals($hash, hash('sha256', $token))) {
+            return $this->json(403, ['error' => 'The token is missing or not accepted.']);
+        }
+        $request = $this->getRequest();
+        if (!$request->isPost()) {
+            $response = $this->getResponse();
+            $response->setStatusCode(405);
+            $response->getHeaders()->addHeaderLine('Allow', 'POST');
+            return $response;
+        }
+        $body = json_decode((string) $request->getContent(), true);
+        if (!is_array($body)) {
+            return $this->json(400, ['jsonrpc' => '2.0', 'id' => null, 'error' => ['code' => -32700, 'message' => 'Parse error.']]);
+        }
+        $services = $this->getEvent()->getApplication()->getServiceManager();
+        $mcp = new Mcp(new Report($services));
+        // A single message or a batch.
+        $batch = array_is_list($body);
+        $messages = $batch ? $body : [$body];
+        $replies = [];
+        foreach ($messages as $message) {
+            $reply = is_array($message) ? $mcp->handle($message) : ['jsonrpc' => '2.0', 'id' => null, 'error' => ['code' => -32600, 'message' => 'Invalid request.']];
+            if ($reply !== null) {
+                $replies[] = $reply;
+            }
+        }
+        if (!$replies) {
+            $response = $this->getResponse();
+            $response->setStatusCode(202);
+            return $response;
+        }
+        return $this->json(200, $batch ? $replies : $replies[0]);
     }
 
     /** Writes the JSON answer straight to the response, without a view template. */
