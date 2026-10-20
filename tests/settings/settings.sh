@@ -8,7 +8,7 @@ JAR=${JAR:-/tmp/jar.txt}
 pass=0; fail=0
 check() { if [ "$1" = ok ]; then pass=$((pass+1)); echo "ok   $2"; else fail=$((fail+1)); echo "FAIL $2"; fi; }
 db() { mysql -uroot omeka_test -N -e "$1" 2>/dev/null; }
-token() { curl -s -b "$JAR" "$BASE/admin/vpb-settings" | grep -o 'name="vpb_settings_csrf" value="[^"]*"' | sed 's/.*value="//;s/"$//'; }
+token() { curl -s -b "$JAR" "$BASE/admin/vpb-settings" | grep -o 'name="vpb_settings_csrf" value="[^"]*"' | head -1 | sed 's/.*value="//;s/"$//'; }
 save() { curl -s -b "$JAR" -o /dev/null -w '%{http_code}' -X POST "$BASE/admin/vpb-settings" --data-urlencode "vpb_settings_csrf=$(token)" "$@"; }
 val() { db "SELECT value FROM setting WHERE id='$1'"; }
 

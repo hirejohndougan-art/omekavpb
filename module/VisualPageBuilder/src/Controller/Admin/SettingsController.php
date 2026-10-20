@@ -58,6 +58,7 @@ class SettingsController extends AbstractActionController
             'kinds' => $this->chosenKinds(),
             'fileKinds' => self::FILE_KINDS,
             'csrf' => (new Csrf(['name' => self::CSRF_NAME]))->getHash(),
+            'rebuilding' => (bool) $this->settings()->get(\VisualPageBuilder\Search\ReindexJob::REBUILDING_SETTING, false),
         ]);
     }
 
@@ -67,6 +68,9 @@ class SettingsController extends AbstractActionController
         if (!(new Csrf(['name' => self::CSRF_NAME]))->isValid($post[self::CSRF_NAME] ?? '')) {
             $this->messenger()->addError('That form expired. Please try again.'); // @translate
             return $this->redirect()->toRoute('admin/visual-page-builder-settings');
+        }
+        if (($post['vpb_settings_action'] ?? '') === 'rebuild_index') {
+            return $this->rebuildIndex();
         }
         $settings = $this->settings();
         $settings->set('vpb_org_name', trim((string) ($post['vpb_org_name'] ?? '')));
@@ -113,6 +117,22 @@ class SettingsController extends AbstractActionController
             return array_values(array_intersect(array_keys(self::FILE_KINDS), $saved));
         }
         return array_keys(self::FILE_KINDS);
+    }
+
+    /**
+     * Starts the full search index rebuild as a background job (Phase 10). Visitors get Omeka's
+     * search until it finishes. A second press while one is running does nothing.
+     */
+    private function rebuildIndex()
+    {
+        $settings = $this->settings();
+        if ($settings->get(\VisualPageBuilder\Search\ReindexJob::REBUILDING_SETTING, false)) {
+            $this->messenger()->addNotice('The search index is already being rebuilt. Visitors get Omeka\'s search until it finishes.'); // @translate
+        } else {
+            $this->jobDispatcher()->dispatch(\VisualPageBuilder\Search\ReindexJob::class);
+            $this->messenger()->addSuccess('The search index is being rebuilt in the background. Search uses Omeka\'s search until it finishes.'); // @translate
+        }
+        return $this->redirect()->toRoute('admin/visual-page-builder-settings');
     }
 
     private function requireGlobalAdmin(): void

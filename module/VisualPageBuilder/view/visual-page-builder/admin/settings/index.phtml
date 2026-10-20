@@ -7,6 +7,8 @@
  * @var string[] $kinds  file kinds chosen
  * @var array $fileKinds  SettingsController::FILE_KINDS
  * @var string $csrf
+ * @var string $synonyms  search synonyms as saved
+ * @var bool $rebuilding  a full index rebuild is running
  */
 $escape = $this->plugin('escapeHtml');
 $translate = $this->plugin('translate');
@@ -65,9 +67,22 @@ echo $this->partial('visual-page-builder/admin/library/_nav', ['current' => ''])
         <legend><?php echo $escape($translate('Search synonyms')); ?></legend>
         <p class="vpb-set-hint"><?php echo $escape($translate('Searching for the left-hand word also finds the words on the right. One rule per line, for example: rr = railroad, rail road. The rule works one way only.')); ?></p>
         <label for="vpb-synonyms" class="sr-only"><?php echo $escape($translate('Synonyms')); ?></label>
-        <textarea id="vpb-synonyms" name="synonyms" rows="8"><?php echo $escape($values['synonyms']); ?></textarea>
+        <textarea id="vpb-synonyms" name="synonyms" rows="8"><?php echo $escape($synonyms); ?></textarea>
     </fieldset>
 
         <button type="submit"><?php echo $escape($translate('Save settings')); ?></button>
     </div>
+</form>
+
+<form method="post" class="vpb-set-rebuild">
+    <input type="hidden" name="<?php echo $escape(\VisualPageBuilder\Controller\Admin\SettingsController::CSRF_NAME); ?>" value="<?php echo $escape($csrf); ?>">
+    <input type="hidden" name="vpb_settings_action" value="rebuild_index">
+    <fieldset>
+        <legend><?php echo $escape($translate('Search index')); ?></legend>
+        <p class="vpb-set-hint"><?php echo $escape($translate('Search finds items from an index that is updated each time an item is saved. Items added before this module was installed need a full rebuild. It runs in the background and can take a while for a large collection.')); ?></p>
+        <?php if ($rebuilding): ?>
+        <p class="vpb-set-hint"><strong><?php echo $escape($translate('A rebuild is running now. Visitors get Omeka\'s search until it finishes.')); ?></strong></p>
+        <?php endif; ?>
+        <button type="submit"<?php echo $rebuilding ? ' disabled' : ''; ?>><?php echo $escape($translate('Rebuild the search index')); ?></button>
+    </fieldset>
 </form>

@@ -90,13 +90,11 @@ when it is saved, created, or changed, so new work appears in search
 straight away.
 
 Items that were in the collection before the module was installed are
-not in the index until the whole collection is indexed. The module has a
-background job for this, which runs the full rebuild. While a rebuild is
-running, visitors get Omeka's own search, so the site keeps working.
-
-OPEN ITEM: there is no button in the admin yet to start the full rebuild.
-Until there is one, the rebuild must be started by the developer. Ask for
-it before installing on a collection that already has items.
+not in the index until the whole collection is indexed. To index them, open Settings and press "Rebuild the search index" in the
+Search index section. The rebuild runs in the background. While it runs,
+visitors get Omeka's own search, so the site keeps working, and the button
+is greyed out. Press it once after installing on a collection that already
+has items.
 
 
 ------------------------------------------------------------------------
