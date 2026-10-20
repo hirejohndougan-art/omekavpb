@@ -10,6 +10,7 @@ return [
         'invokables' => [
             'VisualPageBuilder\Controller\Site\Search' => Controller\Site\SearchController::class,
             'VisualPageBuilder\Controller\Admin\Search' => Controller\Admin\SearchController::class,
+            'VisualPageBuilder\Controller\Admin\Settings' => Controller\Admin\SettingsController::class,
             'VisualPageBuilder\Controller\Admin\Menu' => Controller\Admin\MenuController::class,
             'VisualPageBuilder\Controller\Admin\Region' => Controller\Admin\RegionController::class,
             'VisualPageBuilder\Controller\Admin\Pages' => Controller\Admin\PagesController::class,
@@ -97,6 +98,18 @@ return [
                             'defaults' => [
                                 '__NAMESPACE__' => 'VisualPageBuilder\Controller\Admin',
                                 'controller' => 'Search',
+                                'action' => 'index',
+                            ],
+                        ],
+                    ],
+                    // Settings (Phase 9): organization, new items, file types, cite and download, items per page.
+                    'visual-page-builder-settings' => [
+                        'type' => \Laminas\Router\Http\Literal::class,
+                        'options' => [
+                            'route' => '/vpb-settings',
+                            'defaults' => [
+                                '__NAMESPACE__' => 'VisualPageBuilder\Controller\Admin',
+                                'controller' => 'Settings',
                                 'action' => 'index',
                             ],
                         ],

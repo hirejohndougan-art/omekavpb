@@ -1,0 +1,65 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Settings (Phase 9): for the whole installation.
+ *
+ * @var array $values  current values by key (SettingsController::DEFAULTS)
+ * @var string[] $kinds  file kinds chosen
+ * @var array $fileKinds  SettingsController::FILE_KINDS
+ * @var string $csrf
+ */
+$escape = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+$this->headStyle()->appendStyle('
+.vpb-set-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(16rem,1fr));gap:1rem 1.4rem;max-width:60rem}
+.vpb-set-form fieldset{border:1px solid #dfdfdf;border-radius:4px;padding:.8rem 1rem;margin:0;background:#fff}
+.vpb-set-form legend{font-weight:600;padding:0 .3rem}
+.vpb-set-form label{display:block;margin:.35rem 0}
+.vpb-set-form input[type=text],.vpb-set-form input[type=email],.vpb-set-form input[type=number],.vpb-set-form select{width:100%}
+.vpb-set-note{font-size:.9rem;color:#676767;margin:.3rem 0 0}
+.vpb-set-save{grid-column:1/-1}
+');
+echo $this->pageTitle($translate('Settings'), 1, $translate('Visual Builder'));
+?>
+<p class="vpb-set-note"><?php echo $escape($translate('These settings apply to the whole installation. Only a global administrator can change them.')); ?></p>
+<form method="post" class="vpb-set-form">
+    <input type="hidden" name="<?php echo $escape(\VisualPageBuilder\Controller\Admin\SettingsController::CSRF_NAME); ?>" value="<?php echo $escape($csrf); ?>">
+
+    <fieldset>
+        <legend><?php echo $escape($translate('Organization')); ?></legend>
+        <label><?php echo $escape($translate('Organization name')); ?>
+            <input type="text" name="vpb_org_name" value="<?php echo $escape($values['vpb_org_name']); ?>"></label>
+        <label><?php echo $escape($translate('Contact email')); ?>
+            <input type="email" name="vpb_contact_email" value="<?php echo $escape($values['vpb_contact_email']); ?>"></label>
+        <p class="vpb-set-note"><?php echo $escape($translate('Shown to visitors who need help. Leave blank to show none.')); ?></p>
+    </fieldset>
+
+    <fieldset>
+        <legend><?php echo $escape($translate('New items')); ?></legend>
+        <label><?php echo $escape($translate('New items start as')); ?>
+            <select name="vpb_new_item_status">
+                <option value="private"<?php echo $values['vpb_new_item_status'] !== 'public' ? ' selected' : ''; ?>><?php echo $escape($translate('Private (not on the public site)')); ?></option>
+                <option value="public"<?php echo $values['vpb_new_item_status'] === 'public' ? ' selected' : ''; ?>><?php echo $escape($translate('Public')); ?></option>
+            </select></label>
+        <label><?php echo $escape($translate('Items per page')); ?>
+            <input type="number" name="vpb_items_per_page" min="5" max="100" step="1" value="<?php echo (int) $values['vpb_items_per_page']; ?>"></label>
+    </fieldset>
+
+    <fieldset>
+        <legend><?php echo $escape($translate('Item buttons')); ?></legend>
+        <label><input type="checkbox" name="vpb_show_cite" value="1"<?php echo $values['vpb_show_cite'] ? ' checked' : ''; ?>> <?php echo $escape($translate('Cite this item')); ?></label>
+        <label><input type="checkbox" name="vpb_show_download" value="1"<?php echo $values['vpb_show_download'] ? ' checked' : ''; ?>> <?php echo $escape($translate('Download')); ?></label>
+    </fieldset>
+
+    <fieldset>
+        <legend><?php echo $escape($translate('Files people can upload')); ?></legend>
+        <?php foreach ($fileKinds as $key => $kind): ?>
+        <label><input type="checkbox" name="kinds[]" value="<?php echo $escape($key); ?>"<?php echo in_array($key, $kinds, true) ? ' checked' : ''; ?>> <?php echo $escape($translate($kind['label'])); ?></label>
+        <?php endforeach; ?>
+        <p class="vpb-set-note"><?php echo $escape($translate('Uncheck a kind to refuse those files. At least one must stay checked.')); ?></p>
+    </fieldset>
+
+    <div class="vpb-set-save">
+        <button type="submit"><?php echo $escape($translate('Save settings')); ?></button>
+    </div>
+</form>

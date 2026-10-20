@@ -19,6 +19,9 @@ if (!$item) {
     }
     return;
 }
+if (isset($shown) && !$shown) {
+    return;
+}
 ?>
 <?php if ($files): ?>
 <ul class="special-blocks-item-downloads">

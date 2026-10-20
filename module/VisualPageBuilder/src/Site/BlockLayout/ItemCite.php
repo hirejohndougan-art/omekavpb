@@ -29,8 +29,10 @@ class ItemCite extends AbstractItemField
 
     protected function fieldVars(PhpRenderer $view, array $data, SiteRepresentation $site, $item): array
     {
+        // Settings > Item buttons: the citation can be switched off for the whole site.
+        $shown = (bool) $view->getHelperPluginManager()->getServiceLocator()->get('Omeka\Settings')->get('vpb_show_cite', true);
         if (!$item) {
-            return ['citation' => ''];
+            return ['citation' => '', 'shown' => $shown];
         }
         $parts = array_filter([
             implode('; ', self::itemTexts($item, 'dcterms:creator')),
@@ -39,6 +41,6 @@ class ItemCite extends AbstractItemField
             $site->title(),
             $item->siteUrl($site->slug()),
         ], 'strlen');
-        return ['citation' => implode('. ', $parts)];
+        return ['citation' => implode('. ', $parts), 'shown' => $shown];
     }
 }

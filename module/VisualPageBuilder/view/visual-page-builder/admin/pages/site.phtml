@@ -44,6 +44,7 @@ $regionState = function ($page) use ($translate) {
     <a class="button" href="<?php echo $escape($this->url('admin/visual-page-builder-theme', ['site-slug' => $site->slug()])); ?>"><?php echo $escape($translate('Theme Builder')); ?></a>
     <a class="button" href="<?php echo $escape($site->siteUrl()); ?>" target="_blank" rel="noopener noreferrer"><?php echo $escape($translate('View site')); ?></a>
     <?php $user = $this->identity(); if ($user && $user->getRole() === 'global_admin'): ?>
+    <a class="button" href="<?php echo $escape($this->url('admin/visual-page-builder-settings')); ?>"><?php echo $escape($translate('Settings')); ?></a>
     <a class="button" href="<?php echo $escape($this->url('admin/visual-page-builder-search')); ?>"><?php echo $escape($translate('Search settings')); ?></a>
     <?php endif; ?>
 </div>

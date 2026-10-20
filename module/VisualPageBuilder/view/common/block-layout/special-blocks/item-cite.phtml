@@ -17,5 +17,8 @@ if (!$item) {
     }
     return;
 }
+if (isset($shown) && !$shown) {
+    return;
+}
 ?>
 <p class="special-blocks-item-cite"><?php echo $escape($citation); ?></p>

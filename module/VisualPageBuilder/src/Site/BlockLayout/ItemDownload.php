@@ -29,8 +29,10 @@ class ItemDownload extends AbstractItemField
 
     protected function fieldVars(PhpRenderer $view, array $data, SiteRepresentation $site, $item): array
     {
+        // Settings > Item buttons: downloads can be switched off for the whole site.
+        $shown = (bool) $view->getHelperPluginManager()->getServiceLocator()->get('Omeka\Settings')->get('vpb_show_download', true);
         $files = [];
-        if ($item) {
+        if ($item && $shown) {
             foreach ($item->media() as $media) {
                 $url = $media->originalUrl();
                 if ($url) {
@@ -38,6 +40,6 @@ class ItemDownload extends AbstractItemField
                 }
             }
         }
-        return ['files' => $files];
+        return ['files' => $files, 'shown' => $shown];
     }
 }
