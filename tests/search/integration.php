@@ -165,6 +165,15 @@ $r = $public('depot', ['has_description' => [1]]);
 check('the yes/no facet narrows to items with a description', $r['total'] === 1 && $r['ids'] === [$depot->id()], (string) $r['total']);
 check('the yes/no facet is labelled', \VisualPageBuilder\Search\BrowseQuery::labelsFor($api, 'has_description', [1]) === [1 => 'Has a description']);
 
+// Recently added: the newest added item comes first. The interior photo was renamed above,
+// so the search is for the shared test word; the three dates set here make the order certain.
+$conn->executeStatement('UPDATE ' . Index::DOC . ' SET added = ? WHERE item_id = ?', ['2020-01-01 00:00:00', $depot->id()]);
+$conn->executeStatement('UPDATE ' . Index::DOC . ' SET added = ? WHERE item_id = ?', ['2019-01-01 00:00:00', $interior->id()]);
+$conn->executeStatement('UPDATE ' . Index::DOC . ' SET added = ? WHERE item_id = ?', ['2021-01-01 00:00:00', $oral->id()]);
+$recent = Search::run($conn, 'vpbtest', false, 1, 50, $syn, [], null, 'recent');
+check('recently added puts the newest item first', $recent['ids'] === [$oral->id(), $depot->id(), $interior->id()],
+    'ids=' . implode(',', $recent['ids']));
+
 // Clean up.
 foreach ([$depot, $interior, $staff, $oral] as $item) {
     $api->delete('items', $item->id());

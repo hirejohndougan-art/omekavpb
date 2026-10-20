@@ -31,8 +31,8 @@ class BrowseQuery
     /** Address parameters that narrow the results (carried by every browse control). */
     const FILTER_PARAMS = ['item_set', 'class', 'decade', 'has_images', 'has_description', 'subject', 'creator', 'place'];
 
-    /** Sort choices: relevance (best match), A-Z, oldest and newest first. */
-    const SORTS = ['relevance', 'title', 'oldest', 'newest'];
+    /** Sort choices: relevance (best match), A-Z, oldest, newest first, and recently added. */
+    const SORTS = ['relevance', 'title', 'oldest', 'newest', 'recent'];
 
     /** @var array<string, array> one answer per distinct request */
     protected static $answers = [];

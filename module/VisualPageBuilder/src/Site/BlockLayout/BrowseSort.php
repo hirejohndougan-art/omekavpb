@@ -11,7 +11,7 @@ use VisualPageBuilder\Search\BrowseQuery;
  */
 class BrowseSort extends AbstractSchemaBlock
 {
-    const DESCRIPTION = 'The order of the results: best match, A to Z, oldest first, or newest first.'; // @translate
+    const DESCRIPTION = 'The order of the results: best match, A to Z, oldest first, newest first, or recently added.'; // @translate
 
     const GOOD_FOR = 'Above the results, beside Results per page.'; // @translate
 
@@ -22,6 +22,7 @@ class BrowseSort extends AbstractSchemaBlock
         'title' => 'A to Z',
         'oldest' => 'Oldest first',
         'newest' => 'Newest first',
+        'recent' => 'Recently added',
     ]; // @translate
 
     public function getLabel()

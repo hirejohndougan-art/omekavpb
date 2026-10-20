@@ -64,9 +64,15 @@ class Index
             year_start INT NULL,
             year_end INT NULL,
             indexed DATETIME NOT NULL,
+            added DATETIME NULL,
             PRIMARY KEY (item_id),
-            INDEX vpb_sd_years (year_start, year_end)
+            INDEX vpb_sd_years (year_start, year_end),
+            INDEX vpb_sd_added (added)
         ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci ENGINE = InnoDB');
+        // Tables made before "added" (Recently added sort) existed get the column now.
+        if (!self::hasColumn($conn, self::DOC, 'added')) {
+            $conn->executeStatement('ALTER TABLE ' . self::DOC . ' ADD COLUMN added DATETIME NULL, ADD INDEX vpb_sd_added (added)');
+        }
         $conn->executeStatement('CREATE TABLE IF NOT EXISTS ' . self::TERM . ' (
             term VARCHAR(100) NOT NULL,
             item_id INT NOT NULL,
@@ -92,6 +98,14 @@ class Index
             label VARCHAR(191) NOT NULL,
             UNIQUE KEY vpb_sfv_label (field, label)
         ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci ENGINE = InnoDB');
+    }
+
+    public static function hasColumn(Connection $conn, string $table, string $column): bool
+    {
+        return (int) $conn->fetchOne(
+            'SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?',
+            [$table, $column]
+        ) === 1;
     }
 
     public static function dropTables(Connection $conn): void
@@ -137,6 +151,7 @@ class Index
             'search_text' => $text,
             'year_start' => $start,
             'year_end' => $end,
+            'added' => $item->created() ? $item->created()->format('Y-m-d H:i:s') : null,
             'indexed' => (new \DateTime('now', new \DateTimeZone('UTC')))->format('Y-m-d H:i:s'),
         ]);
 

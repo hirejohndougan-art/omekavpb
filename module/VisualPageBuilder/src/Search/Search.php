@@ -46,6 +46,7 @@ class Search
                 'title' => 'd.title ASC',
                 'oldest' => '(d.year_start IS NULL), d.year_start ASC, d.title ASC',
                 'newest' => '(d.year_start IS NULL), d.year_start DESC, d.title ASC',
+                'recent' => '(d.added IS NULL), d.added DESC, d.title ASC',
                 default => $score === null ? 'd.title ASC' : $score['sql'] . ' DESC, d.title ASC',
             };
             $sql = 'SELECT d.item_id FROM ' . Index::DOC . ' d WHERE ' . $where
