@@ -3,6 +3,7 @@
 namespace VisualPageBuilder\Search;
 
 use Laminas\View\Renderer\PhpRenderer;
+use VisualPageBuilder\Templates\CurrentRecord;
 use VisualPageBuilder\Templates\CurrentScreen;
 use Omeka\Api\Representation\SiteRepresentation;
 
@@ -63,6 +64,11 @@ class BrowseQuery
     {
         $state = self::fromRequest($view);
         $screen = CurrentScreen::get() ?? 'browse-items';
+        // The item set screen lists only the set it is drawn for.
+        $set = $screen === 'item-set' ? CurrentRecord::get() : null;
+        if ($set) {
+            $state['facets']['item_set'] = [(int) $set->id()];
+        }
         $key = $site->id() . '|' . $screen . '|' . json_encode($state);
         if (isset(self::$answers[$key])) {
             return self::$answers[$key];

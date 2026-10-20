@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # HTTP checks for the Browse items screen (plan Phase 4, first slice): the Results and
 # Pagination blocks on live "Browse items" and "Browse item sets" templates. Needs a running
-# Omeka S test install with VPB active, a site with slug $SITE, and both live templates on it,
-# each holding Results and Pagination. Usage:
+# Omeka S test install with VPB active, a site with slug $SITE, and live templates for Browse
+# items, Browse item sets and Item set on it, each holding Results and Pagination. Usage:
 #   BASE=http://127.0.0.1:8080 SITE=dhs tests/search/browse.sh
 BASE=${BASE:-http://127.0.0.1:8080}
 SITE=${SITE:-dhs}
@@ -30,6 +30,14 @@ setpage() { curl -s "$BASE/s/$SITE/item-set?$1"; }
 check "item set browse page answers" "$(curl -s -o /dev/null -w '%{http_code}' "$BASE/s/$SITE/item-set")" "200"
 check "item set Results block is drawn" "$(setpage '' | grep -c 'vpb-results-count')" "1"
 check "nonsense shows the item set empty message" "$(setpage 'q=zzzzqqqq' | grep -c 'No item sets match')" "1"
+
+SET_ID=$(setpage '' | grep -o 'item-set/[0-9]*' | head -1 | cut -d/ -f2)
+if [ -n "$SET_ID" ]; then
+  check "item set page answers" "$(curl -s -o /dev/null -w '%{http_code}' "$BASE/s/$SITE/item-set/$SET_ID")" "200"
+  check "item set page counts the set's items" \
+    "$(curl -s "$BASE/s/$SITE/item-set/$SET_ID" | grep -o 'vpb-results-count">[0-9,]* [a-z ]*' | grep -o '[0-9,]*' | tr -d ',')" \
+    "$(page "item_set%5B%5D=$SET_ID" | grep -o 'vpb-results-count">[0-9,]* [a-z ]*' | grep -o '[0-9,]*' | tr -d ',')"
+fi
 
 echo "browse checks: $pass passed, $fail failed"
 [ "$fail" -eq 0 ]

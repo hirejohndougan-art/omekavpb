@@ -1,13 +1,20 @@
 <?php
 // SPDX-License-Identifier: GPL-2.0-or-later
 /**
- * The item browse page. When a live Theme Builder template applies (Browse
- * items), that template is drawn; otherwise this is Omeka's own browse page,
- * unchanged. Item set pages keep Omeka's layout for now.
+ * The item browse page, and an item set's page (Omeka shows an item set's items
+ * with this view). When a live Theme Builder template applies, it is drawn:
+ * Item set for an item set's page, Browse items otherwise. Otherwise this is
+ * Omeka's own page, unchanged.
  */
-$templated = (!isset($itemSet) && $this->getHelperPluginManager()->has('vpbScreen'))
-    ? $this->vpbScreen($this->currentSite(), 'browse-items')
-    : null;
+if (isset($itemSet)) {
+    $templated = $this->getHelperPluginManager()->has('vpbScreen')
+        ? $this->vpbScreen($this->currentSite(), 'item-set', $itemSet)
+        : null;
+} else {
+    $templated = $this->getHelperPluginManager()->has('vpbScreen')
+        ? $this->vpbScreen($this->currentSite(), 'browse-items')
+        : null;
+}
 
 if ($templated !== null) {
     echo $templated;
