@@ -8,6 +8,7 @@ return [
             'VisualPageBuilder\Controller\Admin\Builder' => Service\Controller\Admin\BuilderControllerFactory::class,
         ],
         'invokables' => [
+            'VisualPageBuilder\Controller\Site\Search' => Controller\Site\SearchController::class,
             'VisualPageBuilder\Controller\Admin\Menu' => Controller\Admin\MenuController::class,
             'VisualPageBuilder\Controller\Admin\Region' => Controller\Admin\RegionController::class,
             'VisualPageBuilder\Controller\Admin\Pages' => Controller\Admin\PagesController::class,
@@ -50,6 +51,22 @@ return [
     ],
     'router' => [
         'routes' => [
+            // Public: the search endpoint under each site (VPB Search).
+            'site' => [
+                'child_routes' => [
+                    'vpb-search' => [
+                        'type' => \Laminas\Router\Http\Literal::class,
+                        'options' => [
+                            'route' => '/vpb-search',
+                            'defaults' => [
+                                '__NAMESPACE__' => 'VisualPageBuilder\Controller\Site',
+                                'controller' => 'Search',
+                                'action' => 'search',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
             'admin' => [
                 'child_routes' => [
                     // The menu builder. The page editor's route below needs a

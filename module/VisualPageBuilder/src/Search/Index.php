@@ -22,6 +22,9 @@ class Index
     public const TERM = 'vpb_search_term';
     public const FACET = 'vpb_search_facet';
 
+    /** Omeka setting that holds the synonyms list (one "term = alternative" per line). */
+    public const SYNONYMS_SETTING = 'vpb_search_synonyms';
+
     /** How much a word counts, by the property it came from (plan: title highest). */
     public const WEIGHTS = [
         'dcterms:title' => 3,

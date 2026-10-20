@@ -15,6 +15,9 @@ class ReindexJob extends AbstractJob
 {
     public const PER_PAGE = 100;
 
+    /** Omeka setting that is true while a rebuild runs; visitors get Omeka's search meanwhile. */
+    public const REBUILDING_SETTING = 'vpb_search_rebuilding';
+
     public function perform()
     {
         $services = $this->getServiceLocator();
@@ -22,7 +25,18 @@ class ReindexJob extends AbstractJob
         $em = $services->get('Omeka\EntityManager');
         $conn = $services->get('Omeka\Connection');
 
+        $settings = $services->get('Omeka\Settings');
         Index::createTables($conn);
+        $settings->set(self::REBUILDING_SETTING, true);
+        try {
+            $this->rebuild($api, $em, $conn);
+        } finally {
+            $settings->set(self::REBUILDING_SETTING, false);
+        }
+    }
+
+    private function rebuild($api, $em, $conn): void
+    {
         foreach ([Index::FACET, Index::TERM, Index::DOC] as $table) {
             $conn->executeStatement('DELETE FROM ' . $table);
         }

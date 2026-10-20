@@ -24,6 +24,8 @@ class Module extends AbstractModule
         // to update the specific page, and Omeka's API enforces it again on save.
         $acl = $this->getServiceLocator()->get('Omeka\Acl');
         $acl->allow(null, ['VisualPageBuilder\Controller\Admin\Builder', 'VisualPageBuilder\Controller\Admin\Menu', 'VisualPageBuilder\Controller\Admin\Region', 'VisualPageBuilder\Controller\Admin\Pages']);
+        // The public search endpoint (VPB Search) is open to every visitor, logged in or not.
+        $acl->allow(null, 'VisualPageBuilder\Controller\Site\Search', 'search');
     }
 
     /**
