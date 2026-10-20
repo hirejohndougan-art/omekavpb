@@ -53,7 +53,7 @@ class BrowseResults extends AbstractSchemaBlock
         }
         $api = $view->getHelperPluginManager()->getServiceLocator()->get('Omeka\ApiManager');
         $names = [];
-        foreach (['item_set', 'class'] as $field) {
+        foreach (BrowseQuery::FILTER_PARAMS as $field) {
             $names = array_merge($names, array_values(BrowseQuery::labelsFor($api, $field, $result['selected'][$field])));
         }
         $removed = BrowseQuery::labelsFor($api, $result['helper']['field'], [$result['helper']['id']]);

@@ -38,7 +38,7 @@ class BrowseSort extends AbstractSchemaBlock
     {
         $result = BrowseQuery::run($view, $site);
         // Keep the search, filters and page size; a new order starts at page one.
-        $query = array_intersect_key($view->params()->fromQuery(), array_flip(['q', 'fulltext_search', 'per_page', 'item_set', 'class']));
+        $query = array_intersect_key($view->params()->fromQuery(), array_flip(array_merge(['q', 'fulltext_search', 'per_page'], BrowseQuery::FILTER_PARAMS)));
         $choices = [];
         foreach (self::LABELS as $sort => $label) {
             $choices[] = [

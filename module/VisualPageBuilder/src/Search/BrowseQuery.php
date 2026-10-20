@@ -28,6 +28,9 @@ class BrowseQuery
 
     const DEFAULT_PER_PAGE = 24;
 
+    /** Address parameters that narrow the results (carried by every browse control). */
+    const FILTER_PARAMS = ['item_set', 'class', 'decade', 'has_images'];
+
     /** Sort choices: relevance (best match), A-Z, oldest and newest first. */
     const SORTS = ['relevance', 'title', 'oldest', 'newest'];
 
@@ -59,6 +62,8 @@ class BrowseQuery
             'facets' => [
                 'item_set' => array_map('intval', (array) $query->get('item_set', [])),
                 'class' => array_map('intval', (array) $query->get('class', [])),
+                'decade' => array_map('intval', (array) $query->get('decade', [])),
+                'has_images' => array_map('intval', (array) $query->get('has_images', [])),
             ],
         ];
     }
@@ -114,7 +119,7 @@ class BrowseQuery
                 'facetOptions' => self::facetLabels($api, Search::facetCounts($conn, $state['q'], false, $synonyms, $state['facets'], $siteId)),
                 'helper' => null,
             ];
-            if ($result['total'] === 0 && ($state['facets']['item_set'] || $state['facets']['class'])) {
+            if ($result['total'] === 0 && array_filter($state['facets'])) {
                 $answer['helper'] = self::noResultsHelper($api, $conn, $state, $synonyms, $siteId);
             }
         } else {
@@ -129,6 +134,7 @@ class BrowseQuery
             if ($state['facets']['class']) {
                 $params['resource_class_id'] = $state['facets']['class'];
             }
+            // Decades and images need the index; the fallback can't count or filter by them.
             $response = $api->search('items', $params);
             $answer = [
                 'items' => $response->getContent(),
@@ -163,8 +169,8 @@ class BrowseQuery
     protected static function noResultsHelper($api, $conn, array $state, ?Synonyms $synonyms, int $siteId): ?array
     {
         $best = null;
-        foreach (['item_set', 'class'] as $field) {
-            foreach ($state['facets'][$field] as $id) {
+        foreach (Index::FACET_FIELDS as $field) {
+            foreach ($state['facets'][$field] ?? [] as $id) {
                 $without = $state['facets'];
                 $without[$field] = array_values(array_diff($without[$field], [$id]));
                 $count = Search::run($conn, $state['q'], false, 1, 1, $synonyms, $without, $siteId)['total'];
@@ -194,7 +200,12 @@ class BrowseQuery
             foreach ($labels as $id => $label) {
                 $out[$field][] = ['id' => $id, 'label' => $label, 'count' => $values[$id]];
             }
-            usort($out[$field], fn ($a, $b) => $b['count'] <=> $a['count'] ?: strcmp($a['label'], $b['label']));
+            if ($field === 'decade') {
+                // Decades read in order, earliest first.
+                usort($out[$field], fn ($a, $b) => $a['id'] <=> $b['id']);
+            } else {
+                usort($out[$field], fn ($a, $b) => $b['count'] <=> $a['count'] ?: strcmp($a['label'], $b['label']));
+            }
         }
         return $out;
     }
@@ -209,6 +220,12 @@ class BrowseQuery
         $ids = array_values(array_unique(array_map('intval', $ids)));
         if ($ids === []) {
             return [];
+        }
+        if ($field === 'decade') {
+            return array_combine($ids, array_map(fn ($decade) => $decade . 's', $ids));
+        }
+        if ($field === 'has_images') {
+            return array_intersect_key([1 => 'Has images'], array_flip($ids)); // @translate
         }
         $resource = $field === 'item_set' ? 'item_sets' : 'resource_classes';
         $labels = [];

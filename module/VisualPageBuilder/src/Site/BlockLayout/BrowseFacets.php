@@ -22,7 +22,7 @@ class BrowseFacets extends AbstractSchemaBlock
     const TEMPLATE = 'browse-facets';
 
     /** Field name => the label shown to visitors. */
-    const FIELDS = ['item_set' => 'Collection', 'class' => 'Type']; // @translate
+    const FIELDS = ['item_set' => 'Collection', 'class' => 'Type', 'decade' => 'Date', 'has_images' => 'Images']; // @translate
 
     public function getLabel()
     {
@@ -47,16 +47,20 @@ class BrowseFacets extends AbstractSchemaBlock
         $active = [];
         foreach ($fields as $field => $label) {
             $options = [];
-            foreach ($result['facetOptions'][$field] ?? [] as $option) {
+            $options_all = $result['facetOptions'][$field] ?? [];
+            $largest = $options_all ? max(array_column($options_all, 'count')) : 1;
+            foreach ($options_all as $option) {
                 $on = in_array($option['id'], $selected[$field], true);
                 $next = $selected;
                 $next[$field] = $on
                     ? array_values(array_diff($selected[$field], [$option['id']]))
                     : array_values(array_merge($selected[$field], [$option['id']]));
-                $options[] = $option + ['active' => $on, 'url' => self::url($view, $next)];
+                $bar = (int) round(100 * $option['count'] / max(1, $largest));
+                $options[] = $option + ['active' => $on, 'url' => self::url($view, $next), 'bar' => $bar];
             }
             if ($options) {
-                $groups[] = ['label' => $view->translate($label), 'options' => $options];
+                // Dates read as bars: each decade's width is its share of the largest decade.
+                $groups[] = ['label' => $view->translate($label), 'options' => $options, 'bars' => $field === 'decade'];
             }
             foreach (BrowseQuery::labelsFor($api, $field, $selected[$field]) as $id => $name) {
                 $next = $selected;
@@ -71,16 +75,19 @@ class BrowseFacets extends AbstractSchemaBlock
             'total' => $result['total'],
             'groups' => $groups,
             'active' => $active,
-            'clearUrl' => $active ? self::url($view, ['item_set' => [], 'class' => []]) : null,
+            'clearUrl' => $active ? self::url($view, []) : null,
             'blockClass' => static::cssClass(),
         ];
     }
 
-    /** The address for these filters, keeping the search and page size, and starting at page one. */
+    /**
+     * The address for these filters: the search, sort and page size stay, the filters
+     * are exactly the ones given, and paging starts again at page one.
+     */
     public static function url(PhpRenderer $view, array $selected): string
     {
         $query = array_intersect_key($view->params()->fromQuery(), array_flip(['q', 'fulltext_search', 'per_page', 'sort']));
-        foreach (['item_set', 'class'] as $field) {
+        foreach (BrowseQuery::FILTER_PARAMS as $field) {
             if (!empty($selected[$field])) {
                 $query[$field] = array_values($selected[$field]);
             }

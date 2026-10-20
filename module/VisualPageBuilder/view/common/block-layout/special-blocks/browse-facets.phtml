@@ -3,7 +3,7 @@
  * Filters for the results, with the filters in use.
  *
  * @var bool $show
- * @var array $groups  [{label, options: [{id, label, count, active, url}]}]
+ * @var array $groups  [{label, bars, options: [{id, label, count, active, url, bar}]}]
  * @var array $active  [{label, url}] the filters in use; each link removes one
  * @var string|null $clearUrl
  * @var string $panelId
@@ -36,6 +36,7 @@ $translate = $this->plugin('translate');
         <?php foreach ($group['options'] as $option): ?>
             <li>
                 <a href="<?php echo $escape($option['url']); ?>" aria-pressed="<?php echo $option['active'] ? 'true' : 'false'; ?>">
+                    <?php if ($group['bars']): ?><span class="vpb-facet-bar" aria-hidden="true" style="width: <?php echo (int) $option['bar']; ?>%"></span><?php endif; ?>
                     <span class="vpb-facet-label"><?php echo $escape($option['label']); ?></span>
                     <span class="vpb-facet-count"><?php echo $escape(number_format($option['count'])); ?></span>
                 </a>

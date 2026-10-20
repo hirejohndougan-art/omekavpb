@@ -79,7 +79,7 @@ class Search
     ): array {
         $parsed = QueryParser::parse($raw, $synonyms);
         $counts = [];
-        foreach (['item_set', 'class'] as $field) {
+        foreach (Index::FACET_FIELDS as $field) {
             $others = $facets;
             unset($others[$field]);
             [$where, $params] = self::conditions($parsed, $staff, $others, $siteId);
@@ -145,7 +145,7 @@ class Search
             $params[] = $parsed['years']['start'];
         }
 
-        foreach (['item_set', 'class'] as $field) {
+        foreach (Index::FACET_FIELDS as $field) {
             $ids = array_values(array_filter(array_map('intval', $facets[$field] ?? [])));
             if ($ids) {
                 $marks = implode(',', array_fill(0, count($ids), '?'));

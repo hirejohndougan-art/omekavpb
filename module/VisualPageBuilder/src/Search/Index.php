@@ -21,6 +21,9 @@ class Index
     public const DOC = 'vpb_search_doc';
     public const TERM = 'vpb_search_term';
     public const FACET = 'vpb_search_facet';
+
+    /** Facet fields: item set and resource class (ids), decade (the decade's first year), and has images (1). */
+    public const FACET_FIELDS = ['item_set', 'class', 'decade', 'has_images'];
     /** One row per stem: the word as first written in the catalog, for "Did you mean". */
     public const WORD = 'vpb_search_word';
 
@@ -138,6 +141,16 @@ class Index
         $class = $item->resourceClass();
         if ($class) {
             $conn->insert(self::FACET, ['item_id' => $id, 'field' => 'class', 'value_id' => (int) $class->id()]);
+        }
+        // Decade: from the item's first year. Undated items have no decade.
+        if ($start !== null && $start >= 0) {
+            $conn->insert(self::FACET, ['item_id' => $id, 'field' => 'decade', 'value_id' => intdiv($start, 10) * 10]);
+        }
+        foreach ($item->media() as $media) {
+            if (strpos((string) $media->mediaType(), 'image/') === 0) {
+                $conn->insert(self::FACET, ['item_id' => $id, 'field' => 'has_images', 'value_id' => 1]);
+                break;
+            }
         }
     }
 
