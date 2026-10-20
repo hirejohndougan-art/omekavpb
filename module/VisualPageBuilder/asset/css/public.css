@@ -81,6 +81,12 @@
 @media screen and (min-width: 601px) and (max-width: 896px) { .vpb-has-pad-tablet { padding: var(--vpb-pad-tablet) !important; } }
 @media screen and (max-width: 600px) { .vpb-has-pad-phone { padding: var(--vpb-pad-phone) !important; } }
 
+/* Text size for one device (layout data "vpb_text_tablet" / "vpb_text_phone", a percent
+   of the theme's text size). It scales text that inherits the size; text a block sets
+   in its own pixel size keeps that size. */
+@media screen and (min-width: 601px) and (max-width: 896px) { .vpb-has-text-tablet { font-size: calc(var(--vpb-text-tablet) * 1%) !important; } }
+@media screen and (max-width: 600px) { .vpb-has-text-phone { font-size: calc(var(--vpb-text-phone) * 1%) !important; } }
+
 /* ---------- Printing (v1.12.0) ---------- */
    Printed pages keep the content: menus, buttons, search boxes, map
    controls, and players drop out; link addresses are printed after the

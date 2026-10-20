@@ -29,6 +29,12 @@ function isSel(kind, id) { return !state.preview && state.sel && state.sel.kind 
 function hiddenAtDev(b) {
   return !!(b.ld && b.ld.vpb_hide && String(b.ld.vpb_hide).split(',').indexOf(state.dev) >= 0);
 }
+/** The block's text size (percent) at the previewed width, or null for the theme's size. */
+function textAtDev(b) {
+  var key = 'vpb_text_' + state.dev;
+  if (state.dev !== 'desktop' && b.ld && b.ld[key] !== undefined && b.ld[key] !== '') return +b.ld[key];
+  return null;
+}
 /** The block's padding at the previewed width: its tablet or phone value when set, else its padding. */
 function paddingAtDev(b) {
   var key = 'vpb_pad_' + state.dev;
@@ -192,6 +198,8 @@ function blkEl(b, bi) {
   var st = '';
   var pad = paddingAtDev(b);
   if (pad !== null && pad !== undefined) st += 'padding:' + pad + 'px;';
+  var text = textAtDev(b);
+  if (text) st += 'font-size:' + text + '%;';
   if (b.bg) st += 'background:' + b.bg + ';';
   if (VPB.isDark(b.bg)) st += 'color:#fff;';
   st += VPB.bgImageCss(b.img);

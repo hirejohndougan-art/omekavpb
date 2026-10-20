@@ -130,6 +130,14 @@ $both = Devices::decorate('<div class="block block-html" style="color:red">x</di
 check('hidden and padded together, with the existing style kept', $both === '<div class="block vpb-hide-desktop vpb-has-pad-phone block-html" style="--vpb-pad-phone:6px;color:red">x</div>', $both);
 check('padding with no wrapper gets a wrapper with the custom property', Devices::decorate('<p>a</p>', [], ['tablet' => 4]) === '<div class="vpb-has-pad-tablet" style="--vpb-pad-tablet:4px"><p>a</p></div>');
 
+// Text size on tablet and phone
+check('text size is a percent kept between 60 and 150', Devices::textValue('90') === 90 && Devices::textValue('40') === 60 && Devices::textValue('200') === 150);
+check('blank text size means the theme default', Devices::textValue('') === null && Devices::textValue(null) === null);
+$sized = Devices::decorate('<div class="block block-html"><p>x</p></div>', [], [], ['phone' => '80']);
+check('phone text size marks the wrapper and sets its custom property', $sized === '<div class="block vpb-has-text-phone block-html" style="--vpb-text-phone:80"><p>x</p></div>', $sized);
+$all = Devices::decorate('<div class="block block-html" style="color:red">x</div>', ['tablet'], ['phone' => 6], ['tablet' => 120]);
+check('hidden, padded and sized together', $all === '<div class="block vpb-hide-tablet vpb-has-text-tablet vpb-has-pad-phone block-html" style="--vpb-text-tablet:120;--vpb-pad-phone:6px;color:red">x</div>', $all);
+
 // --- Report -------------------------------------------------------------
 $total = $pass + count($fail);
 echo "PHP tests: $pass of $total passed\n";

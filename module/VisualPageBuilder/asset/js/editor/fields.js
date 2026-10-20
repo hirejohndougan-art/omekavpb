@@ -58,6 +58,24 @@ function devPadField(target, dev, id) {
   return h('div', { class: 'field' }, [h('label', { for: id, text: 'Padding on ' + dev }), r, h('div', { class: 'hex-row' }, [out, reset])]);
 }
 /**
+ * Text size for one device (tablet or phone) on a block, as a percent of the
+ * theme's text size: layout data "vpb_text_<device>". "Same as on desktop"
+ * removes it.
+ */
+function devTextField(target, dev, id) {
+  var key = 'vpb_text_' + dev;
+  var ld = target.ld || (target.ld = {});
+  var cur = ld[key] === undefined || ld[key] === '' ? null : +ld[key];
+  var out = h('span', { class: 'val', text: cur === null ? 'Same as on desktop' : cur + '%' });
+  var r = h('input', { type: 'range', id: id, min: 60, max: 150, step: 5 });
+  r.value = cur || 100;
+  r.addEventListener('input', function () { ld[key] = String(+r.value); out.textContent = ld[key] + '%'; refreshStatus(); });
+  r.addEventListener('change', function () { commit(); renderAll(); });
+  var reset = h('button', { type: 'button', class: 'btn small', text: 'Use desktop size' });
+  reset.addEventListener('click', function () { delete ld[key]; commit(); renderAll(); });
+  return h('div', { class: 'field' }, [h('label', { for: id, text: 'Text size on ' + dev }), r, h('div', { class: 'hex-row' }, [out, reset])]);
+}
+/**
  * Background image for a section, column, or block (target.img): choose an
  * image from Assets, how it fills the area, where it sits, and an optional
  * dark layer over it that also turns the text white.
@@ -215,7 +233,7 @@ function note(text) { return h('p', { class: 'note', text: text }); }
 
 VPB.fields = {
   bgImageField: bgImageField, anchorField: anchorField, anchorsInUse: anchorsInUse,
-  field: field, segField: segField, padField: padField, devPadField: devPadField, bgField: bgField, classField: classField,
+  field: field, segField: segField, padField: padField, devPadField: devPadField, devTextField: devTextField, bgField: bgField, classField: classField,
   selectField: selectField, textField: textField, numberField: numberField, checkField: checkField,
   note: note, changed: changed
 };

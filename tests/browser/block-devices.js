@@ -12,6 +12,7 @@ const html = '<!doctype html><html><head><meta name="viewport" content="width=de
   + '<div class="block vpb-hide-desktop" id="d">D</div><div class="block vpb-hide-tablet" id="t">T</div>'
   + '<div class="block vpb-hide-phone" id="p">P</div><div class="block" id="all">ALL</div>'
   + '<div class="block vpb-has-pad-tablet vpb-has-pad-phone" id="pad" style="--vpb-pad-tablet:40px;--vpb-pad-phone:6px">PAD</div>'
+  + '<div class="block vpb-has-text-tablet vpb-has-text-phone" id="txt" style="--vpb-text-tablet:120;--vpb-text-phone:50"><span id="txtin">TXT</span></div>'
   + '</div></body></html>';
 // Expected: each marked block is hidden only on its own device.
 const expected = {
@@ -21,6 +22,8 @@ const expected = {
 };
 // Padding (px) the padded block should have at each width: its own on tablet and phone, else none set.
 const expectedPad = { 390: '6px', 768: '40px', 1280: '0px' };
+// Text size (px) of the sized block's text: 120% on tablet, 50% on phone, the browser's 16px on desktop.
+const expectedText = { 390: '8px', 768: '19.2px', 1280: '16px' };
 (async () => {
   const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || undefined, args: ['--no-sandbox'] });
   let failed = 0;
@@ -32,6 +35,8 @@ const expectedPad = { 390: '6px', 768: '40px', 1280: '0px' };
       const shown = await page.locator('#' + id).isVisible();
       if (shown !== expected[width][id]) { failed++; console.log('FAIL', width + 'px', id, 'shown', shown); }
     }
+    const textSize = await page.locator('#txtin').evaluate((el) => getComputedStyle(el).fontSize);
+    if (textSize !== expectedText[width]) { failed++; console.log('FAIL', width + 'px', 'text size', textSize, 'expected', expectedText[width]); }
     const padding = await page.locator('#pad').evaluate((el) => getComputedStyle(el).paddingTop);
     if (padding !== expectedPad[width]) { failed++; console.log('FAIL', width + 'px', 'padding', padding, 'expected', expectedPad[width]); }
     await page.close();

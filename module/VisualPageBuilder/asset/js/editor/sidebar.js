@@ -141,6 +141,8 @@ function renderProps() {
   // Padding on smaller screens, for this block only (blank: same as desktop).
   l.appendChild(F.devPadField(b, 'tablet', 'f-pad-tablet'));
   l.appendChild(F.devPadField(b, 'phone', 'f-pad-phone'));
+  l.appendChild(F.devTextField(b, 'tablet', 'f-text-tablet'));
+  l.appendChild(F.devTextField(b, 'phone', 'f-text-phone'));
   p.appendChild(l);
   var s2 = h('div', { class: 'p-sec' }, [h('h3', { text: 'Style' })]);
   s2.appendChild(bgField(b, 'f-bg'));
