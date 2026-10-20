@@ -157,6 +157,21 @@ class Search
             }
         }
 
+        // A year range keeps the items whose dated range overlaps it; undated items never match.
+        $from = $facets['year_from'] ?? null;
+        $to = $facets['year_to'] ?? null;
+        if ($from !== null && $to !== null && $from > $to) {
+            [$from, $to] = [$to, $from];
+        }
+        if ($from !== null) {
+            $clauses[] = 'd.year_end >= ?';
+            $params[] = (int) $from;
+        }
+        if ($to !== null) {
+            $clauses[] = 'd.year_start <= ?';
+            $params[] = (int) $to;
+        }
+
         return [implode(' AND ', $clauses), $params];
     }
 

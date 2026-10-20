@@ -59,5 +59,22 @@ $translate = $this->plugin('translate');
         <?php endif; ?>
     </fieldset>
 <?php endforeach; ?>
+    <fieldset class="vpb-facet vpb-facet-years">
+        <legend><?php echo $escape($translate('Years')); ?></legend>
+        <form method="get" action="<?php echo $escape($years['action']); ?>" class="vpb-years-form">
+            <?php foreach ($years['hidden'] as $pair): ?>
+            <input type="hidden" name="<?php echo $escape($pair[0]); ?>" value="<?php echo $escape($pair[1]); ?>">
+            <?php endforeach; ?>
+            <label>
+                <span><?php echo $escape($translate('From')); ?></span>
+                <input type="number" name="year_from" min="0" max="9999" step="1" value="<?php echo $escape($years['from']); ?>">
+            </label>
+            <label>
+                <span><?php echo $escape($translate('To')); ?></span>
+                <input type="number" name="year_to" min="0" max="9999" step="1" value="<?php echo $escape($years['to']); ?>">
+            </label>
+            <button type="submit"><?php echo $escape($translate('Apply years')); ?></button>
+        </form>
+    </fieldset>
     <button type="button" class="vpb-facets-done"><?php echo $escape(sprintf($translate('Show %s results'), number_format($total))); ?></button>
 </div>

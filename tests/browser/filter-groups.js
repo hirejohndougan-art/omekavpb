@@ -64,6 +64,20 @@ const lit = (property_id, v) => [{ property_id, type: 'literal', '@value': v }];
     await page.waitForLoadState('domcontentloaded');
     check('pressing Has a description leaves one item', (await page.locator('.vpb-results-count, .vpb-results-heading').first().textContent().catch(() => '')).includes('1 item'));
     check('the filter is listed as in use', await page.locator('.vpb-facets-active').count() === 1);
+    // Years: a range from the address bar keeps the 1923 item only; the Years form does the same.
+    await page.goto(`${BASE}/s/dhs/item?fulltext_search=${WORD}&year_from=1920&year_to=1930`, { waitUntil: 'domcontentloaded' });
+    const inRange = await page.locator('.vpb-results').innerText();
+    check('a year range keeps the item dated in it', inRange.includes(`${WORD} item 0`) && !inRange.includes(`${WORD} item 1`) && !inRange.includes(`${WORD} item 2`));
+    check('the year range is listed as in use', (await page.locator('.vpb-facets-active').innerText()).includes('1920 to 1930'));
+    await page.goto(`${BASE}/s/dhs/item?fulltext_search=${WORD}`, { waitUntil: 'domcontentloaded' });
+    await page.locator('.vpb-years-form input[name="year_from"]').fill('1980');
+    await page.locator('.vpb-years-form input[name="year_to"]').fill('1990');
+    await page.locator('.vpb-years-form button[type="submit"]').click();
+    await page.waitForLoadState('domcontentloaded');
+    const formRange = await page.locator('.vpb-results').innerText();
+    check('the Years form keeps the item dated 1987', formRange.includes(`${WORD} item 1`) && !formRange.includes(`${WORD} item 0`));
+    check('the Years form keeps the search word', page.url().includes(`fulltext_search=${WORD}`));
+
   } finally {
     await browser.close();
     for (const id of ids) await fetch(`${BASE}/api/items/${id}?${AUTH}`, { method: 'DELETE' });

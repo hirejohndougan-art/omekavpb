@@ -112,7 +112,21 @@ class BrowseFacets extends AbstractSchemaBlock
             }
         }
 
+        // The year range: a chip in Filtered by (removing it keeps the rest), and the From and To boxes.
+        if (!empty($selected['year_from']) || !empty($selected['year_to'])) {
+            $next = $selected;
+            unset($next['year_from'], $next['year_to']);
+            $active[] = ['label' => self::yearLabel($view, $selected), 'url' => self::url($view, $next, $expanded, $letters)];
+        }
+        $years = [
+            'action' => $view->url(null, [], [], true),
+            'from' => $selected['year_from'] ?? '',
+            'to' => $selected['year_to'] ?? '',
+            'hidden' => self::hiddenFields($view, $selected, $expanded, $letters),
+        ];
+
         return [
+            'years' => $years,
             'show' => $result['mode'] === 'index' && $screen !== 'browse-item-sets',
             'panelId' => 'vpb-facets-' . preg_replace('/[^A-Za-z0-9_-]/', '', $blockKey),
             'total' => $result['total'],
@@ -141,7 +155,49 @@ class BrowseFacets extends AbstractSchemaBlock
         if ($letters) {
             $query['letter'] = $letters;
         }
+        foreach (['year_from', 'year_to'] as $key) {
+            if (!empty($selected[$key])) {
+                $query[$key] = (int) $selected[$key];
+            }
+        }
         return $view->url(null, [], ['query' => $query], true);
+    }
+
+    /** The year range as words: "1920 to 1930", "from 1920" or "to 1930". */
+    public static function yearLabel(PhpRenderer $view, array $selected): string
+    {
+        $from = $selected['year_from'] ?? null;
+        $to = $selected['year_to'] ?? null;
+        if ($from && $to) {
+            return sprintf($view->translate('%1$s to %2$s'), $from, $to);
+        }
+        return $from ? sprintf($view->translate('From %s'), $from) : sprintf($view->translate('To %s'), $to);
+    }
+
+    /**
+     * The fields the Years form must send so that the other settings stay: the search,
+     * page size and sort, the filters in use, the expanded lists and the letters.
+     *
+     * @return array<int, array{0: string, 1: string}> [name, value] pairs
+     */
+    public static function hiddenFields(PhpRenderer $view, array $selected, array $expanded, array $letters): array
+    {
+        $fields = [];
+        foreach (array_intersect_key($view->params()->fromQuery(), array_flip(['q', 'fulltext_search', 'per_page', 'sort'])) as $name => $value) {
+            $fields[] = [$name, (string) $value];
+        }
+        foreach (BrowseQuery::FILTER_PARAMS as $field) {
+            foreach ($selected[$field] ?? [] as $id) {
+                $fields[] = [$field . '[]', (string) $id];
+            }
+        }
+        foreach ($expanded as $field) {
+            $fields[] = ['show_all[]', $field];
+        }
+        foreach ($letters as $field => $letter) {
+            $fields[] = ['letter[' . $field . ']', $letter];
+        }
+        return $fields;
     }
 
     /** The A–Z letter chosen for each text field, from the address bar (letter[subject]=V). */

@@ -68,8 +68,18 @@ class BrowseQuery
                 'subject' => array_map('intval', (array) $query->get('subject', [])),
                 'creator' => array_map('intval', (array) $query->get('creator', [])),
                 'place' => array_map('intval', (array) $query->get('place', [])),
+                // A year range: items whose date overlaps it. Null when not set.
+                'year_from' => self::year($query->get('year_from')),
+                'year_to' => self::year($query->get('year_to')),
             ],
         ];
+    }
+
+    /** A year from the address bar (1 to 4 digits), or null. */
+    public static function year($value): ?int
+    {
+        $value = trim((string) $value);
+        return preg_match('/^\d{1,4}$/', $value) ? (int) $value : null;
     }
 
     /**
