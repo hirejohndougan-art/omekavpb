@@ -41,8 +41,9 @@ DRAFTS=$(db "SELECT COUNT(*) FROM vpb_draft")
 [ "$ITEMS" -gt 0 ] && check ok "the copy has items before uninstall ($ITEMS)" || check no "the copy has items before uninstall"
 [ "$(curl -s -o /dev/null -w '%{http_code}' -b "$UJAR" "$BASE/s/dhs")" = 200 ] && check ok "the site renders before uninstall" || check no "the site renders before uninstall"
 
-TOKEN=$(curl -s -b "$UJAR" "$BASE/admin/module" | grep -o 'name="csrf" value="[^"]*"' | head -1 | sed 's/.*value="//;s/"$//')
-curl -s -b "$UJAR" -o /dev/null -w '%{http_code}' -X POST "$BASE/admin/module/uninstall?id=VisualPageBuilder" -d "csrf=$TOKEN" -d submit=Confirm >/tmp/uninstall-status
+# The uninstall form's own token (Omeka checks the token of the confirmation form).
+TOKEN=$(curl -s -b "$UJAR" "$BASE/admin/module/uninstall-confirm?id=VisualPageBuilder" | grep -o 'confirmform_csrf" value="[^"]*"' | sed 's/.*value="//;s/"$//')
+curl -s -b "$UJAR" -o /dev/null -w '%{http_code}' -X POST "$BASE/admin/module/uninstall?id=VisualPageBuilder" --data-urlencode "confirmform_csrf=$TOKEN" -d submit="Confirm uninstall" >/dev/null
 [ "$(db "SELECT COUNT(*) FROM module WHERE id='VisualPageBuilder'")" = 0 ] && check ok "VPB is uninstalled" || check no "VPB is uninstalled"
 [ "$(db "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='$DB' AND table_name='vpb_draft'")" = 0 ] && check ok "its tables are dropped" || check no "its tables are dropped"
 
