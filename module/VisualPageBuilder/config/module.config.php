@@ -11,6 +11,7 @@ return [
             'VisualPageBuilder\Controller\Site\Search' => Controller\Site\SearchController::class,
             'VisualPageBuilder\Controller\Admin\Search' => Controller\Admin\SearchController::class,
             'VisualPageBuilder\Controller\Admin\Settings' => Controller\Admin\SettingsController::class,
+            'VisualPageBuilder\Controller\Admin\People' => Controller\Admin\PeopleController::class,
             'VisualPageBuilder\Controller\Admin\Menu' => Controller\Admin\MenuController::class,
             'VisualPageBuilder\Controller\Admin\Region' => Controller\Admin\RegionController::class,
             'VisualPageBuilder\Controller\Admin\Pages' => Controller\Admin\PagesController::class,
@@ -98,6 +99,18 @@ return [
                             'defaults' => [
                                 '__NAMESPACE__' => 'VisualPageBuilder\Controller\Admin',
                                 'controller' => 'Search',
+                                'action' => 'index',
+                            ],
+                        ],
+                    ],
+                    // People (Phase 9): accounts, roles in plain words, invitations.
+                    'visual-page-builder-people' => [
+                        'type' => \Laminas\Router\Http\Literal::class,
+                        'options' => [
+                            'route' => '/vpb-people',
+                            'defaults' => [
+                                '__NAMESPACE__' => 'VisualPageBuilder\Controller\Admin',
+                                'controller' => 'People',
                                 'action' => 'index',
                             ],
                         ],

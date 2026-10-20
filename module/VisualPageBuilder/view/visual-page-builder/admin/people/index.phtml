@@ -1,0 +1,83 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * People (Phase 9).
+ *
+ * @var array $people  [id, name, email, role, active, isYou]
+ * @var array $roles  role key => Omeka's label
+ * @var array $roleHelp  role key => what it can do, in plain words
+ * @var string $csrf
+ */
+$escape = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+$csrfName = \VisualPageBuilder\Controller\Admin\PeopleController::CSRF_NAME;
+$this->headStyle()->appendStyle('
+.vpb-people-table{width:100%;border-collapse:collapse;background:#fff;max-width:64rem}
+.vpb-people-table th,.vpb-people-table td{text-align:left;padding:.5rem .6rem;border-top:1px solid #efefef;vertical-align:middle}
+.vpb-people-table th{border-top:0;font-size:.9rem;color:#676767}
+.vpb-people-roles{display:grid;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));gap:.4rem 1rem;max-width:64rem;margin:.5rem 0 1.2rem}
+.vpb-people-roles dt{font-weight:600}
+.vpb-people-roles dd{margin:0 0 .4rem;color:#444}
+.vpb-people-invite{display:flex;flex-wrap:wrap;gap:.5rem;align-items:end;max-width:64rem;margin-top:1rem}
+.vpb-people-invite label{display:block;font-size:.9rem}
+.vpb-people-you{font-size:.85rem;color:#676767}
+.vpb-people-inline{display:inline}
+.vpb-visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+');
+echo $this->pageTitle($translate('People'), 1, $translate('Visual Builder'));
+?>
+<h2><?php echo $escape($translate('What each role can do')); ?></h2>
+<dl class="vpb-people-roles">
+<?php foreach ($roles as $key => $label): ?>
+    <div>
+        <dt><?php echo $escape($translate($label)); ?></dt>
+        <dd><?php echo $escape($translate($roleHelp[$key] ?? '')); ?></dd>
+    </div>
+<?php endforeach; ?>
+</dl>
+
+<h2><?php echo $escape($translate('Accounts')); ?></h2>
+<table class="vpb-people-table">
+    <thead><tr><th><?php echo $escape($translate('Name')); ?></th><th><?php echo $escape($translate('Email')); ?></th><th><?php echo $escape($translate('Role')); ?></th></tr></thead>
+    <tbody>
+    <?php foreach ($people as $person): ?>
+        <tr>
+            <td><?php echo $escape($person['name']); ?><?php if (!$person['active']): ?> <span class="vpb-people-you">(<?php echo $escape($translate('invitation not yet accepted')); ?>)</span><?php endif; ?></td>
+            <td><?php echo $escape($person['email']); ?></td>
+            <td>
+                <?php if ($person['isYou']): ?>
+                    <?php echo $escape($translate($roles[$person['role']] ?? $person['role'])); ?> <span class="vpb-people-you">(<?php echo $escape($translate('you')); ?>)</span>
+                <?php else: ?>
+                <form method="post" class="vpb-people-inline">
+                    <input type="hidden" name="<?php echo $escape($csrfName); ?>" value="<?php echo $escape($csrf); ?>">
+                    <input type="hidden" name="user_id" value="<?php echo (int) $person['id']; ?>">
+                    <label><span class="vpb-visually-hidden"><?php echo $escape($translate('Role for')); ?> <?php echo $escape($person['name']); ?></span>
+                    <select name="role">
+                        <?php foreach ($roles as $key => $label): ?>
+                        <option value="<?php echo $escape($key); ?>"<?php echo $key === $person['role'] ? ' selected' : ''; ?>><?php echo $escape($translate($label)); ?></option>
+                        <?php endforeach; ?>
+                    </select></label>
+                    <button type="submit"><?php echo $escape($translate('Change')); ?></button>
+                </form>
+                <?php endif; ?>
+            </td>
+        </tr>
+    <?php endforeach; ?>
+    </tbody>
+</table>
+
+<h2><?php echo $escape($translate('Invite someone')); ?></h2>
+<p class="vpb-people-you"><?php echo $escape($translate('They get Omeka’s activation email and set their own password.')); ?></p>
+<form method="post" class="vpb-people-invite">
+    <input type="hidden" name="<?php echo $escape($csrfName); ?>" value="<?php echo $escape($csrf); ?>">
+    <input type="hidden" name="vpb_action" value="invite">
+    <label><?php echo $escape($translate('Name')); ?><br><input type="text" name="name" required></label>
+    <label><?php echo $escape($translate('Email')); ?><br><input type="email" name="email" required></label>
+    <label><?php echo $escape($translate('Role')); ?><br>
+        <select name="role">
+            <?php foreach ($roles as $key => $label): ?>
+            <option value="<?php echo $escape($key); ?>"<?php echo $key === 'author' ? ' selected' : ''; ?>><?php echo $escape($translate($label)); ?></option>
+            <?php endforeach; ?>
+        </select></label>
+    <button type="submit"><?php echo $escape($translate('Send invitation')); ?></button>
+</form>
