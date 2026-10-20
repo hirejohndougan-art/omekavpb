@@ -33,9 +33,21 @@ class ThemeController extends AbstractActionController
                 return $t['screen'] === $screen;
             }));
         }
+        // The site's header and footer (built in the visual editor) show in the hub as
+        // their screens' current design, with an Edit link. They are not templates.
+        $regions = [];
+        foreach (\VisualPageBuilder\SiteRegions::REGIONS as $key => $info) {
+            foreach ($site->pages() as $page) {
+                if ($page->slug() === $info['slug']) {
+                    $regions[$key] = $page;
+                    break;
+                }
+            }
+        }
         $view = new ViewModel([
             'site' => $site,
             'groups' => $groups,
+            'regions' => $regions,
             'screens' => array_map(function ($key) {
                 return ['key' => $key, 'label' => Screens::label($key), 'required' => Screens::required($key)];
             }, Screens::keys()),

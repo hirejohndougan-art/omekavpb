@@ -29,6 +29,41 @@ class GlobalStyles
         'corner_style' => ['Corners', 'select', 'soft', ['square' => 'Square', 'soft' => 'Soft', 'round' => 'Round']], // @translate
     ];
 
+    /**
+     * The font stacks the Companion Theme uses for each font choice. Kept in
+     * step with the theme's layout (tests/php checks the two agree), so the
+     * Theme Builder's preview shows the fonts the site will use.
+     */
+    const FONTS = [
+        'serif' => 'Iowan Old Style, Palatino Linotype, Palatino, Georgia, serif',
+        'sans' => 'system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif',
+        'humanist' => 'Seravek, Gill Sans Nova, Gill Sans, Calibri, Ubuntu, sans-serif',
+        'slab' => 'Rockwell, Roboto Slab, DejaVu Serif, Georgia, serif',
+    ];
+
+    /**
+     * The same custom properties as cssVars(), as an inline style string, for
+     * the live preview. Carries the font stacks too, which the site's :root
+     * rule sets in the theme's layout.
+     */
+    public static function previewStyle(array $values): string
+    {
+        $v = self::values($values);
+        $link = $v['link_color'] !== '' ? $v['link_color'] : $v['accent_color'];
+        return sprintf(
+            '--pb-accent:%s;--pb-secondary:%s;--pb-ink:%s;--pb-bg:%s;--pb-link:%s;--pb-text-size:%s;--pb-radius:%s;--pb-heading-font:%s;--pb-body-font:%s',
+            $v['accent_color'],
+            $v['secondary_color'],
+            $v['text_color'],
+            $v['background_color'],
+            $link,
+            self::SIZES[$v['text_size']],
+            self::CORNERS[$v['corner_style']],
+            self::FONTS[$v['heading_font']],
+            self::FONTS[$v['body_font']]
+        );
+    }
+
     /** The values the theme's CSS variables take for each choice. */
     const SIZES = ['small' => '0.95rem', 'medium' => '1.0625rem', 'large' => '1.15rem'];
     const CORNERS = ['square' => '0', 'soft' => '6px', 'round' => '14px'];

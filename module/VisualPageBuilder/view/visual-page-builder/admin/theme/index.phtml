@@ -5,6 +5,7 @@
  *
  * @var \Omeka\Api\Representation\SiteRepresentation $site
  * @var array $groups  templates by screen key (Store::all, grouped)
+ * @var array $regions  header and footer pages by key (built in the visual editor)
  * @var array $screens  [key, label, required] for each screen
  * @var string[] $scopes  Resolver levels
  * @var array $styles  current Global styles values
@@ -31,6 +32,14 @@ $this->headStyle()->appendStyle('
 .vpb-theme-form label{display:block;font-size:.9rem;margin-bottom:.2rem}
 .vpb-theme-form input[type=text],.vpb-theme-form input[type=number],.vpb-theme-form select{width:100%}
 .vpb-theme-note{font-size:.9rem;color:#676767;margin:.4rem 0 .8rem}
+.vpb-styles-layout{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(16rem,1fr);gap:1.2rem;align-items:start}
+@media (max-width:900px){.vpb-styles-layout{grid-template-columns:1fr}}
+.vpb-style-preview{background:var(--pb-bg,#fbf8f1);color:var(--pb-ink,#1f1b16);font-family:var(--pb-body-font);font-size:var(--pb-text-size,1.0625rem);line-height:1.6;border:1px solid #dfdfdf;border-radius:var(--pb-radius,6px);padding:1.1rem 1.2rem}
+.vpb-style-preview-kicker{font-size:.8rem;text-transform:uppercase;letter-spacing:.04em;color:#676767;margin:0 0 .4rem;font-family:sans-serif}
+.vpb-style-preview-h{font-family:var(--pb-heading-font);font-size:1.5rem;line-height:1.2;color:var(--pb-accent,#0f5e54);margin:0 0 .4rem}
+.vpb-style-preview a{color:var(--pb-link,#0f5e54)}
+.vpb-style-preview-btn{display:inline-block;background:var(--pb-accent,#0f5e54);color:var(--pb-bg,#fbf8f1);padding:.35rem .9rem;border-radius:var(--pb-radius,6px)}
+.vpb-style-preview-card{margin-top:.8rem;padding:.6rem .8rem;border-left:4px solid var(--pb-secondary,#5b5348);background:rgba(0,0,0,.03);border-radius:var(--pb-radius,6px)}
 ');
 echo $this->pageTitle(sprintf($translate('Theme Builder: %s'), $site->title()), 1, $translate('Visual Builder'));
 ?>
@@ -51,7 +60,15 @@ echo $this->pageTitle(sprintf($translate('Theme Builder: %s'), $site->title()), 
     <?php if ($screen['required']): ?>
     <p class="vpb-theme-need"><?php echo $escape($translate('Required blocks:')); ?> <?php echo $escape(implode(', ', array_map(function ($k) { return ucwords(str_replace('-', ' ', $k)); }, $screen['required']))); ?></p>
     <?php endif; ?>
-    <?php if (!$list): ?>
+    <?php if (isset($regions[$screen['key']])): $region = $regions[$screen['key']]; ?>
+    <div class="vpb-theme-row">
+        <span class="vpb-theme-name"><?php echo $escape($translate('Current design')); ?></span>
+        <span class="vpb-theme-state <?php echo $usesCompanion ? 'is-live' : 'is-draft'; ?>"><?php echo $escape($usesCompanion ? $translate('Live') : $translate('Not used by this theme')); ?></span>
+        <span class="vpb-theme-note"><?php echo $escape($translate('Built in the visual editor, shown on every page.')); ?></span>
+        <a class="button" href="<?php echo $escape($this->url('admin/visual-page-builder', ['site-slug' => $site->slug(), 'page-id' => (int) $region->id(), 'action' => 'edit'])); ?>"><?php echo $escape($translate('Edit')); ?></a>
+    </div>
+    <?php endif; ?>
+    <?php if (!$list && !isset($regions[$screen['key']])): ?>
     <p class="vpb-theme-note"><?php echo $escape($translate('No templates yet. The theme\'s own layout is used.')); ?></p>
     <?php endif; ?>
     <?php foreach ($list as $i => $t): ?>
@@ -145,7 +162,8 @@ echo $this->pageTitle(sprintf($translate('Theme Builder: %s'), $site->title()), 
 
 <h2 id="vpb-global-styles"><?php echo $escape($translate('Global styles')); ?></h2>
 <p class="vpb-theme-note"><?php echo $escape($translate('These apply to every page and template on this site. Changing a color here changes every block that uses it.')); ?></p>
-<form method="post" class="vpb-theme-form" aria-labelledby="vpb-global-styles">
+<div class="vpb-styles-layout">
+<form method="post" id="vpb-styles-form" class="vpb-theme-form" aria-labelledby="vpb-global-styles">
     <input type="hidden" name="vpb_theme_csrf" value="<?php echo $escape($csrf); ?>">
     <input type="hidden" name="vpb_action" value="globals">
     <?php foreach ($styleFields as $name => [$label, $type, $default, $options]): ?>
@@ -164,3 +182,40 @@ echo $this->pageTitle(sprintf($translate('Theme Builder: %s'), $site->title()), 
     <?php endforeach; ?>
     <div><button type="submit"><?php echo $escape($translate('Save global styles')); ?></button></div>
 </form>
+<div class="vpb-style-preview" id="vpb-style-preview" role="region" aria-label="<?php echo $escape($translate('Preview of the global styles')); ?>" style="<?php echo $escape(\VisualPageBuilder\Templates\GlobalStyles::previewStyle($styles)); ?>">
+    <p class="vpb-style-preview-kicker"><?php echo $escape($translate('Preview')); ?></p>
+    <p class="vpb-style-preview-h"><?php echo $escape($translate('A heading on your site')); ?></p>
+    <p><?php echo $escape($translate('Body text in the text font. Links look like')); ?> <a href="#vpb-global-styles"><?php echo $escape($translate('this')); ?></a>.</p>
+    <p><span class="vpb-style-preview-btn"><?php echo $escape($translate('A button')); ?></span></p>
+    <div class="vpb-style-preview-card"><?php echo $escape($translate('A panel, such as a box of details')); ?></div>
+</div>
+</div>
+<script>
+(function () {
+    var form = document.getElementById('vpb-styles-form'), root = document.getElementById('vpb-style-preview');
+    if (!form || !root) { return; }
+    var sizes = <?php echo json_encode(\VisualPageBuilder\Templates\GlobalStyles::SIZES); ?>;
+    var corners = <?php echo json_encode(\VisualPageBuilder\Templates\GlobalStyles::CORNERS); ?>;
+    var fonts = <?php echo json_encode(\VisualPageBuilder\Templates\GlobalStyles::FONTS); ?>;
+    function val(name) { var el = document.getElementById('vpb-style-' + name); return el ? el.value : ''; }
+    function isColor(v) { return /^#[0-9a-fA-F]{6}$/.test(v); }
+    function set(prop, v) { if (v !== null && v !== undefined && v !== '') { root.style.setProperty(prop, v); } }
+    // Mirrors GlobalStyles::previewStyle: invalid or blank values keep what the page started with.
+    function update() {
+        var accent = val('accent_color');
+        if (isColor(accent)) { set('--pb-accent', accent); }
+        if (isColor(val('secondary_color'))) { set('--pb-secondary', val('secondary_color')); }
+        if (isColor(val('text_color'))) { set('--pb-ink', val('text_color')); }
+        if (isColor(val('background_color'))) { set('--pb-bg', val('background_color')); }
+        var link = val('link_color');
+        if (isColor(link)) { set('--pb-link', link); } else if (isColor(accent)) { set('--pb-link', accent); }
+        set('--pb-text-size', sizes[val('text_size')]);
+        set('--pb-radius', corners[val('corner_style')]);
+        set('--pb-heading-font', fonts[val('heading_font')]);
+        set('--pb-body-font', fonts[val('body_font')]);
+    }
+    form.addEventListener('input', update);
+    form.addEventListener('change', update);
+})();
+</script>
+</div>

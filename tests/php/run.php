@@ -72,6 +72,15 @@ check('defaults cover every field', count(GlobalStyles::defaults()) === count(Gl
 check('clean keeps valid colors, lowercased', GlobalStyles::clean(['accent_color' => '#ABCDEF'])['accent_color'] === '#abcdef');
 check('bad color falls back to default', GlobalStyles::clean(['accent_color' => 'red'])['accent_color'] === '#0f5e54');
 check('blank link color is allowed', GlobalStyles::clean(['link_color' => ''])['link_color'] === '');
+// The preview's font stacks must be the theme's own (layout.phtml).
+$themeLayout = file_get_contents(__DIR__ . '/../../theme/visual-page-builder-companion/view/layout/layout.phtml');
+$themeFontsMatch = true;
+foreach (GlobalStyles::FONTS as $key => $stack) {
+    $themeFontsMatch = $themeFontsMatch && strpos($themeLayout, "'$key' => '$stack'") !== false;
+}
+check('preview font stacks match the theme layout', $themeFontsMatch);
+check('preview style carries the link color, falling back to primary', strpos(GlobalStyles::previewStyle(['accent_color' => '#123456']), '--pb-link:#123456') !== false);
+check('preview style carries the font stacks', strpos(GlobalStyles::previewStyle([]), '--pb-body-font:system-ui') !== false);
 check('bad link color falls back to blank', GlobalStyles::clean(['link_color' => 'nope'])['link_color'] === '');
 check('unknown select choice falls back', GlobalStyles::clean(['text_size' => 'huge'])['text_size'] === 'medium');
 check('values fill missing settings with defaults', GlobalStyles::values([])['corner_style'] === 'soft');
