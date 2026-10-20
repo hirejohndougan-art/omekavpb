@@ -41,6 +41,8 @@ $fresh = function () use ($api, $em, $pageId) {
 
 try {
     check('a new template starts with its required blocks', Required::missing('item', Store::blockTypes($fresh())) === []);
+    check('a new template has no page-title block', !in_array('pageTitle', Store::blockTypes($fresh()), true),
+        implode(',', Store::blockTypes($fresh())));
 
     // Remove one required block directly (the editor and API refuse to delete it).
     $lost = $required[0];

@@ -78,6 +78,12 @@ class Store
         self::assertScreen($screen);
         self::assertScope($scope, $value);
         $count = count(self::all($site));
+        // The starter blocks go in with the page. Omeka adds its page-title block (which
+        // shows the page's name, here the template's internal name) to any new page
+        // created without blocks, so an empty create would bring that block in.
+        $blocks = array_map(function ($layout) use ($site) {
+            return ['o:layout' => $layout, 'o:data' => Screens::starterData($layout, $site->slug()), 'o:attachment' => []];
+        }, Screens::starters($screen));
         $page = $api->create('site_pages', [
             'o:site' => ['o:id' => $site->id()],
             'o:title' => mb_substr($name !== '' ? $name : Screens::label($screen), 0, 190),
@@ -89,14 +95,9 @@ class Store
                 'visual_page_builder' => ['version' => 1],
                 self::KEY => ['screen' => $screen, 'scope' => $scope, 'value' => $value, 'status' => 'draft', 'order' => $count + 1],
             ],
-            'o:block' => [],
+            'o:block' => $blocks,
         ])->getContent();
-        $starters = Screens::starters($screen);
-        if ($starters) {
-            // The starter blocks: the required ones are in place from the start.
-            $api->update('site_pages', $page->id(), ['o:block' => array_map(function ($layout) use ($site) {
-                return ['o:layout' => $layout, 'o:data' => Screens::starterData($layout, $site->slug()), 'o:attachment' => []];
-            }, $starters)], [], ['isPartial' => true]);
+        if ($blocks) {
             $page = $api->read('site_pages', $page->id())->getContent();
         }
         return $page;
