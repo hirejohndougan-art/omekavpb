@@ -26,6 +26,31 @@ class Module extends AbstractModule
         $acl->allow(null, ['VisualPageBuilder\Controller\Admin\Builder', 'VisualPageBuilder\Controller\Admin\Menu', 'VisualPageBuilder\Controller\Admin\Region', 'VisualPageBuilder\Controller\Admin\Pages']);
         // The public search endpoint (VPB Search) is open to every visitor, logged in or not.
         $acl->allow(null, 'VisualPageBuilder\Controller\Site\Search', 'search');
+        $this->landOnHome($event);
+    }
+
+    /**
+     * People land on Home after signing in: the admin front page (/admin) sends a
+     * signed-in user to VPB Home. Other admin pages are not affected.
+     */
+    private function landOnHome(MvcEvent $event): void
+    {
+        $application = $event->getApplication();
+        $application->getEventManager()->attach(MvcEvent::EVENT_ROUTE, function (MvcEvent $e) {
+            $match = $e->getRouteMatch();
+            if (!$match || $match->getMatchedRouteName() !== 'admin') {
+                return null;
+            }
+            $services = $e->getApplication()->getServiceManager();
+            if (!$services->get('Omeka\AuthenticationService')->hasIdentity()) {
+                return null;
+            }
+            $home = $e->getRouter()->assemble([], ['name' => 'admin/visual-page-builder-home']);
+            $response = $e->getResponse() ?: new \Laminas\Http\PhpEnvironment\Response();
+            $response->getHeaders()->addHeaderLine('Location', $home);
+            $response->setStatusCode(302);
+            return $response;
+        }, -10); // after the route is matched
     }
 
     /**

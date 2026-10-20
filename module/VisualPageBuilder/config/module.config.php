@@ -108,6 +108,18 @@ return [
                             ],
                         ],
                     ],
+                    // Glossary and help (Phase 6): plain words for the admin screens.
+                    'visual-page-builder-glossary' => [
+                        'type' => \Laminas\Router\Http\Literal::class,
+                        'options' => [
+                            'route' => '/vpb-glossary',
+                            'defaults' => [
+                                '__NAMESPACE__' => 'VisualPageBuilder\Controller\Admin',
+                                'controller' => 'Home',
+                                'action' => 'glossary',
+                            ],
+                        ],
+                    ],
                     // One item (Phase 6): Details, Where it shows, Files, History, actions.
                     'visual-page-builder-item' => [
                         'type' => \Laminas\Router\Http\Segment::class,

@@ -1,0 +1,19 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/** @var array $terms  term => plain-word meaning */
+$escape = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+echo $this->pageTitle($translate('Glossary'), 1, $translate('Visual Builder'));
+echo $this->partial('visual-page-builder/admin/library/_nav', ['current' => 'admin/visual-page-builder-glossary']);
+?>
+<dl class="vpb-glossary">
+<?php foreach ($terms as $term => $meaning): ?>
+    <dt><?php echo $escape($translate($term)); ?></dt>
+    <dd><?php echo $escape($translate($meaning)); ?></dd>
+<?php endforeach; ?>
+</dl>
+<style>
+.vpb-glossary{max-width:44rem}
+.vpb-glossary dt{font-weight:600;margin-top:.9rem}
+.vpb-glossary dd{margin:.2rem 0 0 0}
+</style>

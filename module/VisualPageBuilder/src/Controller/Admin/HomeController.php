@@ -14,6 +14,29 @@ use Laminas\View\Model\ViewModel;
  */
 class HomeController extends AbstractActionController
 {
+    /** Plain-word meanings, shown on the glossary page and in the help panel. */
+    public const GLOSSARY = [
+        'Item' => 'One record: a photograph, a document, a letter. Its files are attached to it.',
+        'File' => 'An image, PDF, audio or video attached to an item.',
+        'Main image' => 'The file shown first for an item on the public site.',
+        'Item set' => 'A group of items, such as a collection or an exhibit.',
+        'Site' => 'One public website that shows items. An item can appear on several sites.',
+        'Public' => 'Visitors can see the item on the public site.',
+        'Staff only' => 'Only signed-in staff can see the item. Visitors cannot.',
+        'Draft' => 'An item kept aside while it is being worked on. It stays staff only until you publish it.',
+        'Resource template' => 'The list of questions an item type asks for, such as Photograph or Document.',
+        'Facet' => 'A filter on a search page, such as Subject or Decade.',
+        'Template' => 'A design for a public page, made in the Theme Builder.',
+        'Revision' => 'An earlier version of an item, kept so you can restore it.',
+    ];
+
+    public function glossaryAction()
+    {
+        $view = new ViewModel(['terms' => self::GLOSSARY]);
+        $view->setTemplate('visual-page-builder/admin/home/glossary');
+        return $view;
+    }
+
     public function indexAction()
     {
         $manager = $this->getEvent()->getApplication()->getServiceManager();

@@ -1,6 +1,9 @@
 <?php
 // SPDX-License-Identifier: GPL-2.0-or-later
-/** Links between the library screens (Files, Item sets, Settings, People). @var string $current */
+/**
+ * The top bar of the friendly admin: links between its screens, a search box for items, and a
+ * help panel with a link to the glossary. @var string $current
+ */
 $escape = $this->plugin('escapeHtml');
 $translate = $this->plugin('translate');
 $links = [
@@ -12,9 +15,33 @@ $links = [
     'admin/visual-page-builder-settings' => 'Settings',
     'admin/visual-page-builder-people' => 'People',
 ];
+$q = (string) ($this->query ?? '');
 ?>
 <nav class="vpb-lib-nav" aria-label="<?php echo $escape($translate('Visual Builder sections')); ?>">
 <?php foreach ($links as $route => $label): ?>
     <a href="<?php echo $escape($this->url($route)); ?>"<?php echo $route === $current ? ' aria-current="page"' : ''; ?>><?php echo $escape($translate($label)); ?></a>
 <?php endforeach; ?>
+    <form method="get" action="<?php echo $escape($this->url('admin/visual-page-builder-items')); ?>" class="vpb-topbar-search" role="search">
+        <label class="vpb-visually-hidden" for="vpb-topbar-q"><?php echo $escape($translate('Search items')); ?></label>
+        <input type="search" id="vpb-topbar-q" name="q" value="<?php echo $escape($q); ?>" placeholder="<?php echo $escape($translate('Search items')); ?>">
+        <button type="submit"><?php echo $escape($translate('Search')); ?></button>
+    </form>
+    <details class="vpb-help">
+        <summary><?php echo $escape($translate('Help')); ?></summary>
+        <div class="vpb-help-body">
+            <p><?php echo $escape($translate('Items are your records. Each one has details, files, and a place where it shows.')); ?></p>
+            <p><?php echo $escape($translate('A draft is kept staff only until you publish it.')); ?></p>
+            <p><a href="<?php echo $escape($this->url('admin/visual-page-builder-glossary')); ?>"><?php echo $escape($translate('Words used here, explained')); ?></a></p>
+        </div>
+    </details>
 </nav>
+<style>
+.vpb-lib-nav{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin:0 0 1rem}
+.vpb-lib-nav > a,.vpb-lib-nav > details > summary{padding:.3rem .8rem;border:1px solid #dfdfdf;border-radius:999px;color:inherit;text-decoration:none;background:#fff;cursor:pointer}
+.vpb-lib-nav > a[aria-current=page]{background:#1f4d3f;border-color:#1f4d3f;color:#fff}
+.vpb-topbar-search{display:flex;gap:.3rem;margin-left:auto}
+.vpb-topbar-search input[type=search]{min-width:12rem}
+.vpb-help{position:relative}
+.vpb-help-body{position:absolute;right:0;z-index:5;width:18rem;background:#fff;border:1px solid #dfdfdf;border-radius:4px;padding:.8rem 1rem;box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.vpb-help-body p{margin:.4rem 0}
+</style>
