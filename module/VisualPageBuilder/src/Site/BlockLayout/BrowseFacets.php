@@ -34,6 +34,7 @@ class BrowseFacets extends AbstractSchemaBlock
         'decade' => 'Date',
         'has_images' => 'Images',
         'has_description' => 'Description',
+        'has_transcript' => 'Transcript',
     ]; // @translate
 
     /** Text fields list this many values (most items first) plus any chosen ones; the rest sit behind "Show all". */
@@ -55,6 +56,7 @@ class BrowseFacets extends AbstractSchemaBlock
             ['key' => 'show_date', 'type' => Schema::TYPE_CHECKBOX, 'group' => 'Fields', 'default' => true, 'label' => 'Date, with the years'], // @translate
             ['key' => 'show_images', 'type' => Schema::TYPE_CHECKBOX, 'group' => 'Fields', 'default' => true, 'label' => 'Images'], // @translate
             ['key' => 'show_description', 'type' => Schema::TYPE_CHECKBOX, 'group' => 'Fields', 'default' => true, 'label' => 'Description'], // @translate
+            ['key' => 'show_transcript', 'type' => Schema::TYPE_CHECKBOX, 'group' => 'Fields', 'default' => true, 'label' => 'Transcript'], // @translate
             ['key' => 'text_order', 'type' => Schema::TYPE_SELECT, 'group' => 'Display', 'default' => 'count', 'label' => 'Subjects, creators and places in',
                 'options' => ['count' => 'Most items first', 'az' => 'A to Z']], // @translate
             ['key' => 'text_shown', 'type' => Schema::TYPE_NUMBER, 'group' => 'Display', 'default' => 10, 'min' => 1, 'max' => 100,

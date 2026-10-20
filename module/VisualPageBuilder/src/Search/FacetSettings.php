@@ -19,6 +19,7 @@ class FacetSettings
         'decade' => 'show_date',
         'has_images' => 'show_images',
         'has_description' => 'show_description',
+        'has_transcript' => 'show_transcript',
     ];
 
     /** Text values listed before "Show all" when the setting is not given. */

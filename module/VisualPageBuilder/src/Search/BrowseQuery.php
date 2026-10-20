@@ -29,7 +29,7 @@ class BrowseQuery
     const DEFAULT_PER_PAGE = 24;
 
     /** Address parameters that narrow the results (carried by every browse control). */
-    const FILTER_PARAMS = ['item_set', 'class', 'decade', 'has_images', 'has_description', 'subject', 'creator', 'place'];
+    const FILTER_PARAMS = ['item_set', 'class', 'decade', 'has_images', 'has_description', 'has_transcript', 'subject', 'creator', 'place'];
 
     /** Sort choices: relevance (best match), A-Z, oldest, newest first, and recently added. */
     const SORTS = ['relevance', 'title', 'oldest', 'newest', 'recent'];
@@ -65,6 +65,7 @@ class BrowseQuery
                 'decade' => array_map('intval', (array) $query->get('decade', [])),
                 'has_images' => array_map('intval', (array) $query->get('has_images', [])),
                 'has_description' => array_map('intval', (array) $query->get('has_description', [])),
+                'has_transcript' => array_map('intval', (array) $query->get('has_transcript', [])),
                 'subject' => array_map('intval', (array) $query->get('subject', [])),
                 'creator' => array_map('intval', (array) $query->get('creator', [])),
                 'place' => array_map('intval', (array) $query->get('place', [])),
@@ -248,6 +249,9 @@ class BrowseQuery
         }
         if ($field === 'has_description') {
             return array_intersect_key([1 => 'Has a description'], array_flip($ids)); // @translate
+        }
+        if ($field === 'has_transcript') {
+            return array_intersect_key([1 => 'Has a transcript'], array_flip($ids)); // @translate
         }
         $resource = $field === 'item_set' ? 'item_sets' : 'resource_classes';
         $labels = [];

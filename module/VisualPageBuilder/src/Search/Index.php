@@ -28,7 +28,14 @@ class Index
      * Facet fields: item set and resource class (ids), decade (the decade's first year),
      * has images (1), and the text fields (see TEXT_FIELDS).
      */
-    public const FACET_FIELDS = ['item_set', 'class', 'decade', 'has_images', 'has_description', 'subject', 'creator', 'place'];
+    public const FACET_FIELDS = ['item_set', 'class', 'decade', 'has_images', 'has_description', 'has_transcript', 'subject', 'creator', 'place'];
+
+    /**
+     * The property that holds an item's transcript (the has-transcript yes/no facet).
+     * Default bibo:content, the property the DHS oral histories use; change it here if the
+     * transcripts live elsewhere, then reindex.
+     */
+    public const TRANSCRIPT_TERM = 'bibo:content';
 
     /** Text facet fields: the property each one reads. Their values are stored as ids in FACET_VALUE. */
     public const TEXT_FIELDS = [
@@ -191,6 +198,13 @@ class Index
         foreach ($item->value('dcterms:description', ['all' => true, 'default' => []]) as $value) {
             if (self::textLabel((string) $value) !== null) {
                 $conn->insert(self::FACET, ['item_id' => $id, 'field' => 'has_description', 'value_id' => 1]);
+                break;
+            }
+        }
+        // Yes/no: the item has a transcript (any non-blank value of TRANSCRIPT_TERM).
+        foreach ($item->value(self::TRANSCRIPT_TERM, ['all' => true, 'default' => []]) as $value) {
+            if (self::textLabel((string) $value) !== null) {
+                $conn->insert(self::FACET, ['item_id' => $id, 'field' => 'has_transcript', 'value_id' => 1]);
                 break;
             }
         }
