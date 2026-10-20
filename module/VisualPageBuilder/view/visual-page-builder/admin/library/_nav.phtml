@@ -1,0 +1,17 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/** Links between the library screens (Files, Item sets, Settings, People). @var string $current */
+$escape = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+$links = [
+    'admin/visual-page-builder-files' => 'Files',
+    'admin/visual-page-builder-item-sets' => 'Item sets',
+    'admin/visual-page-builder-settings' => 'Settings',
+    'admin/visual-page-builder-people' => 'People',
+];
+?>
+<nav class="vpb-lib-nav" aria-label="<?php echo $escape($translate('Visual Builder sections')); ?>">
+<?php foreach ($links as $route => $label): ?>
+    <a href="<?php echo $escape($this->url($route)); ?>"<?php echo $route === $current ? ' aria-current="page"' : ''; ?>><?php echo $escape($translate($label)); ?></a>
+<?php endforeach; ?>
+</nav>

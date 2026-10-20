@@ -1,0 +1,65 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Files (Phase 8): every file in the installation, by kind, each with a link to its item.
+ *
+ * @var array $files  [id, title, type, thumbnail, itemId, itemTitle, itemUrl]
+ * @var array $kinds  LibraryController::KINDS
+ * @var string $kind
+ * @var int $page
+ * @var int $pages
+ * @var int $total
+ */
+$escape = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+$this->headStyle()->appendStyle('
+.vpb-lib-nav{display:flex;flex-wrap:wrap;gap:.4rem;margin:0 0 1rem}
+.vpb-lib-nav a{padding:.25rem .7rem;border:1px solid #dfdfdf;border-radius:999px;color:inherit;text-decoration:none;background:#fff}
+.vpb-lib-nav a[aria-current=page]{background:#1f4d3f;border-color:#1f4d3f;color:#fff}
+.vpb-lib-kinds{display:flex;flex-wrap:wrap;gap:.4rem;margin:0 0 1rem}
+.vpb-lib-kinds a{padding:.2rem .6rem;border:1px solid #bbb;border-radius:999px;color:inherit;text-decoration:none;font-size:.9rem}
+.vpb-lib-kinds a[aria-pressed=true]{background:#eef4f2;border-color:#1f4d3f;font-weight:600}
+.vpb-lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(10rem,1fr));gap:.8rem}
+.vpb-lib-card{background:#fff;border:1px solid #dfdfdf;border-radius:4px;padding:.5rem;font-size:.9rem;display:flex;flex-direction:column;gap:.35rem}
+.vpb-lib-card img{width:100%;aspect-ratio:1/1;object-fit:cover;background:#eee;border-radius:3px}
+.vpb-lib-card .vpb-lib-type{color:#676767;font-size:.8rem;overflow-wrap:anywhere}
+.vpb-lib-pager{margin:1rem 0;display:flex;gap:.8rem;align-items:center}
+');
+echo $this->pageTitle($translate('Files'), 1, $translate('Visual Builder'));
+echo $this->partial('visual-page-builder/admin/library/_nav', ['current' => 'admin/visual-page-builder-files']);
+?>
+<nav class="vpb-lib-kinds" aria-label="<?php echo $escape($translate('Kind of file')); ?>">
+<?php foreach ($kinds as $key => $info): ?>
+    <a href="<?php echo $escape($this->url('admin/visual-page-builder-files', [], ['query' => ['kind' => $key]], true)); ?>" aria-pressed="<?php echo $key === $kind ? 'true' : 'false'; ?>"><?php echo $escape($translate($info['label'])); ?></a>
+<?php endforeach; ?>
+</nav>
+<p><?php echo $escape(sprintf($translate('%s files'), number_format($total))); ?></p>
+
+<?php if (!$files): ?>
+<p><?php echo $escape($translate('No files of this kind yet.')); ?></p>
+<?php else: ?>
+<div class="vpb-lib-grid">
+<?php foreach ($files as $file): ?>
+    <div class="vpb-lib-card">
+        <?php if ($file['thumbnail']): ?>
+        <img src="<?php echo $escape($file['thumbnail']); ?>" alt="">
+        <?php else: ?>
+        <div class="vpb-lib-type" aria-hidden="true"><?php echo $escape($file['type'] ?: $translate('No file')); ?></div>
+        <?php endif; ?>
+        <strong><?php echo $escape($file['title'] !== '' ? $file['title'] : $translate('Untitled')); ?></strong>
+        <span class="vpb-lib-type"><?php echo $escape($file['type']); ?></span>
+        <?php if ($file['itemUrl']): ?>
+        <a href="<?php echo $escape($file['itemUrl']); ?>"><?php echo $escape($translate('Its item')); ?>: <?php echo $escape($file['itemTitle']); ?></a>
+        <?php endif; ?>
+    </div>
+<?php endforeach; ?>
+</div>
+<?php endif; ?>
+
+<?php if ($pages > 1): ?>
+<div class="vpb-lib-pager">
+    <?php if ($page > 1): ?><a href="<?php echo $escape($this->url('admin/visual-page-builder-files', [], ['query' => ['kind' => $kind, 'page' => $page - 1]], true)); ?>"><?php echo $escape($translate('Previous')); ?></a><?php endif; ?>
+    <span><?php echo $escape(sprintf($translate('Page %1$s of %2$s'), $page, $pages)); ?></span>
+    <?php if ($page < $pages): ?><a href="<?php echo $escape($this->url('admin/visual-page-builder-files', [], ['query' => ['kind' => $kind, 'page' => $page + 1]], true)); ?>"><?php echo $escape($translate('Next')); ?></a><?php endif; ?>
+</div>
+<?php endif; ?>

@@ -12,6 +12,7 @@ return [
             'VisualPageBuilder\Controller\Admin\Search' => Controller\Admin\SearchController::class,
             'VisualPageBuilder\Controller\Admin\Settings' => Controller\Admin\SettingsController::class,
             'VisualPageBuilder\Controller\Admin\People' => Controller\Admin\PeopleController::class,
+            'VisualPageBuilder\Controller\Admin\Library' => Controller\Admin\LibraryController::class,
             'VisualPageBuilder\Controller\Admin\Menu' => Controller\Admin\MenuController::class,
             'VisualPageBuilder\Controller\Admin\Region' => Controller\Admin\RegionController::class,
             'VisualPageBuilder\Controller\Admin\Pages' => Controller\Admin\PagesController::class,
@@ -100,6 +101,29 @@ return [
                                 '__NAMESPACE__' => 'VisualPageBuilder\Controller\Admin',
                                 'controller' => 'Search',
                                 'action' => 'index',
+                            ],
+                        ],
+                    ],
+                    // Files and Item sets (Phase 8): every file, and the item sets as cards.
+                    'visual-page-builder-files' => [
+                        'type' => \Laminas\Router\Http\Literal::class,
+                        'options' => [
+                            'route' => '/vpb-files',
+                            'defaults' => [
+                                '__NAMESPACE__' => 'VisualPageBuilder\Controller\Admin',
+                                'controller' => 'Library',
+                                'action' => 'files',
+                            ],
+                        ],
+                    ],
+                    'visual-page-builder-item-sets' => [
+                        'type' => \Laminas\Router\Http\Literal::class,
+                        'options' => [
+                            'route' => '/vpb-item-sets',
+                            'defaults' => [
+                                '__NAMESPACE__' => 'VisualPageBuilder\Controller\Admin',
+                                'controller' => 'Library',
+                                'action' => 'item-sets',
                             ],
                         ],
                     ],
