@@ -1,22 +1,162 @@
 <?php
 // SPDX-License-Identifier: GPL-2.0-or-later
 /**
- * Import (Phase 8). Runs on CSV Import; without it active, says so.
- *
- * @var bool $engineActive
- * @var string $modulesUrl
+ * Import (Phase 8): the spreadsheet wizard. @var string $step (engine-off, choose, map, preview,
+ * started), $engineActive, $modulesUrl, $csrf, $csrfName, $itemSets (id => title), $fields,
+ * $token, $filename, $delimiter, $columns, $chosen, $rows, $count, $duplicate, $itemSet, $public,
+ * $itemSetTitle, $jobId, $pastImports, $items
  */
 $escape = $this->plugin('escapeHtml');
 $translate = $this->plugin('translate');
+$fieldLabels = [
+    'title' => $translate('Title'), 'description' => $translate('Description'), 'creator' => $translate('Creator'),
+    'date' => $translate('Date'), 'subject' => $translate('Subject'), 'place' => $translate('Place'),
+    'catalog' => $translate('Catalog number'),
+];
 echo $this->pageTitle($translate('Import'), 1, $translate('Visual Builder'));
 echo $this->partial('visual-page-builder/admin/library/_nav', ['current' => 'admin/visual-page-builder-import']);
+$this->headStyle()->appendStyle('
+.vpb-imp-box{background:#fff;border:1px solid #dfdfdf;border-radius:4px;padding:.9rem 1rem;margin:0 0 1rem;max-width:52rem}
+.vpb-imp-box label{display:block;font-weight:600;margin:.6rem 0 .2rem}
+.vpb-imp-box select,.vpb-imp-box input[type=file]{max-width:100%}
+.vpb-imp-hint{font-size:.85rem;color:#676767;font-weight:400}
+.vpb-imp-table{width:100%;border-collapse:collapse;font-size:.92rem}
+.vpb-imp-table th,.vpb-imp-table td{text-align:left;padding:.35rem .5rem;border-top:1px solid #efefef;vertical-align:top}
+.vpb-imp-ok{color:#1f4d3f;font-weight:600}
+.vpb-imp-check{color:#8a5a00;font-weight:600}
+.vpb-imp-scroll{overflow-x:auto}
+');
 ?>
-<?php if (!$engineActive): ?>
-<section class="vpb-import-note" aria-labelledby="vpb-import-off">
+<?php if ($step === 'engine-off'): ?>
+<section class="vpb-imp-box" aria-labelledby="vpb-import-off">
     <h2 id="vpb-import-off"><?php echo $escape($translate('CSV Import is not turned on')); ?></h2>
     <p><?php echo $escape($translate('The import wizard runs on Omeka’s CSV Import module, which is not active on this installation. Turn it on, then come back here.')); ?></p>
     <p><a class="button" href="<?php echo $escape($modulesUrl); ?>"><?php echo $escape($translate('Go to the Modules page')); ?></a></p>
 </section>
+
+<?php elseif ($step === 'choose'): ?>
+<p><?php echo $escape($translate('Choose a spreadsheet to import. The wizard checks its columns, and shows a preview, before anything is imported.')); ?></p>
+<form method="post" enctype="multipart/form-data" class="vpb-imp-box">
+    <input type="hidden" name="<?php echo $escape($csrfName); ?>" value="<?php echo $escape($csrf); ?>">
+    <input type="hidden" name="vpb_import_action" value="upload">
+    <label for="vpb-imp-source"><?php echo $escape($translate('Spreadsheet')); ?></label>
+    <input type="file" id="vpb-imp-source" name="source" accept=".csv,.tsv,.tab,text/csv,text/tab-separated-values" required>
+    <p class="vpb-imp-hint"><?php echo $escape($translate('CSV or TSV. The first row holds the column names.')); ?></p>
+    <div><button type="submit"><?php echo $escape($translate('Check the columns')); ?></button></div>
+</form>
+<p class="vpb-imp-hint"><a href="<?php echo $escape($pastImports); ?>"><?php echo $escape($translate('See earlier imports')); ?></a></p>
+
+<?php elseif ($step === 'map' || $step === 'preview'): ?>
+<?php
+$duplicate = $duplicate ?? 'add';
+?>
+<?php if ($step === 'map'): ?>
+<p><?php echo $escape(sprintf($translate('%1$s: %2$d rows. Check each column is matched to the right field.'), $filename, $count)); ?></p>
+<form method="post" class="vpb-imp-box">
+    <input type="hidden" name="<?php echo $escape($csrfName); ?>" value="<?php echo $escape($csrf); ?>">
+    <input type="hidden" name="vpb_import_action" value="map">
+    <input type="hidden" name="file" value="<?php echo $escape($token); ?>">
+    <input type="hidden" name="filename" value="<?php echo $escape($filename); ?>">
+    <div class="vpb-imp-scroll">
+    <table class="vpb-imp-table">
+        <caption class="vpb-visually-hidden"><?php echo $escape($translate('Columns and fields')); ?></caption>
+        <thead><tr><th scope="col"><?php echo $escape($translate('Column in your file')); ?></th><th scope="col"><?php echo $escape($translate('Goes to')); ?></th><th scope="col"><?php echo $escape($translate('Status')); ?></th></tr></thead>
+        <tbody>
+        <?php foreach ($columns as $index => $column): ?>
+        <tr>
+            <td><?php echo $escape($column['header'] !== '' ? $column['header'] : $translate('(no name)')); ?></td>
+            <td>
+                <label class="vpb-visually-hidden" for="vpb-col-<?php echo (int) $index; ?>"><?php echo $escape(sprintf($translate('Field for %s'), $column['header'])); ?></label>
+                <select id="vpb-col-<?php echo (int) $index; ?>" name="column[<?php echo (int) $index; ?>]">
+                    <option value=""><?php echo $escape($translate('Not imported')); ?></option>
+                    <?php foreach ($fields as $field => $term): ?>
+                    <option value="<?php echo $escape($field); ?>"<?php echo $column['field'] === $field ? ' selected' : ''; ?>><?php echo $escape($fieldLabels[$field] ?? $field); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </td>
+            <td class="<?php echo $column['status'] === 'Matched' ? 'vpb-imp-ok' : 'vpb-imp-check'; ?>"><?php echo $escape($translate($column['status'])); ?></td>
+        </tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table>
+    </div>
+
+    <label for="vpb-imp-duplicate"><?php echo $escape($translate('If a catalog number already exists')); ?></label>
+    <select id="vpb-imp-duplicate" name="duplicate">
+        <option value="add"<?php echo $duplicate === 'add' ? ' selected' : ''; ?>><?php echo $escape($translate('Add the row as a new item')); ?></option>
+        <option value="update"<?php echo $duplicate === 'update' ? ' selected' : ''; ?>><?php echo $escape($translate('Update the existing item, and add rows that are new')); ?></option>
+        <option value="update_only"<?php echo $duplicate === 'update_only' ? ' selected' : ''; ?>><?php echo $escape($translate('Update the existing item, and skip rows that are new')); ?></option>
+    </select>
+    <p class="vpb-imp-hint"><?php echo $escape($translate('Updates need the catalog number column matched. The item set and public setting apply to new items only; updates leave them as they are.')); ?></p>
+
+    <label for="vpb-imp-set"><?php echo $escape($translate('Add new items to this item set (optional)')); ?></label>
+    <select id="vpb-imp-set" name="item_set">
+        <option value=""><?php echo $escape($translate('No item set')); ?></option>
+        <?php foreach ($itemSets as $id => $title): ?>
+        <option value="<?php echo (int) $id; ?>"<?php echo (int) $itemSet === (int) $id ? ' selected' : ''; ?>><?php echo $escape($title); ?></option>
+        <?php endforeach; ?>
+    </select>
+
+    <label><input type="checkbox" name="public" value="1"<?php echo !empty($public) ? ' checked' : ''; ?>> <?php echo $escape($translate('Make the new items public (otherwise they are staff only, and you can publish them later)')); ?></label>
+
+    <div><button type="submit" name="vpb_import_action" value="map"><?php echo $escape($translate('Preview the first rows')); ?></button></div>
+</form>
+
 <?php else: ?>
-<p><?php echo $escape($translate('Choose a spreadsheet to import. The wizard checks its columns before anything is imported.')); ?></p>
+<?php
+$previewChosen = $chosen ?? [];
+?>
+<section class="vpb-imp-box" aria-labelledby="vpb-imp-preview">
+    <h2 id="vpb-imp-preview" style="font-size:1.05rem"><?php echo $escape($translate('Preview')); ?></h2>
+    <p class="vpb-imp-hint"><?php echo $escape(sprintf($translate('The first %1$d of %2$d rows, as they will be imported.'), count($rows), $count)); ?></p>
+    <div class="vpb-imp-scroll">
+    <table class="vpb-imp-table">
+        <caption class="vpb-visually-hidden"><?php echo $escape($translate('First rows of the file')); ?></caption>
+        <thead><tr>
+            <?php foreach ($columns as $index => $column): if (empty($previewChosen[$index])) { continue; } ?>
+            <th scope="col"><?php echo $escape($fieldLabels[$previewChosen[$index]] ?? $previewChosen[$index]); ?></th>
+            <?php endforeach; ?>
+        </tr></thead>
+        <tbody>
+        <?php foreach ($rows as $row): ?>
+        <tr>
+            <?php foreach ($columns as $index => $column): if (empty($previewChosen[$index])) { continue; } ?>
+            <td><?php echo $escape(trim((string) ($row[$index] ?? ''))); ?></td>
+            <?php endforeach; ?>
+        </tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table>
+    </div>
+    <p class="vpb-imp-hint">
+        <?php echo $escape($duplicate === 'add' ? $translate('Every row is added as a new item.') : $translate('Rows with a catalog number that already exists update that item.')); ?>
+        <?php if (!empty($itemSetTitle)): ?> <?php echo $escape(sprintf($translate('Items go into %s.'), $itemSetTitle)); ?><?php endif; ?>
+        <?php echo $escape(!empty($public) ? $translate('New items are public.') : $translate('New items are staff only.')); ?>
+    </p>
+</section>
+<form method="post" class="vpb-imp-box">
+    <input type="hidden" name="<?php echo $escape($csrfName); ?>" value="<?php echo $escape($csrf); ?>">
+    <input type="hidden" name="file" value="<?php echo $escape($token); ?>">
+    <input type="hidden" name="filename" value="<?php echo $escape($filename); ?>">
+    <input type="hidden" name="duplicate" value="<?php echo $escape($duplicate); ?>">
+    <input type="hidden" name="item_set" value="<?php echo (int) $itemSet; ?>">
+    <?php if (!empty($public)): ?><input type="hidden" name="public" value="1"><?php endif; ?>
+    <?php foreach ($columns as $index => $column): ?>
+    <input type="hidden" name="column[<?php echo (int) $index; ?>]" value="<?php echo $escape((string) ($previewChosen[$index] ?? '')); ?>">
+    <?php endforeach; ?>
+    <p><button type="submit" name="vpb_import_action" value="start"><?php echo $escape($translate('Start the import')); ?></button>
+    <a href="<?php echo $escape($items); ?>"><?php echo $escape($translate('Cancel')); ?></a></p>
+</form>
+<?php endif; ?>
+
+<?php elseif ($step === 'started'): ?>
+<section class="vpb-imp-box" aria-labelledby="vpb-imp-started">
+    <h2 id="vpb-imp-started" style="font-size:1.05rem"><?php echo $escape($translate('The import has started')); ?></h2>
+    <p><?php echo $escape($translate('It runs in the background, so you can leave this page. The items appear as they are made.')); ?></p>
+    <p>
+        <a href="<?php echo $escape($this->url('admin/id', ['controller' => 'job', 'id' => $jobId], [], true)); ?>"><?php echo $escape($translate('Watch its progress')); ?></a>
+        · <a href="<?php echo $escape($items); ?>"><?php echo $escape($translate('See the new items')); ?></a>
+        · <a href="<?php echo $escape($pastImports); ?>"><?php echo $escape($translate('See earlier imports')); ?></a>
+    </p>
+</section>
 <?php endif; ?>
