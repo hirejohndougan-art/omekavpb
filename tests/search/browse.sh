@@ -21,6 +21,7 @@ TOTAL=$(count '')
 check "a keyword count is the same on the browse page and the search endpoint" \
   "$(count 'q=lighthouse')" \
   "$(curl -s "$BASE/s/$SITE/vpb-search?q=lighthouse" | php -r '$d=json_decode(stream_get_contents(STDIN),true); echo $d["total"];')"
+check "the site search box (fulltext_search) gives the same count as q" "$(count 'fulltext_search=lighthouse')" "$(count 'q=lighthouse')"
 check "nonsense shows the empty message" "$(page 'q=zzzzqqqq' | grep -c 'vpb-results-empty')" "1"
 check "a page holds at most per_page cards" "$(cards 'per_page=12&page=1')" "$([ "$TOTAL" -gt 12 ] 2>/dev/null && echo 12 || echo "$TOTAL")"
 if [ "$TOTAL" -gt 12 ] 2>/dev/null; then

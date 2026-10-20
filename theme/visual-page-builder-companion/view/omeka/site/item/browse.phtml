@@ -1,19 +1,26 @@
 <?php
 // SPDX-License-Identifier: GPL-2.0-or-later
 /**
- * The item browse page, and an item set's page (Omeka shows an item set's items
- * with this view). When a live Theme Builder template applies, it is drawn:
- * Item set for an item set's page, Browse items otherwise. Otherwise this is
- * Omeka's own page, unchanged.
+ * The item browse page, an item set's page (Omeka shows an item set's items with
+ * this view), and a search. When a live Theme Builder template applies, it is
+ * drawn: Item set for an item set's page; Search results when the site's search
+ * box was used (falling back to Browse items); Browse items otherwise. Otherwise
+ * this is Omeka's own page, unchanged.
  */
+$helpers = $this->getHelperPluginManager();
+$site = $this->currentSite();
+$searching = trim((string) $this->params()->fromQuery('fulltext_search', '')) !== '';
+
+$templated = null;
 if (isset($itemSet)) {
-    $templated = $this->getHelperPluginManager()->has('vpbScreen')
-        ? $this->vpbScreen($this->currentSite(), 'item-set', $itemSet)
-        : null;
+    $templated = $helpers->has('vpbScreen') ? $this->vpbScreen($site, 'item-set', $itemSet) : null;
 } else {
-    $templated = $this->getHelperPluginManager()->has('vpbScreen')
-        ? $this->vpbScreen($this->currentSite(), 'browse-items')
-        : null;
+    if ($searching && $helpers->has('vpbScreen')) {
+        $templated = $this->vpbScreen($site, 'search-results');
+    }
+    if ($templated === null && $helpers->has('vpbScreen')) {
+        $templated = $this->vpbScreen($site, 'browse-items');
+    }
 }
 
 if ($templated !== null) {

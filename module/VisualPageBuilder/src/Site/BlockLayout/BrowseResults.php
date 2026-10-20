@@ -59,7 +59,7 @@ class BrowseResults extends AbstractSchemaBlock
             'noun' => $result['noun'],
             'query' => $result['query'],
             'suggestion' => $result['suggestion'],
-            'suggestionUrl' => $result['suggestion'] !== null ? $view->url(null, [], ['query' => ['q' => $result['suggestion']]], true) : null,
+            'suggestionUrl' => $result['suggestion'] !== null ? $view->url(null, [], ['query' => [$result['param'] => $result['suggestion']]], true) : null,
             'layout' => $data['layout'] === 'list' ? 'list' : 'grid',
             'blockClass' => static::cssClass(),
         ];

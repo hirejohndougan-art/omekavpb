@@ -19,7 +19,8 @@ use Omeka\Api\Representation\SiteRepresentation;
  * On the Browse item sets screen the same parameters find item sets (no facets,
  * since the index only covers items).
  *
- * Address parameters: q, page, per_page (12, 24 or 48), item_set[] and class[].
+ * Address parameters: fulltext_search (what the site's search box sends) or q, page,
+ * per_page (12, 24 or 48), item_set[] and class[].
  */
 class BrowseQuery
 {
@@ -40,12 +41,15 @@ class BrowseQuery
         $services = $view->getHelperPluginManager()->getServiceLocator();
         $query = $services->get('Application')->getRequest()->getQuery();
 
+        // The site's search box sends fulltext_search; q is the VPB Search name for it.
+        $fulltext = trim((string) $query->get('fulltext_search', ''));
         $perPage = (int) $query->get('per_page', self::DEFAULT_PER_PAGE);
         if (!in_array($perPage, self::PER_PAGE_CHOICES, true)) {
             $perPage = self::DEFAULT_PER_PAGE;
         }
         return [
-            'q' => trim((string) $query->get('q', '')),
+            'q' => $fulltext !== '' ? $fulltext : trim((string) $query->get('q', '')),
+            'param' => $fulltext !== '' ? 'fulltext_search' : 'q',
             'page' => max(1, (int) $query->get('page', 1)),
             'per_page' => $perPage,
             'facets' => [
@@ -131,6 +135,7 @@ class BrowseQuery
             'per_page' => $state['per_page'],
             'pages' => max(1, (int) ceil($answer['total'] / $state['per_page'])),
             'query' => $state['q'],
+            'param' => $state['param'],
             'facets' => $state['facets'],
         ];
         self::$answers[$key] = $answer;

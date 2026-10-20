@@ -26,7 +26,7 @@ $label = $total === 1 ? ($isSets ? $translate('item set') : $translate('item')) 
         <?php endif; ?>
     </p>
 <?php else: ?>
-    <p class="vpb-results-count"><?php echo $escape(sprintf($translate('%s %s'), number_format($total), $label)); ?></p>
+    <p class="vpb-results-count"><?php echo $escape(sprintf($translate('%s %s'), number_format($total), $label)); ?><?php if ($query !== ''): ?> <?php echo $escape(sprintf($translate('for “%s”'), $query)); ?><?php endif; ?></p>
     <ul class="vpb-results-items">
     <?php foreach ($cards as $card): ?>
         <li class="vpb-result">
