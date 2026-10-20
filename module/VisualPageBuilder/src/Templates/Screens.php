@@ -42,6 +42,7 @@ class Screens
         'search-results' => ['specialSearchBox', 'perPage', 'sort', 'facets', 'results', 'pagination'],
         'browse-item-sets' => ['specialSearchBox', 'results', 'pagination'],
         'item-set' => ['itemSetHeader', 'results', 'pagination'],
+        'media' => ['media-viewer'],
         'not-found' => ['specialSearchBox'],
     ];
 

@@ -54,5 +54,7 @@ check "a sort keeps the search on its links" "$(page 'q=lighthouse&sort=title' |
 
 check "no results with filters offers to remove the narrowest one" "$(page 'item_set%5B%5D=771&class%5B%5D=99999' | grep -c 'vpb-results-helper')" "1"
 
+check "a missing page keeps its 404 status (with or without a Page not found template)" "$(curl -s -o /dev/null -w '%{http_code}' "$BASE/s/$SITE/no-such-page-vpb-check")" "404"
+
 echo "browse checks: $pass passed, $fail failed"
 [ "$fail" -eq 0 ]

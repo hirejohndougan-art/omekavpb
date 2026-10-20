@@ -1,0 +1,16 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * "Page not found" on a site. When a live Theme Builder template applies (Page not
+ * found), it is drawn; otherwise this is Omeka's own message, unchanged.
+ */
+$templated = null;
+if ($this->getHelperPluginManager()->has('vpbScreen') && $this->getHelperPluginManager()->has('currentSite')) {
+    $templated = $this->vpbScreen($this->currentSite(), 'not-found');
+}
+
+if ($templated !== null) {
+    echo $templated;
+} else {
+    include OMEKA_PATH . '/application/view/error/404.phtml';
+}

@@ -91,6 +91,8 @@ class SpecialBlocks
         'facets' => Site\BlockLayout\BrowseFacets::class,
         'perPage' => Site\BlockLayout\BrowsePerPage::class,
         'sort' => Site\BlockLayout\BrowseSort::class,
+        // The media file on a Media template (Theme Builder).
+        'media-viewer' => Site\BlockLayout\MediaViewer::class,
     ];
 
     /**
@@ -111,6 +113,7 @@ class SpecialBlocks
         'Header and footer' => ['specialLogo', 'specialSiteTitle', 'specialSiteMenu', 'specialCopyright'], // @translate
         // Only offered when editing a Theme Builder browse or search template.
         'Browse pages' => ['results', 'pagination', 'itemSetHeader', 'facets', 'perPage', 'sort'], // @translate
+        'Media' => ['media-viewer'], // @translate
         // Only offered when editing a Theme Builder item template (placement "item").
         'Item fields' => ['itemTitle', 'itemMainImage', 'itemDescription', 'itemDate', 'itemDetails', 'itemOneField', 'itemSubjects', 'itemSets', 'itemCite', 'itemDownload', 'itemPrevNext'], // @translate
     ];

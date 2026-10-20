@@ -1,0 +1,16 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * The media page. When a live Theme Builder template applies (Media), it is
+ * drawn; otherwise this is Omeka's own media page, unchanged.
+ */
+$templated = $this->getHelperPluginManager()->has('vpbScreen')
+    ? $this->vpbScreen($this->currentSite(), 'media', $media)
+    : null;
+
+if ($templated !== null) {
+    echo $templated;
+} else {
+    // Omeka's own media page, drawn by Omeka's file (this theme doesn't replace it).
+    include OMEKA_PATH . '/application/view/omeka/site/media/show.phtml';
+}

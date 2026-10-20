@@ -1,0 +1,21 @@
+<?php
+/**
+ * The media file. Outside a media template it draws nothing; in the editor's
+ * preview it shows its sample.
+ *
+ * @var string|null $html
+ * @var bool $isPreview
+ * @var string $sample
+ * @var string $blockClass
+ */
+$escape = $this->plugin('escapeHtml');
+if ($html === null) {
+    if ($isPreview) {
+        echo '<p class="special-blocks-item-sample">' . $escape($sample) . '</p>';
+    }
+    return;
+}
+?>
+<div class="special-blocks <?php echo $escape($blockClass); ?> vpb-media-viewer">
+    <?php echo $html; ?>
+</div>
