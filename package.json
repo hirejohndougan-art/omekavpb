@@ -3,7 +3,7 @@
   "private": true,
   "description": "Development tooling for the Visual Page Builder and Special Blocks Omeka S modules. Not shipped with the modules.",
   "scripts": {
-    "test": "node tests/tools/seed.js && node tests/run.js && php tests/php/run.php",
+    "test": "node tests/tools/seed.js && node tests/run.js && php tests/php/run.php && php tests/php/search.php",
     "seed": "node tests/tools/seed.js",
     "lint": "eslint module/VisualPageBuilder/asset/js module/VisualPageBuilder/asset/special-blocks/js module/VisualPageBuilder/asset/menu-builder theme/visual-page-builder-companion/asset/js tests eslint.config.js",
     "lint:php": "php tools/php-cs-fixer.phar check --config=.php-cs-fixer.dist.php module",
@@ -11,7 +11,7 @@
     "golden:record": "node tests/tools/golden.js record",
     "golden:compare": "node tests/tools/golden.js compare",
     "package": "bash test-env/package.sh",
-    "test:php": "php tests/php/run.php"
+    "test:php": "php tests/php/run.php && php tests/php/search.php"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
