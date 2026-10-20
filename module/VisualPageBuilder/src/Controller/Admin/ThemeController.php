@@ -61,6 +61,45 @@ class ThemeController extends AbstractActionController
         return $view;
     }
 
+    /**
+     * Check page: every template of the site with its required blocks. A missing
+     * block can be put back here; a template with none missing can go live.
+     *
+     * Route: admin/visual-page-builder-check  →  /admin/visual-builder/:site-slug/check
+     */
+    public function checkAction()
+    {
+        $site = $this->site();
+        if ($this->getRequest()->isPost()) {
+            return $this->handlePost($site);
+        }
+        $templates = Store::all($site);
+        $live = [];
+        foreach ($templates as $t) {
+            if ($t['status'] === 'live' && $t['scope'] === 'all') {
+                $live[$t['screen']] = true;
+            }
+        }
+        // Screens with no live template for every item, set and so on: the theme's own layout shows.
+        $fallbacks = [];
+        foreach (Screens::keys() as $key) {
+            if (empty($live[$key])) {
+                $fallbacks[] = ['key' => $key, 'label' => Screens::label($key)];
+            }
+        }
+        $view = new ViewModel([
+            'site' => $site,
+            'templates' => $templates,
+            'problems' => count(array_filter($templates, function ($t) {
+                return $t['missing'] !== [];
+            })),
+            'fallbacks' => $fallbacks,
+            'csrf' => (new Csrf(['name' => 'vpb_theme_csrf']))->getHash(),
+        ]);
+        $view->setTemplate('visual-page-builder/admin/theme/check');
+        return $view;
+    }
+
     protected function site()
     {
         $slug = $this->params('site-slug');
@@ -83,7 +122,11 @@ class ThemeController extends AbstractActionController
 
     protected function back($site)
     {
-        return $this->redirect()->toRoute('admin/visual-page-builder-theme', ['site-slug' => $site->slug()]);
+        // Forms posted from the Check page come back to it.
+        $route = $this->params()->fromPost('return') === 'check'
+            ? 'admin/visual-page-builder-check'
+            : 'admin/visual-page-builder-theme';
+        return $this->redirect()->toRoute($route, ['site-slug' => $site->slug()]);
     }
 
     protected function handlePost($site)

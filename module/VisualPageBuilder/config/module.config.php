@@ -114,6 +114,19 @@ return [
                             ],
                         ],
                     ],
+                    // Check page: every template's required blocks, before going live.
+                    'visual-page-builder-check' => [
+                        'type' => \Laminas\Router\Http\Segment::class,
+                        'options' => [
+                            'route' => '/visual-builder/:site-slug/check',
+                            'constraints' => ['site-slug' => '[a-zA-Z0-9_-]+'],
+                            'defaults' => [
+                                '__NAMESPACE__' => 'VisualPageBuilder\Controller\Admin',
+                                'controller' => 'Theme',
+                                'action' => 'check',
+                            ],
+                        ],
+                    ],
                     // Visual Builder: one page per site with its pages, header,
                     // footer, and menu (Controller\Admin\PagesController).
                     'visual-page-builder-pages' => [

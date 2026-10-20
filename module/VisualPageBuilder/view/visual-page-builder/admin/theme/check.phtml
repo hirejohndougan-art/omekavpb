@@ -1,0 +1,75 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Check page: every template of one site, with the required blocks it is missing.
+ *
+ * @var \Omeka\Api\Representation\SiteRepresentation $site
+ * @var array $templates  Store::all rows (missing = required block types not in the layout)
+ * @var int $problems  templates with a missing required block
+ * @var array $fallbacks  [key, label] screens with no live template for every item
+ * @var string $csrf
+ */
+$escape = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+$this->headStyle()->appendStyle('
+.vpb-check-summary{margin:0 0 1rem}
+.vpb-check-list{list-style:none;margin:0;padding:0;border:1px solid #dfdfdf;border-radius:4px;background:#fff}
+.vpb-check-list li{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;padding:.6rem .9rem;border-top:1px solid #efefef}
+.vpb-check-list li:first-child{border-top:0}
+.vpb-check-name{flex:1 1 14rem;font-weight:600}
+.vpb-check-screen{font-size:.9rem;color:#676767}
+.vpb-check-ok{font-size:.85rem;color:#1d5a2a}
+.vpb-check-missing{font-size:.85rem;color:#8a3b12}
+.vpb-check-inline{display:inline}
+.vpb-check-inline button{margin:0}
+.vpb-check-fallback{font-size:.9rem;color:#676767}
+');
+echo $this->pageTitle(sprintf($translate('Check page: %s'), $site->title()), 1, $translate('Theme Builder'));
+?>
+<div id="page-actions">
+    <a class="button" href="<?php echo $escape($this->url('admin/visual-page-builder-theme', ['site-slug' => $site->slug()])); ?>"><?php echo $escape($translate('Back to the Theme Builder')); ?></a>
+</div>
+
+<p class="vpb-check-summary">
+<?php if ($problems === 0): ?>
+    <span class="vpb-check-ok"><?php echo $escape($translate('Every template has its required blocks.')); ?></span>
+<?php else: ?>
+    <span class="vpb-check-missing"><?php echo $escape(sprintf($translate('%d template(s) are missing required blocks. They cannot go live until they are put back.'), $problems)); ?></span>
+<?php endif; ?>
+</p>
+
+<?php if (!$templates): ?>
+<p class="vpb-check-fallback"><?php echo $escape($translate('No templates yet. Every screen uses the theme’s own layout.')); ?></p>
+<?php else: ?>
+<ul class="vpb-check-list">
+<?php foreach ($templates as $t): ?>
+    <li>
+        <span class="vpb-check-name"><?php echo $escape($t['name']); ?></span>
+        <span class="vpb-check-screen"><?php echo $escape($t['screenLabel']); ?></span>
+        <span class="vpb-theme-state <?php echo $t['status'] === 'live' ? 'is-live' : 'is-draft'; ?>"><?php echo $escape($t['status'] === 'live' ? $translate('Live') : $translate('Draft')); ?></span>
+        <?php if ($t['missing']): ?>
+        <span class="vpb-check-missing"><?php echo $escape($translate('Missing:')); ?> <?php echo $escape(implode(', ', array_map(function ($k) { return ucwords(str_replace('-', ' ', $k)); }, $t['missing']))); ?></span>
+        <form method="post" class="vpb-check-inline">
+            <input type="hidden" name="vpb_theme_csrf" value="<?php echo $escape($csrf); ?>">
+            <input type="hidden" name="vpb_action" value="restore">
+            <input type="hidden" name="template_id" value="<?php echo (int) $t['id']; ?>">
+            <input type="hidden" name="return" value="check">
+            <button type="submit"><?php echo $escape($translate('Put back')); ?></button>
+        </form>
+        <?php else: ?>
+        <span class="vpb-check-ok"><?php echo $escape($translate('Required blocks in place')); ?></span>
+        <?php endif; ?>
+    </li>
+<?php endforeach; ?>
+</ul>
+<?php endif; ?>
+
+<?php if ($fallbacks): ?>
+<h2><?php echo $escape($translate('Screens without a live template')); ?></h2>
+<p class="vpb-check-fallback"><?php echo $escape($translate('These screens have no live template for every item, set and so on. They show the theme’s own layout until one goes live.')); ?></p>
+<ul>
+<?php foreach ($fallbacks as $f): ?>
+    <li><?php echo $escape($translate($f['label'])); ?></li>
+<?php endforeach; ?>
+</ul>
+<?php endif; ?>

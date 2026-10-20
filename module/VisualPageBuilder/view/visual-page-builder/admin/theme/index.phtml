@@ -44,6 +44,7 @@ $this->headStyle()->appendStyle('
 echo $this->pageTitle(sprintf($translate('Theme Builder: %s'), $site->title()), 1, $translate('Visual Builder'));
 ?>
 <div id="page-actions">
+    <a class="button" href="<?php echo $escape($this->url('admin/visual-page-builder-check', ['site-slug' => $site->slug()])); ?>"><?php echo $escape($translate('Check page')); ?></a>
     <a class="button" href="<?php echo $escape($this->url('admin/visual-page-builder-pages', ['site-slug' => $site->slug()])); ?>"><?php echo $escape($translate('Back to the Visual Builder')); ?></a>
 </div>
 
