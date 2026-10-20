@@ -1,0 +1,112 @@
+VISUAL PAGE BUILDER for Omeka S
+ADMIN GUIDE: filters and search
+========================================================================
+
+For site managers. This covers the Filters block on browse and search
+result pages, search synonyms, the search report, and how the search
+index stays up to date. Volunteers should read the Simple-mode user guide
+instead.
+
+
+------------------------------------------------------------------------
+THE FILTERS BLOCK
+------------------------------------------------------------------------
+
+The Filters block sits beside the results on a browse or search results
+page. Add it in the page builder like any other block, and choose which
+filters it shows in the block's settings.
+
+Filters you can show (each one can be switched on or off):
+  Collection   Item sets
+  Type         Item class
+  Subject, Creator, Place
+  Date         Decades as bars, then From and To years
+  Images, Description, Transcript
+                Yes/no filters for items that have them
+
+Display settings:
+  Subjects, creators and places in  Most items first, or A to Z
+  Values listed before "Show all"   How many to show before the link
+  Subjects, creators and places as  A list, or as tick boxes
+
+What visitors see:
+  Each choice shows how many items it matches. Choosing one narrows the
+  results, and the choices in use appear under "Filtered by". Each one
+  can be removed, and "Clear all filters" removes them all.
+  Subject, creator and place have a row of letters (A to Z) for long
+  lists. Choosing a letter shows only the values that start with it.
+  "Show all" opens the full list, and "Show fewer" closes it.
+  Date shows decades as bars. "Apply years" uses the From and To boxes.
+
+On a phone:
+  The filters start closed behind a Filters button. The button opens them
+  as a full-screen panel. "Show N results" closes the panel and shows the
+  results. The Escape key also closes it. While the panel is open, the
+  rest of the page cannot be reached with the keyboard.
+
+Checked: every filter link takes keyboard focus and shows a visible
+outline, and the phone panel keeps keyboard focus inside itself.
+
+
+------------------------------------------------------------------------
+SEARCH SYNONYMS
+------------------------------------------------------------------------
+
+Settings > Search synonyms. A synonym makes a visitor's search find words
+that mean the same thing.
+
+  One rule per line, with the word on the left and its alternatives on
+  the right, separated by commas:
+
+      rr = railroad, rail road
+      station = depot
+
+  - The rule works one way only. "rr" finds "railroad", but "railroad"
+    does not find "rr" unless you add that rule too.
+  - Lines without an equals sign are ignored.
+  - Only a global administrator can change Settings.
+
+Keep the list short and check it against the search report (below).
+Changes apply to new searches straight away.
+
+
+------------------------------------------------------------------------
+THE SEARCH REPORT
+------------------------------------------------------------------------
+
+Home shows the top searches on the public site over the last 30 days,
+and the searches that found nothing. Use the second list to decide
+whether to add a synonym, add a missing item, or leave it alone.
+
+Searches are kept for 365 days and then removed. Staff searches in the
+admin are not counted.
+
+
+------------------------------------------------------------------------
+HOW THE SEARCH INDEX STAYS CURRENT
+------------------------------------------------------------------------
+
+Search uses the Visual Page Builder index. An item is added to the index
+when it is saved, created, or changed, so new work appears in search
+straight away.
+
+Items that were in the collection before the module was installed are
+not in the index until the whole collection is indexed. The module has a
+background job for this, which runs the full rebuild. While a rebuild is
+running, visitors get Omeka's own search, so the site keeps working.
+
+OPEN ITEM: there is no button in the admin yet to start the full rebuild.
+Until there is one, the rebuild must be started by the developer. Ask for
+it before installing on a collection that already has items.
+
+
+------------------------------------------------------------------------
+OTHER THINGS TO KNOW
+------------------------------------------------------------------------
+
+- Expert mode (switched on at the bottom of the sidebar, per person)
+  shows the Omeka screens and the Dublin Core codes for each question.
+  The Simple-mode user guide describes the default view.
+- Questions sets the labels and help text on the Add an item form.
+- The Companion Theme styles the filters. Other themes show the same
+  block with their own styling.
