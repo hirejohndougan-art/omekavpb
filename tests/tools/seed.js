@@ -44,7 +44,7 @@ const lit = v => [{ type: 'literal', property_id: 1, '@value': v }];
   if (!site) site = await api('POST', 'sites', { 'o:title': 'DHS', 'o:slug': 'dhs', 'o:theme': 'default', 'o:is_public': true });
   console.log('site', site['o:id']);
 
-  const items = await api('GET', 'items?per_page=100');
+  const items = await api('GET', 'items?per_page=1000');
   for (let n = 0; n < 3; n++) {
     const title = 'Railroad photo ' + n;
     if (items.some(i => i['o:title'] === title)) continue;
@@ -93,7 +93,7 @@ async function seedSpecialBlocks(dhs) {
 
   // Today's month and day in the test site's time zone (Omeka's setting).
   const md = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago', month: '2-digit', day: '2-digit' }).format(new Date()).replace('/', '-');
-  const items = await api('GET', 'items?per_page=100');
+  const items = await api('GET', 'items?per_page=1000');
   const specs = [
     ['Legacy portrait', [legacy], [lp], '1911-' + md],
     ['Shared map', [legacy, dhs], [lp, rail], '1950-' + md],
@@ -128,7 +128,7 @@ async function seedSpecialBlocks(dhs) {
   // Subjects (replaced each run, so the counts stay predictable).
   props['dcterms:subject'] = (await api('GET', 'properties?term=dcterms:subject'))[0]['o:id'];
   props['bibo:content'] = (await api('GET', 'properties?term=bibo:content'))[0]['o:id'];
-  const fresh = await api('GET', 'items?per_page=100');
+  const fresh = await api('GET', 'items?per_page=1000');
   const subjects = { 'Legacy portrait': ['Schools'], 'Shared map': ['Railroad', 'Maps'], 'Undated letter': ['Railroad'] };
   for (const [title, subs] of Object.entries(subjects)) {
     const it = fresh.find(i => i['o:title'] === title);
