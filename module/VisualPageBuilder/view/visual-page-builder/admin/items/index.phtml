@@ -1,0 +1,136 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Items (Phase 6): search, filters, a list or grid, and bulk actions.
+ *
+ * @var array $items  [id, title, public, modified, thumbnail, url, draft]
+ * @var int $total
+ * @var int $page
+ * @var int $pages
+ * @var array $filters  q, item_set_id, visibility, quick, view
+ * @var array $quick  QUICK keys and labels
+ * @var array $sets  [id, title]
+ * @var string $csrf
+ */
+$escape = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+$csrfName = \VisualPageBuilder\Controller\Admin\ItemsController::CSRF_NAME;
+$route = 'admin/visual-page-builder-items';
+$link = function (array $changes) use ($filters, $route) {
+    $query = array_merge(['q' => $filters['q'], 'item_set_id' => $filters['item_set_id'] ?: '',
+        'visibility' => $filters['visibility'], 'quick' => $filters['quick'], 'view' => $filters['view']], $changes);
+    return $this->url($route, [], ['query' => array_filter($query, fn ($v) => $v !== '' && $v !== 0 && $v !== 'all' && $v !== 'list')], true);
+};
+$this->headStyle()->appendStyle('
+.vpb-items-filters{display:flex;flex-wrap:wrap;gap:.6rem;align-items:end;margin:0 0 .8rem}
+.vpb-items-filters label{display:block;font-size:.85rem}
+.vpb-items-chips{display:flex;flex-wrap:wrap;gap:.4rem;margin:0 0 .8rem}
+.vpb-items-chips a{padding:.2rem .65rem;border:1px solid #bbb;border-radius:999px;color:inherit;text-decoration:none;font-size:.9rem;background:#fff}
+.vpb-items-chips a[aria-current=true]{background:#1f4d3f;border-color:#1f4d3f;color:#fff}
+.vpb-items-bulk{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;background:#fff;border:1px solid #dfdfdf;border-radius:4px;padding:.6rem .8rem;margin:0 0 .8rem}
+.vpb-items-table{width:100%;border-collapse:collapse;background:#fff}
+.vpb-items-table th,.vpb-items-table td{text-align:left;padding:.45rem .6rem;border-top:1px solid #efefef;vertical-align:middle}
+.vpb-items-table th{border-top:0;font-size:.9rem;color:#676767}
+.vpb-items-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(10rem,1fr));gap:.8rem}
+.vpb-items-card{background:#fff;border:1px solid #dfdfdf;border-radius:4px;padding:.5rem;display:flex;flex-direction:column;gap:.35rem;font-size:.9rem}
+.vpb-items-card img{width:100%;aspect-ratio:1/1;object-fit:cover;background:#eee;border-radius:3px}
+.vpb-items-tag{font-size:.78rem;padding:.05rem .4rem;border-radius:3px;background:#eee;color:#444}
+.vpb-items-tag.is-draft{background:#f4ecd8;color:#6b4f12}
+.vpb-items-pager{display:flex;gap:.8rem;align-items:center;margin:1rem 0}
+.vpb-items-confirm{color:#8a3b12}
+');
+echo $this->pageTitle($translate('Items'), 1, $translate('Visual Builder'));
+echo $this->partial('visual-page-builder/admin/library/_nav', ['current' => $route]);
+?>
+<form method="get" class="vpb-items-filters" action="<?php echo $escape($this->url($route)); ?>">
+    <label><?php echo $escape($translate('Search items')); ?><br><input type="search" name="q" value="<?php echo $escape($filters['q']); ?>"></label>
+    <label><?php echo $escape($translate('Item set')); ?><br>
+        <select name="item_set_id">
+            <option value=""><?php echo $escape($translate('All item sets')); ?></option>
+            <?php foreach ($sets as $set): ?>
+            <option value="<?php echo (int) $set['id']; ?>"<?php echo (int) $set['id'] === (int) $filters['item_set_id'] ? ' selected' : ''; ?>><?php echo $escape($set['title']); ?></option>
+            <?php endforeach; ?>
+        </select></label>
+    <label><?php echo $escape($translate('Visibility')); ?><br>
+        <select name="visibility">
+            <option value="all"<?php echo $filters['visibility'] === 'all' ? ' selected' : ''; ?>><?php echo $escape($translate('Public and staff only')); ?></option>
+            <option value="public"<?php echo $filters['visibility'] === 'public' ? ' selected' : ''; ?>><?php echo $escape($translate('Public')); ?></option>
+            <option value="private"<?php echo $filters['visibility'] === 'private' ? ' selected' : ''; ?>><?php echo $escape($translate('Staff only')); ?></option>
+        </select></label>
+    <input type="hidden" name="quick" value="<?php echo $escape($filters['quick']); ?>">
+    <input type="hidden" name="view" value="<?php echo $escape($filters['view']); ?>">
+    <button type="submit"><?php echo $escape($translate('Apply')); ?></button>
+</form>
+
+<nav class="vpb-items-chips" aria-label="<?php echo $escape($translate('Quick filters')); ?>">
+    <a href="<?php echo $escape($link(['quick' => ''])); ?>" aria-current="<?php echo $filters['quick'] === '' ? 'true' : 'false'; ?>"><?php echo $escape($translate('Everything')); ?></a>
+    <?php foreach ($quick as $key => $label): ?>
+    <a href="<?php echo $escape($link(['quick' => $key])); ?>" aria-current="<?php echo $filters['quick'] === $key ? 'true' : 'false'; ?>"><?php echo $escape($translate($label)); ?></a>
+    <?php endforeach; ?>
+    <a href="<?php echo $escape($link(['view' => $filters['view'] === 'grid' ? 'list' : 'grid'])); ?>"><?php echo $escape($filters['view'] === 'grid' ? $translate('List view') : $translate('Grid view')); ?></a>
+</nav>
+
+<p><?php echo $escape(sprintf($translate('%s items'), number_format($total))); ?></p>
+
+<form method="post" action="<?php echo $escape($this->url($route, [], ['query' => $filters], true)); ?>">
+    <input type="hidden" name="<?php echo $escape($csrfName); ?>" value="<?php echo $escape($csrf); ?>">
+    <div class="vpb-items-bulk" role="group" aria-label="<?php echo $escape($translate('Bulk actions')); ?>">
+        <label><?php echo $escape($translate('With the chosen items')); ?>
+            <select name="vpb_action">
+                <option value=""><?php echo $escape($translate('Choose an action')); ?></option>
+                <option value="public"><?php echo $escape($translate('Make public')); ?></option>
+                <option value="private"><?php echo $escape($translate('Make staff only')); ?></option>
+                <option value="add_set"><?php echo $escape($translate('Add to an item set')); ?></option>
+                <option value="delete"><?php echo $escape($translate('Delete')); ?></option>
+            </select></label>
+        <label><?php echo $escape($translate('Item set')); ?>
+            <select name="item_set_id">
+                <option value=""><?php echo $escape($translate('Choose')); ?></option>
+                <?php foreach ($sets as $set): ?>
+                <option value="<?php echo (int) $set['id']; ?>"><?php echo $escape($set['title']); ?></option>
+                <?php endforeach; ?>
+            </select></label>
+        <label class="vpb-items-confirm"><input type="checkbox" name="confirm_delete" value="1"> <?php echo $escape($translate('I understand: deleting cannot be undone from here')); ?></label>
+        <button type="submit"><?php echo $escape($translate('Apply to chosen items')); ?></button>
+        <label><input type="checkbox" onclick="document.querySelectorAll('.vpb-items-pick').forEach(function(c){c.checked=this.checked}, this)"> <?php echo $escape($translate('Choose all on this page')); ?></label>
+    </div>
+
+    <?php if (!$items): ?>
+    <p><?php echo $escape($translate('No items match these filters.')); ?></p>
+    <?php elseif ($filters['view'] === 'grid'): ?>
+    <div class="vpb-items-grid">
+    <?php foreach ($items as $item): ?>
+        <div class="vpb-items-card">
+            <?php if ($item['thumbnail']): ?><img src="<?php echo $escape($item['thumbnail']); ?>" alt=""><?php endif; ?>
+            <label><input type="checkbox" class="vpb-items-pick" name="ids[]" value="<?php echo (int) $item['id']; ?>"> <a href="<?php echo $escape($item['url']); ?>"><?php echo $escape($item['title'] !== '' ? $item['title'] : $translate('Untitled')); ?></a></label>
+            <span>
+                <span class="vpb-items-tag"><?php echo $escape($item['public'] ? $translate('Public') : $translate('Staff only')); ?></span>
+                <?php if ($item['draft']): ?><span class="vpb-items-tag is-draft"><?php echo $escape($translate('Draft')); ?></span><?php endif; ?>
+            </span>
+        </div>
+    <?php endforeach; ?>
+    </div>
+    <?php else: ?>
+    <table class="vpb-items-table">
+        <thead><tr><th><span class="vpb-visually-hidden"><?php echo $escape($translate('Choose')); ?></span></th><th><?php echo $escape($translate('Title')); ?></th><th><?php echo $escape($translate('Visibility')); ?></th><th><?php echo $escape($translate('Changed')); ?></th></tr></thead>
+        <tbody>
+        <?php foreach ($items as $item): ?>
+            <tr>
+                <td><input type="checkbox" class="vpb-items-pick" name="ids[]" value="<?php echo (int) $item['id']; ?>" aria-label="<?php echo $escape($translate('Choose')); ?> <?php echo $escape($item['title']); ?>"></td>
+                <td><a href="<?php echo $escape($item['url']); ?>"><?php echo $escape($item['title'] !== '' ? $item['title'] : $translate('Untitled')); ?></a></td>
+                <td><span class="vpb-items-tag"><?php echo $escape($item['public'] ? $translate('Public') : $translate('Staff only')); ?></span> <?php if ($item['draft']): ?><span class="vpb-items-tag is-draft"><?php echo $escape($translate('Draft')); ?></span><?php endif; ?></td>
+                <td><?php echo $escape($item['modified']); ?></td>
+            </tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table>
+    <?php endif; ?>
+</form>
+
+<?php if ($pages > 1): ?>
+<div class="vpb-items-pager">
+    <?php if ($page > 1): ?><a href="<?php echo $escape($link(['page' => $page - 1])); ?>"><?php echo $escape($translate('Previous')); ?></a><?php endif; ?>
+    <span><?php echo $escape(sprintf($translate('Page %1$s of %2$s'), $page, $pages)); ?></span>
+    <?php if ($page < $pages): ?><a href="<?php echo $escape($link(['page' => $page + 1])); ?>"><?php echo $escape($translate('Next')); ?></a><?php endif; ?>
+</div>
+<?php endif; ?>

@@ -15,6 +15,7 @@ return [
             'VisualPageBuilder\Controller\Admin\Library' => Controller\Admin\LibraryController::class,
             'VisualPageBuilder\Controller\Admin\Import' => Controller\Admin\ImportController::class,
             'VisualPageBuilder\Controller\Admin\Home' => Controller\Admin\HomeController::class,
+            'VisualPageBuilder\Controller\Admin\Items' => Controller\Admin\ItemsController::class,
             'VisualPageBuilder\Controller\Admin\Menu' => Controller\Admin\MenuController::class,
             'VisualPageBuilder\Controller\Admin\Region' => Controller\Admin\RegionController::class,
             'VisualPageBuilder\Controller\Admin\Pages' => Controller\Admin\PagesController::class,
@@ -102,6 +103,18 @@ return [
                             'defaults' => [
                                 '__NAMESPACE__' => 'VisualPageBuilder\Controller\Admin',
                                 'controller' => 'Search',
+                                'action' => 'index',
+                            ],
+                        ],
+                    ],
+                    // Items (Phase 6): search, filters, list or grid, bulk actions.
+                    'visual-page-builder-items' => [
+                        'type' => \Laminas\Router\Http\Literal::class,
+                        'options' => [
+                            'route' => '/vpb-items',
+                            'defaults' => [
+                                '__NAMESPACE__' => 'VisualPageBuilder\Controller\Admin',
+                                'controller' => 'Items',
                                 'action' => 'index',
                             ],
                         ],
