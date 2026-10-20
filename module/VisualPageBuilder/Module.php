@@ -45,6 +45,7 @@ class Module extends AbstractModule
         $this->renameOldLayouts($services);
         // The module's classes aren't autoloaded until it's active.
         require_once __DIR__ . '/src/PageHistory.php';
+        require_once __DIR__ . '/src/Search/Index.php';
         PageHistory::createTable($services->get('Omeka\Connection'));
         Search\Index::createTables($services->get('Omeka\Connection'));
     }
