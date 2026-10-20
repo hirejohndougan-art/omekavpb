@@ -40,6 +40,14 @@ $this->headStyle()->appendStyle('
 .vpb-items-confirm{color:#8a3b12}
 ');
 echo $this->pageTitle($translate('Items'), 1, $translate('Visual Builder'));
+?>
+<p>
+    <a class="button" href="<?php echo $escape($this->url('admin/visual-page-builder-add')); ?>"><?php echo $escape($translate('Add an item')); ?></a>
+    <?php if (!empty($classicForm)): ?>
+    <a href="<?php echo $escape($this->url('admin/visual-page-builder-add', [], ['query' => ['form' => 'friendly']], true)); ?>"><?php echo $escape($translate('Switch back to the simple add form')); ?></a>
+    <?php endif; ?>
+</p>
+<?php
 echo $this->partial('visual-page-builder/admin/library/_nav', ['current' => $route]);
 ?>
 <form method="get" class="vpb-items-filters" action="<?php echo $escape($this->url($route)); ?>">

@@ -17,6 +17,7 @@ return [
             'VisualPageBuilder\Controller\Admin\Home' => Controller\Admin\HomeController::class,
             'VisualPageBuilder\Controller\Admin\Items' => Controller\Admin\ItemsController::class,
             'VisualPageBuilder\Controller\Admin\Item' => Controller\Admin\ItemController::class,
+            'VisualPageBuilder\Controller\Admin\Add' => Controller\Admin\AddController::class,
             'VisualPageBuilder\Controller\Admin\Menu' => Controller\Admin\MenuController::class,
             'VisualPageBuilder\Controller\Admin\Region' => Controller\Admin\RegionController::class,
             'VisualPageBuilder\Controller\Admin\Pages' => Controller\Admin\PagesController::class,
@@ -104,6 +105,18 @@ return [
                             'defaults' => [
                                 '__NAMESPACE__' => 'VisualPageBuilder\Controller\Admin',
                                 'controller' => 'Search',
+                                'action' => 'index',
+                            ],
+                        ],
+                    ],
+                    // Add an item (Phase 7): Files, Describe, Where it shows; or the classic form.
+                    'visual-page-builder-add' => [
+                        'type' => \Laminas\Router\Http\Literal::class,
+                        'options' => [
+                            'route' => '/vpb-add',
+                            'defaults' => [
+                                '__NAMESPACE__' => 'VisualPageBuilder\\Controller\\Admin',
+                                'controller' => 'Add',
                                 'action' => 'index',
                             ],
                         ],

@@ -57,6 +57,7 @@ class Module extends AbstractModule
         'admin/visual-page-builder-settings',
         'admin/visual-page-builder-people',
         'admin/visual-page-builder-glossary',
+        'admin/visual-page-builder-add',
     ];
 
     /**

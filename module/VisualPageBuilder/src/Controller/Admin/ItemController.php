@@ -20,15 +20,8 @@ class ItemController extends AbstractActionController
 {
     public const CSRF_NAME = 'vpb_item_csrf';
 
-    /** The Details fields: form name => dcterms term. Multi-value fields take one value per line. */
-    public const FIELDS = [
-        'title' => 'dcterms:title',
-        'description' => 'dcterms:description',
-        'creator' => 'dcterms:creator',
-        'date' => 'dcterms:date',
-        'subject' => 'dcterms:subject',
-        'place' => 'dcterms:spatial',
-    ];
+    /** The Details fields (see ItemForm). */
+    public const FIELDS = \VisualPageBuilder\ItemForm::FIELDS;
 
     public const TABS = ['details', 'where', 'files', 'history'];
 
@@ -199,23 +192,7 @@ class ItemController extends AbstractActionController
     /** The Details form as Omeka values: one literal per non-blank line, the others emptied. */
     private function detailsData(array $post, $manager): array
     {
-        $api = $manager->get('Omeka\ApiManager');
-        $data = [];
-        foreach (self::FIELDS as $field => $term) {
-            $property = (int) $api->search('properties', ['term' => $term])->getContent()[0]->id();
-            $data[$term] = [];
-            foreach (preg_split('/\r\n|\r|\n/', (string) ($post[$field] ?? '')) as $line) {
-                $line = trim($line);
-                if ($line !== '') {
-                    $data[$term][] = ['type' => 'literal', 'property_id' => $property, '@value' => $line];
-                }
-            }
-        }
-        if (trim((string) ($post['title'] ?? '')) === '') {
-            // A title is required to publish; keep the old one rather than save a blank.
-            unset($data['dcterms:title']);
-        }
-        return $data;
+        return \VisualPageBuilder\ItemForm::detailsData($post, $manager->get('Omeka\ApiManager'));
     }
 
     /** A copy of the item: its values, sites and sets; a draft, so it is staff only. */

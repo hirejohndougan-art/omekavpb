@@ -1,0 +1,144 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Add an item (Phase 7). @var int $step (0 = start), $itemId, $steps, $values, $sites, $files,
+ * $checklist, $canPublish, $draft, $csrf, $classicUrl, $item
+ */
+$escape = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+$csrfName = \VisualPageBuilder\Controller\Admin\AddController::CSRF_NAME;
+$stepUrl = fn (int $n) => $this->url('admin/visual-page-builder-add', [], ['query' => ['item' => $itemId, 'step' => $n]], true);
+$this->headStyle()->appendStyle('
+.vpb-add{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,18rem);gap:1.2rem;align-items:start}
+@media (max-width:820px){.vpb-add{grid-template-columns:1fr}}
+.vpb-add-steps{display:flex;gap:.4rem;flex-wrap:wrap;margin:0 0 1rem;padding:0;list-style:none}
+.vpb-add-steps a{display:inline-block;padding:.3rem .8rem;border:1px solid #dfdfdf;border-radius:999px;color:inherit;text-decoration:none;background:#fff}
+.vpb-add-steps a[aria-current=step]{background:#1f4d3f;border-color:#1f4d3f;color:#fff}
+.vpb-add-box{background:#fff;border:1px solid #dfdfdf;border-radius:4px;padding:.9rem 1rem;margin:0 0 1rem}
+.vpb-add-form{display:grid;gap:.7rem;max-width:44rem}
+.vpb-add-form label{display:block;font-weight:600}
+.vpb-add-form input[type=text],.vpb-add-form textarea{width:100%;font-weight:400}
+.vpb-add-hint{font-size:.85rem;color:#676767;font-weight:400}
+.vpb-add-check{list-style:none;margin:0;padding:0}
+.vpb-add-check li{padding:.3rem 0;border-top:1px solid #efefef}
+.vpb-add-check li:first-child{border-top:0}
+.vpb-add-ok{color:#1f4d3f;font-weight:600}
+.vpb-add-missing{color:#8a5a00}
+.vpb-add-preview h3{margin:0 0 .3rem;font-size:1.05rem}
+.vpb-add-preview dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:.2rem .6rem;font-size:.92rem}
+.vpb-add-preview dt{color:#676767}
+.vpb-add-preview dd{margin:0}
+');
+echo $this->pageTitle($translate('Add an item'), 1, $translate('Items'));
+?>
+<p>
+    <a href="<?php echo $escape($classicUrl); ?>"><?php echo $escape($translate('Use the classic form')); ?></a>
+</p>
+
+<?php if ($step === 0): ?>
+<div class="vpb-add-box">
+    <p><?php echo $escape($translate('Add an item in three steps: its files, a description, and where it shows. It is kept as a draft until you publish it.')); ?></p>
+    <form method="post">
+        <input type="hidden" name="<?php echo $escape($csrfName); ?>" value="<?php echo $escape($csrf); ?>">
+        <input type="hidden" name="vpb_add_action" value="start">
+        <button type="submit"><?php echo $escape($translate('Start')); ?></button>
+    </form>
+</div>
+<?php else: ?>
+<ol class="vpb-add-steps" aria-label="<?php echo $escape($translate('Steps')); ?>">
+<?php foreach ($steps as $n => $label): ?>
+    <li><a href="<?php echo $escape($stepUrl($n)); ?>"<?php echo $n === $step ? ' aria-current="step"' : ''; ?>><?php echo $n; ?>. <?php echo $escape($translate($label)); ?></a></li>
+<?php endforeach; ?>
+</ol>
+
+<div class="vpb-add">
+    <div>
+    <?php if ($step === 1): ?>
+        <form method="post" enctype="multipart/form-data" class="vpb-add-box vpb-add-form">
+            <input type="hidden" name="<?php echo $escape($csrfName); ?>" value="<?php echo $escape($csrf); ?>">
+            <input type="hidden" name="vpb_add_action" value="files">
+            <input type="hidden" name="item" value="<?php echo (int) $itemId; ?>">
+            <input type="hidden" name="step" value="1">
+            <label><?php echo $escape($translate('Files')); ?>
+                <input type="file" name="upload[]" multiple>
+            </label>
+            <p class="vpb-add-hint"><?php echo $escape($translate('Choose one or more. The file types allowed are set in Settings.')); ?></p>
+            <?php if ($files): ?>
+            <p class="vpb-add-hint"><?php echo $escape($translate('Already added:')); ?> <?php echo $escape(implode(', ', $files)); ?></p>
+            <?php endif; ?>
+            <div><button type="submit"><?php echo $escape($translate('Add files and continue')); ?></button></div>
+        </form>
+        <form method="post" class="vpb-add-box">
+            <input type="hidden" name="<?php echo $escape($csrfName); ?>" value="<?php echo $escape($csrf); ?>">
+            <input type="hidden" name="vpb_add_action" value="files">
+            <input type="hidden" name="item" value="<?php echo (int) $itemId; ?>">
+            <p class="vpb-add-hint"><?php echo $escape($translate('No file yet? You can add one later. The item shows its placeholder until then.')); ?></p>
+            <button type="submit"><?php echo $escape($translate('Skip for now')); ?></button>
+        </form>
+
+    <?php elseif ($step === 2): ?>
+        <form method="post" class="vpb-add-box vpb-add-form">
+            <input type="hidden" name="<?php echo $escape($csrfName); ?>" value="<?php echo $escape($csrf); ?>">
+            <input type="hidden" name="vpb_add_action" value="describe">
+            <input type="hidden" name="item" value="<?php echo (int) $itemId; ?>">
+            <label><?php echo $escape($translate('Title')); ?> <span class="vpb-add-hint"><?php echo $escape($translate('(needed to publish)')); ?></span>
+                <input type="text" name="title" value="<?php echo $escape($values['title']); ?>"></label>
+            <label><?php echo $escape($translate('Description')); ?>
+                <textarea name="description" rows="4"><?php echo $escape($values['description']); ?></textarea></label>
+            <label><?php echo $escape($translate('Date')); ?>
+                <input type="text" name="date" value="<?php echo $escape($values['date']); ?>"></label>
+            <label><?php echo $escape($translate('Creator')); ?> <span class="vpb-add-hint"><?php echo $escape($translate('One per line')); ?></span>
+                <textarea name="creator" rows="2"><?php echo $escape($values['creator']); ?></textarea></label>
+            <label><?php echo $escape($translate('Subjects')); ?> <span class="vpb-add-hint"><?php echo $escape($translate('One per line')); ?></span>
+                <textarea name="subject" rows="2"><?php echo $escape($values['subject']); ?></textarea></label>
+            <label><?php echo $escape($translate('Places')); ?> <span class="vpb-add-hint"><?php echo $escape($translate('One per line')); ?></span>
+                <textarea name="place" rows="2"><?php echo $escape($values['place']); ?></textarea></label>
+            <div><button type="submit"><?php echo $escape($translate('Save and continue')); ?></button></div>
+        </form>
+
+    <?php else: ?>
+        <form method="post" class="vpb-add-box vpb-add-form">
+            <input type="hidden" name="<?php echo $escape($csrfName); ?>" value="<?php echo $escape($csrf); ?>">
+            <input type="hidden" name="item" value="<?php echo (int) $itemId; ?>">
+            <input type="hidden" name="step" value="3">
+            <fieldset>
+                <legend><?php echo $escape($translate('Shows on these sites')); ?></legend>
+                <?php foreach ($sites as $site): ?>
+                <label style="font-weight:400"><input type="checkbox" name="sites[]" value="<?php echo (int) $site['id']; ?>"<?php echo $site['on'] ? ' checked' : ''; ?>> <?php echo $escape($site['title']); ?></label>
+                <?php endforeach; ?>
+            </fieldset>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+                <button type="submit" name="vpb_add_action" value="publish"><?php echo $escape($translate('Publish')); ?></button>
+                <button type="submit" name="vpb_add_action" value="keep_draft"><?php echo $escape($translate('Keep as draft')); ?></button>
+                <button type="submit" name="vpb_add_action" value="where"><?php echo $escape($translate('Save only')); ?></button>
+            </div>
+        </form>
+    <?php endif; ?>
+    </div>
+
+    <aside>
+        <section class="vpb-add-box">
+            <h2 style="font-size:1rem;margin-top:0"><?php echo $escape($translate('Before you publish')); ?></h2>
+            <ul class="vpb-add-check">
+            <?php foreach ($checklist as $row): ?>
+                <li>
+                    <span class="<?php echo $row['done'] ? 'vpb-add-ok' : 'vpb-add-missing'; ?>"><?php echo $row['done'] ? '✓' : '○'; ?></span>
+                    <?php echo $escape($translate($row['label'])); ?>
+                    <?php if (!$row['done'] && !$row['required']): ?><span class="vpb-add-hint">(<?php echo $escape($translate('optional')); ?>)</span><?php endif; ?>
+                </li>
+            <?php endforeach; ?>
+            </ul>
+        </section>
+        <section class="vpb-add-box vpb-add-preview" aria-label="<?php echo $escape($translate('Preview')); ?>">
+            <h3><?php echo $escape($values['title'] !== '' ? $values['title'] : $translate('Untitled')); ?></h3>
+            <p class="vpb-add-hint"><?php echo $escape($translate('Preview as of the last save.')); ?></p>
+            <dl>
+                <dt><?php echo $escape($translate('Creator')); ?></dt><dd><?php echo $escape(str_replace("\n", '; ', $values['creator']) ?: '—'); ?></dd>
+                <dt><?php echo $escape($translate('Date')); ?></dt><dd><?php echo $escape($values['date'] ?: '—'); ?></dd>
+                <dt><?php echo $escape($translate('File')); ?></dt><dd><?php echo $escape($files ? $files[0] : $translate('Placeholder')); ?></dd>
+                <dt><?php echo $escape($translate('Status')); ?></dt><dd><?php echo $escape($draft ? $translate('Draft') : $translate('Public')); ?></dd>
+            </dl>
+        </section>
+    </aside>
+</div>
+<?php endif; ?>

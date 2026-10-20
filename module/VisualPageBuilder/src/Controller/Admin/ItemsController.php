@@ -115,6 +115,7 @@ class ItemsController extends AbstractActionController
             'filters' => ['q' => $q, 'item_set_id' => $setId, 'visibility' => $visibility, 'quick' => $quick, 'view' => $view],
             'quick' => self::QUICK,
             'sets' => $sets,
+            'classicForm' => $manager->get('Omeka\Settings\User')->get(\VisualPageBuilder\Controller\Admin\AddController::FORM_SETTING, 'friendly') === 'classic',
             'csrf' => (new Csrf(['name' => self::CSRF_NAME]))->getHash(),
         ]);
         $view->setTemplate('visual-page-builder/admin/items/index');
