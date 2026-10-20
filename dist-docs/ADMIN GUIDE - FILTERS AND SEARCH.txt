@@ -74,12 +74,11 @@ Changes apply to new searches straight away.
 THE SEARCH REPORT
 ------------------------------------------------------------------------
 
-Home shows the top searches on the public site over the last 30 days,
+Home shows the top searches on the site over the last 30 days,
 and the searches that found nothing. Use the second list to decide
 whether to add a synonym, add a missing item, or leave it alone.
 
-Searches are kept for 365 days and then removed. Staff searches in the
-admin are not counted.
+Searches are kept for 365 days and then removed.
 
 
 ------------------------------------------------------------------------
