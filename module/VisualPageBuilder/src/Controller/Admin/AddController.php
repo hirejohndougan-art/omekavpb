@@ -8,6 +8,7 @@ use Laminas\View\Model\ViewModel;
 use Omeka\Mvc\Exception\NotFoundException;
 use VisualPageBuilder\Drafts;
 use VisualPageBuilder\ItemForm;
+use VisualPageBuilder\Questions;
 
 /**
  * Add an item (Phase 7): three steps, Files, Describe and Where it shows, then Publish or
@@ -65,7 +66,7 @@ class AddController extends AbstractActionController
             'classicUrl' => $this->url()->fromRoute('admin/visual-page-builder-add', [], ['query' => ['form' => 'classic']], true),
         ]);
         if ($item) {
-            $view->setVariables($this->summary($api, $conn, $item));
+            $view->setVariables($this->summary($api, $conn, $item, $manager->get('Omeka\Settings')));
         }
         $view->setTemplate('visual-page-builder/admin/add/index');
         return $view;
@@ -77,7 +78,7 @@ class AddController extends AbstractActionController
     }
 
     /** What the screen shows about the item: the values, the preview, and the checklist. */
-    private function summary($api, $conn, $item): array
+    private function summary($api, $conn, $item, $settings): array
     {
         $values = [];
         foreach (ItemForm::FIELDS as $field => $term) {
@@ -104,6 +105,7 @@ class AddController extends AbstractActionController
         ];
         return [
             'values' => $values,
+            'labels' => Questions::fieldLabels($api, $settings),
             'sites' => $sites,
             'files' => $files,
             'checklist' => $checklist,

@@ -18,6 +18,7 @@ return [
             'VisualPageBuilder\Controller\Admin\Items' => Controller\Admin\ItemsController::class,
             'VisualPageBuilder\Controller\Admin\Item' => Controller\Admin\ItemController::class,
             'VisualPageBuilder\Controller\Admin\Add' => Controller\Admin\AddController::class,
+            'VisualPageBuilder\Controller\Admin\Questions' => Controller\Admin\QuestionsController::class,
             'VisualPageBuilder\Controller\Admin\Menu' => Controller\Admin\MenuController::class,
             'VisualPageBuilder\Controller\Admin\Region' => Controller\Admin\RegionController::class,
             'VisualPageBuilder\Controller\Admin\Pages' => Controller\Admin\PagesController::class,
@@ -105,6 +106,18 @@ return [
                             'defaults' => [
                                 '__NAMESPACE__' => 'VisualPageBuilder\Controller\Admin',
                                 'controller' => 'Search',
+                                'action' => 'index',
+                            ],
+                        ],
+                    ],
+                    // Edit questions (Phase 7): labels, help text and Needed for the item questions.
+                    'visual-page-builder-questions' => [
+                        'type' => \Laminas\Router\Http\Literal::class,
+                        'options' => [
+                            'route' => '/vpb-questions',
+                            'defaults' => [
+                                '__NAMESPACE__' => 'VisualPageBuilder\\Controller\\Admin',
+                                'controller' => 'Questions',
                                 'action' => 'index',
                             ],
                         ],

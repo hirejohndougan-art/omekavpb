@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /**
  * Add an item (Phase 7). @var int $step (0 = start), $itemId, $steps, $values, $sites, $files,
- * $checklist, $canPublish, $draft, $csrf, $classicUrl, $item
+ * $checklist, $canPublish, $draft, $csrf, $classicUrl, $item, $labels (label, comment, needed per field)
  */
 $escape = $this->plugin('escapeHtml');
 $translate = $this->plugin('translate');
@@ -81,18 +81,23 @@ echo $this->pageTitle($translate('Add an item'), 1, $translate('Items'));
             <input type="hidden" name="<?php echo $escape($csrfName); ?>" value="<?php echo $escape($csrf); ?>">
             <input type="hidden" name="vpb_add_action" value="describe">
             <input type="hidden" name="item" value="<?php echo (int) $itemId; ?>">
-            <label><?php echo $escape($translate('Title')); ?> <span class="vpb-add-hint"><?php echo $escape($translate('(needed to publish)')); ?></span>
-                <input type="text" name="title" value="<?php echo $escape($values['title']); ?>"></label>
-            <label><?php echo $escape($translate('Description')); ?>
-                <textarea name="description" rows="4"><?php echo $escape($values['description']); ?></textarea></label>
-            <label><?php echo $escape($translate('Date')); ?>
-                <input type="text" name="date" value="<?php echo $escape($values['date']); ?>"></label>
-            <label><?php echo $escape($translate('Creator')); ?> <span class="vpb-add-hint"><?php echo $escape($translate('One per line')); ?></span>
-                <textarea name="creator" rows="2"><?php echo $escape($values['creator']); ?></textarea></label>
-            <label><?php echo $escape($translate('Subjects')); ?> <span class="vpb-add-hint"><?php echo $escape($translate('One per line')); ?></span>
-                <textarea name="subject" rows="2"><?php echo $escape($values['subject']); ?></textarea></label>
-            <label><?php echo $escape($translate('Places')); ?> <span class="vpb-add-hint"><?php echo $escape($translate('One per line')); ?></span>
-                <textarea name="place" rows="2"><?php echo $escape($values['place']); ?></textarea></label>
+<?php
+            // The Details questions, in order. Labels and help text come from the resource template.
+            $order = ['title' => 'text', 'description' => 'area4', 'date' => 'text', 'creator' => 'area2', 'subject' => 'area2', 'place' => 'area2'];
+            $hints = ['creator' => true, 'subject' => true, 'place' => true];
+            foreach ($order as $field => $kind):
+                $q = $labels[$field];
+            ?>
+            <label><?php echo $escape($q['label']); ?><?php if ($q['needed']): ?> <span class="vpb-add-hint"><?php echo $escape($translate('(needed)')); ?></span><?php endif; ?>
+                <?php if (!empty($hints[$field])): ?><span class="vpb-add-hint"><?php echo $escape($translate('One per line')); ?></span><?php endif; ?>
+                <?php if ($q['comment'] !== ''): ?><span class="vpb-add-hint"><?php echo $escape($q['comment']); ?></span><?php endif; ?>
+                <?php if ($kind === 'text'): ?>
+                <input type="text" name="<?php echo $escape($field); ?>" value="<?php echo $escape($values[$field]); ?>">
+                <?php else: ?>
+                <textarea name="<?php echo $escape($field); ?>" rows="<?php echo $kind === 'area4' ? 4 : 2; ?>"><?php echo $escape($values[$field]); ?></textarea>
+                <?php endif; ?>
+            </label>
+            <?php endforeach; ?>
             <div><button type="submit"><?php echo $escape($translate('Save and continue')); ?></button></div>
         </form>
 

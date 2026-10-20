@@ -1,0 +1,53 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/** Edit questions (Phase 7). @var array $templates, $templateId, $questions, $csrf */
+$escape = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+$csrfName = \VisualPageBuilder\Controller\Admin\QuestionsController::CSRF_NAME;
+$this->headStyle()->appendStyle('
+.vpb-q-table{width:100%;border-collapse:collapse;background:#fff}
+.vpb-q-table th,.vpb-q-table td{padding:.5rem .6rem;border-top:1px solid #efefef;text-align:left;vertical-align:top}
+.vpb-q-table input[type=text]{width:100%}
+.vpb-q-hint{font-size:.85rem;color:#676767}
+');
+echo $this->pageTitle($translate('Edit questions'), 1, $translate('Visual Builder'));
+echo $this->partial('visual-page-builder/admin/library/_nav', ['current' => '']);
+?>
+<p class="vpb-q-hint"><?php echo $escape($translate('Change how each question is asked when someone adds or edits an item. Labels and help text are saved to the resource template, so the same questions are asked everywhere that template is used.')); ?></p>
+
+<form method="get" style="margin:0 0 1rem">
+    <label><?php echo $escape($translate('Resource template')); ?>
+        <select name="template" onchange="this.form.submit()">
+            <option value="0"><?php echo $escape($translate('Choose one')); ?></option>
+            <?php foreach ($templates as $tpl): ?>
+            <option value="<?php echo (int) $tpl['id']; ?>"<?php echo (int) $tpl['id'] === (int) $templateId ? ' selected' : ''; ?>><?php echo $escape($tpl['label']); ?></option>
+            <?php endforeach; ?>
+        </select>
+    </label>
+    <noscript><button type="submit"><?php echo $escape($translate('Show')); ?></button></noscript>
+</form>
+
+<?php if (!$templateId): ?>
+<p><?php echo $escape($translate('Choose a resource template to see its questions.')); ?></p>
+<?php elseif (!$questions): ?>
+<p><?php echo $escape($translate('This template has no questions yet. Add properties to it in Omeka, then come back.')); ?></p>
+<?php else: ?>
+<form method="post">
+    <input type="hidden" name="<?php echo $escape($csrfName); ?>" value="<?php echo $escape($csrf); ?>">
+    <input type="hidden" name="template" value="<?php echo (int) $templateId; ?>">
+    <table class="vpb-q-table">
+        <thead><tr><th><?php echo $escape($translate('Question')); ?></th><th><?php echo $escape($translate('Label shown')); ?></th><th><?php echo $escape($translate('Help text')); ?></th><th><?php echo $escape($translate('Needed')); ?></th></tr></thead>
+        <tbody>
+        <?php foreach ($questions as $q): ?>
+            <tr>
+                <td><?php echo $escape($q['name']); ?><div class="vpb-q-hint"><?php echo $escape($q['term']); ?></div></td>
+                <td><input type="text" name="label[<?php echo (int) $q['property']; ?>]" value="<?php echo $escape($q['label']); ?>" aria-label="<?php echo $escape($translate('Label for') . ' ' . $q['name']); ?>"></td>
+                <td><input type="text" name="comment[<?php echo (int) $q['property']; ?>]" value="<?php echo $escape($q['comment']); ?>" aria-label="<?php echo $escape($translate('Help text for') . ' ' . $q['name']); ?>"></td>
+                <td><label><input type="checkbox" name="needed[<?php echo (int) $q['property']; ?>]" value="1"<?php echo $q['needed'] ? ' checked' : ''; ?>> <?php echo $escape($translate('Needed')); ?></label></td>
+            </tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table>
+    <p><button type="submit"><?php echo $escape($translate('Save questions')); ?></button></p>
+</form>
+<?php endif; ?>

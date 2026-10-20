@@ -77,6 +77,7 @@ class ItemController extends AbstractActionController
             'public' => (bool) $item->isPublic(),
             'draft' => Drafts::isDraft($conn, $id),
             'values' => $values,
+            'labels' => \VisualPageBuilder\Questions::fieldLabels($api, $manager->get('Omeka\Settings')),
             'sets' => $sets,
             'sites' => $sites,
             'files' => $files,
