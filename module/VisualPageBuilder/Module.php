@@ -57,6 +57,31 @@ class Module extends AbstractModule
             $viewModel->setTemplate('visual-page-builder/admin/layout');
             $viewModel->setVariable('vpbCurrent', $name);
             $viewModel->setVariable('vpbMode', $mode);
+
+            // Site switcher: pass the editable sites and current site slug to the layout.
+            $session = new \Laminas\Session\Container('VisualPageBuilder');
+            $routeSlug = $match ? $match->getParam('site-slug') : null;
+            if ($routeSlug) {
+                $session->offsetSet('currentSite', $routeSlug);
+            }
+            $currentSlug = $routeSlug ?: ($session->offsetExists('currentSite') ? $session->offsetGet('currentSite') : null);
+            try {
+                $allSites = $services->get('Omeka\ApiManager')->search('sites', ['sort_by' => 'title'])->getContent();
+                $vpbSites = [];
+                foreach ($allSites as $s) {
+                    if ($s->userIsAllowed('update')) {
+                        $vpbSites[] = $s;
+                    }
+                }
+            } catch (\Exception $ex) {
+                $vpbSites = [];
+            }
+            if (!$currentSlug && $vpbSites) {
+                $currentSlug = $vpbSites[0]->slug();
+                $session->offsetSet('currentSite', $currentSlug);
+            }
+            $viewModel->setVariable('vpbSites', $vpbSites);
+            $viewModel->setVariable('vpbSiteSlug', $currentSlug);
             return null;
         }, -1000); // after Omeka sets its own layout
     }
