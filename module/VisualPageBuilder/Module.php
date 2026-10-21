@@ -39,14 +39,18 @@ class Module extends AbstractModule
         $event->getApplication()->getEventManager()->attach(MvcEvent::EVENT_ROUTE, function (MvcEvent $e) {
             $match = $e->getRouteMatch();
             $name = $match ? (string) $match->getMatchedRouteName() : '';
-            if (!in_array($name, self::FRIENDLY_ROUTES, true)) {
+            require_once __DIR__ . '/src/Mode.php';
+            $mode = \VisualPageBuilder\Mode::current($e->getApplication()->getServiceManager());
+            // In Simple mode every admin screen keeps the friendly layout, Omeka's own screens included,
+            // until the person chooses Expert. Expert keeps Omeka's layout for Omeka's own screens.
+            $everyAdminScreen = $mode === \VisualPageBuilder\Mode::SIMPLE && strpos($name, 'admin') === 0;
+            if (!$everyAdminScreen && !in_array($name, self::FRIENDLY_ROUTES, true)) {
                 return null;
             }
-            require_once __DIR__ . '/src/Mode.php';
             $viewModel = $e->getViewModel();
             $viewModel->setTemplate('visual-page-builder/admin/layout');
             $viewModel->setVariable('vpbCurrent', $name);
-            $viewModel->setVariable('vpbMode', \VisualPageBuilder\Mode::current($e->getApplication()->getServiceManager()));
+            $viewModel->setVariable('vpbMode', $mode);
             return null;
         }, -1000); // after Omeka sets its own layout
     }
