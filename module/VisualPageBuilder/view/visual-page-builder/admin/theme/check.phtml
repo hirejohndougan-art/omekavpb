@@ -23,6 +23,8 @@ $this->headStyle()->appendStyle('
 .vpb-check-inline{display:inline}
 .vpb-check-inline button{margin:0}
 .vpb-check-fallback{font-size:.9rem;color:#676767}
+#content > h1{position:static;width:auto;max-width:calc(100% - 25rem);white-space:normal}
+#page-actions{position:absolute;top:0;right:0}
 ');
 echo $this->pageTitle(sprintf($translate('Check page: %s'), $site->title()), 1, $translate('Theme Builder'));
 ?>

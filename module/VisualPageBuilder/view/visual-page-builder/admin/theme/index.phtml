@@ -40,6 +40,8 @@ $this->headStyle()->appendStyle('
 .vpb-style-preview a{color:var(--pb-link,#0f5e54)}
 .vpb-style-preview-btn{display:inline-block;background:var(--pb-accent,#0f5e54);color:var(--pb-bg,#fbf8f1);padding:.35rem .9rem;border-radius:var(--pb-radius,6px)}
 .vpb-style-preview-card{margin-top:.8rem;padding:.6rem .8rem;border-left:4px solid var(--pb-secondary,#5b5348);background:rgba(0,0,0,.03);border-radius:var(--pb-radius,6px)}
+#content > h1{position:static;width:auto;max-width:calc(100% - 25rem);white-space:normal}
+#page-actions{position:absolute;top:0;right:0}
 ');
 echo $this->pageTitle(sprintf($translate('Theme Builder: %s'), $site->title()), 1, $translate('Visual Builder'));
 ?>
