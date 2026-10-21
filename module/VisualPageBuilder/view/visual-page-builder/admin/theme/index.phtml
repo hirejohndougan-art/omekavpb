@@ -32,7 +32,8 @@ $this->headStyle()->appendStyle('
 .vpb-theme-form label{display:block;font-size:.9rem;margin-bottom:.2rem}
 .vpb-theme-form input[type=text],.vpb-theme-form input[type=number],.vpb-theme-form select{width:100%}
 .vpb-theme-note{font-size:.9rem;color:#676767;margin:.4rem 0 .8rem}
-.vpb-cond{margin:.5rem 0 0;padding:.6rem .8rem;background:#f8f8f8;border-radius:4px;font-size:.9rem}
+.vpb-cond-tags{margin:.4rem 0 0;display:flex;flex-wrap:wrap;gap:.3rem}
+.vpb-cond{margin:.3rem 0 0;padding:.6rem .8rem;background:#f8f8f8;border-radius:4px;font-size:.9rem}
 .vpb-cond summary{cursor:pointer;font-weight:600;font-size:.9rem}
 .vpb-cond-row{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin:.3rem 0}
 .vpb-cond-row select,.vpb-cond-row input{font-size:.85rem;padding:.2rem .3rem}
@@ -132,24 +133,25 @@ echo $this->pageTitle(sprintf($translate('Theme Builder: %s'), $site->title()), 
             <button type="submit" aria-label="<?php echo $escape(sprintf($translate('Move %s down'), $t['name'])); ?>">&darr;</button>
         </form>
         <?php endif; ?>
-        <?php // Display conditions (Blueprint-style). ?>
+        <?php // Display conditions (Blueprint-style): tags always visible, form in details. ?>
+        <?php if ($t['conditions']): ?>
+        <div class="vpb-cond-tags">
+            <?php foreach ($t['conditions'] as $cond): ?>
+            <span class="vpb-cond-tag is-<?php echo $escape($cond['mode']); ?>">
+                <?php echo $escape($cond['mode'] === 'exclude' ? '−' : '+'); ?>
+                <?php echo $escape(\VisualPageBuilder\Templates\DisplayConditions::ruleLabel($cond['rule'])); ?>
+                <?php if ($cond['value'] !== null): ?>(<?php echo $escape($cond['value']); ?>)<?php endif; ?>
+            </span>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
         <details class="vpb-cond">
             <summary><?php echo $escape($translate('Display conditions')); ?>
                 <?php if ($t['conditions']): ?>
                 (<?php echo count($t['conditions']); ?>)
                 <?php endif; ?>
             </summary>
-            <?php if ($t['conditions']): ?>
-            <div style="margin:.4rem 0">
-                <?php foreach ($t['conditions'] as $cond): ?>
-                <span class="vpb-cond-tag is-<?php echo $escape($cond['mode']); ?>">
-                    <?php echo $escape($cond['mode'] === 'exclude' ? '−' : '+'); ?>
-                    <?php echo $escape(\VisualPageBuilder\Templates\DisplayConditions::ruleLabel($cond['rule'])); ?>
-                    <?php if ($cond['value'] !== null): ?>(<?php echo $escape($cond['value']); ?>)<?php endif; ?>
-                </span>
-                <?php endforeach; ?>
-            </div>
-            <?php else: ?>
+            <?php if (!$t['conditions']): ?>
             <p class="vpb-theme-note"><?php echo $escape($translate('No conditions: this template shows on the entire site (for its screen). Add conditions to control where it shows.')); ?></p>
             <?php endif; ?>
             <form method="post">
