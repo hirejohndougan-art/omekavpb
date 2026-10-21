@@ -44,7 +44,7 @@ MAXID=$(db "SELECT COALESCE(MAX(id),0) FROM item")
 curl -s -b "$JAR" -c "$JAR" -o /dev/null -F "vpb_import_csrf=$C" -F vpb_import_action=start -F "file=$F" -F "filename=railroad-photos.csv" -F "duplicate=add" -F "item_set=0" "${COLS[@]}" "$BASE/admin/vpb-import"
 for i in $(seq 1 30); do [ "$(db "SELECT COUNT(*) FROM item")" -ge $((BEFORE+3)) ] && break; sleep 1; done
 check $([ "$(db "SELECT COUNT(*) FROM item")" -eq $((BEFORE+3)) ] && echo ok || echo no) "three items are imported"
-check $([ "$(db "SELECT COUNT(*) FROM value WHERE property_id=1 AND value IN ('Depot at Dickinson','Track crew','Engine 7')")" -eq 3 ] && echo ok || echo no) "the imported titles are there"
+check $([ "$(db "SELECT COUNT(*) FROM value WHERE property_id=1 AND resource_id > $MAXID AND value IN ('Depot at Dickinson','Track crew','Engine 7')")" -eq 3 ] && echo ok || echo no) "the imported titles are there"
 check $([ "$(db "SELECT COUNT(*) FROM resource WHERE is_public=1 AND id > $MAXID AND resource_type='Omeka\\\\Entity\\\\Item'")" -eq 0 ] && echo ok || echo no) "new items are not public unless asked"
 check $([ "$(db "SELECT COUNT(*) FROM job WHERE class LIKE '%CSVImport%Import%' AND status='completed'")" -ge 1 ] && echo ok || echo no) "CSV Import's job ran"
 

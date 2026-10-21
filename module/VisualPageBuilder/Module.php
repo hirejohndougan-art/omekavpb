@@ -40,10 +40,15 @@ class Module extends AbstractModule
             $match = $e->getRouteMatch();
             $name = $match ? (string) $match->getMatchedRouteName() : '';
             require_once __DIR__ . '/src/Mode.php';
-            $mode = \VisualPageBuilder\Mode::current($e->getApplication()->getServiceManager());
+            $services = $e->getApplication()->getServiceManager();
+            $isAdminRoute = strpos($name, 'admin') === 0;
+            // The mode is a per-person setting, so it is read only for a signed-in admin request.
+            $mode = $isAdminRoute && $services->get('Omeka\AuthenticationService')->hasIdentity()
+                ? \VisualPageBuilder\Mode::current($services)
+                : \VisualPageBuilder\Mode::SIMPLE;
             // In Simple mode every admin screen keeps the friendly layout, Omeka's own screens included,
             // until the person chooses Expert. Expert keeps Omeka's layout for Omeka's own screens.
-            $everyAdminScreen = $mode === \VisualPageBuilder\Mode::SIMPLE && strpos($name, 'admin') === 0;
+            $everyAdminScreen = $mode === \VisualPageBuilder\Mode::SIMPLE && $isAdminRoute;
             if (!$everyAdminScreen && !in_array($name, self::FRIENDLY_ROUTES, true)) {
                 return null;
             }
