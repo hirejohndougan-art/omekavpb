@@ -40,6 +40,34 @@ class HomeController extends AbstractActionController
         return $this->redirect()->toRoute('admin/visual-page-builder-home');
     }
 
+    /**
+     * The question asked after sign-in: Simple or Expert. Their answer is saved as their mode
+     * and kept until they change it from the sidebar.
+     */
+    public function chooseModeAction()
+    {
+        $manager = $this->getEvent()->getApplication()->getServiceManager();
+        $csrfName = 'vpb_mode_csrf';
+        if ($this->getRequest()->isPost()) {
+            $post = $this->params()->fromPost();
+            if (!(new \Laminas\Validator\Csrf(['name' => $csrfName]))->isValid($post[$csrfName] ?? '')) {
+                $this->messenger()->addError('That form expired. Please choose again.'); // @translate
+                return $this->redirect()->toRoute('admin/visual-page-builder-choose-mode');
+            }
+            $to = (string) ($post['mode'] ?? '');
+            \VisualPageBuilder\Mode::set($manager, $to === \VisualPageBuilder\Mode::EXPERT ? \VisualPageBuilder\Mode::EXPERT : \VisualPageBuilder\Mode::SIMPLE);
+            \VisualPageBuilder\Mode::markChosenThisSignIn(true);
+            return $this->redirect()->toRoute('admin/visual-page-builder-home');
+        }
+        $view = new ViewModel([
+            'current' => \VisualPageBuilder\Mode::current($manager),
+            'csrf' => (new \Laminas\Validator\Csrf(['name' => $csrfName]))->getHash(),
+            'csrfName' => $csrfName,
+        ]);
+        $view->setTemplate('visual-page-builder/admin/home/choose-mode');
+        return $view;
+    }
+
     public function glossaryAction()
     {
         $view = new ViewModel(['terms' => self::GLOSSARY]);

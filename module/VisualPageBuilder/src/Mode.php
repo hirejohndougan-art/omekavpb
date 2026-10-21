@@ -24,4 +24,15 @@ class Mode
     {
         $services->get('Omeka\Settings\User')->set(self::SETTING, $mode === self::EXPERT ? self::EXPERT : self::SIMPLE);
     }
+
+    /** Whether this sign-in has already answered the Simple or Expert question. */
+    public static function chosenThisSignIn(): bool
+    {
+        return (bool) (new \Laminas\Session\Container('VisualPageBuilder'))->offsetGet('modeChosen');
+    }
+
+    public static function markChosenThisSignIn(bool $chosen = true): void
+    {
+        (new \Laminas\Session\Container('VisualPageBuilder'))->offsetSet('modeChosen', $chosen);
+    }
 }

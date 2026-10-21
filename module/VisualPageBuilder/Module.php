@@ -85,14 +85,28 @@ class Module extends AbstractModule
         $application = $event->getApplication();
         $application->getEventManager()->attach(MvcEvent::EVENT_ROUTE, function (MvcEvent $e) {
             $match = $e->getRouteMatch();
-            if (!$match || $match->getMatchedRouteName() !== 'admin') {
+            if (!$match) {
+                return null;
+            }
+            $name = $match->getMatchedRouteName();
+            require_once __DIR__ . '/src/Mode.php';
+            // Signing out ends the sign-in, so the Simple or Expert question is asked again next time.
+            if ($name === 'logout') {
+                \VisualPageBuilder\Mode::markChosenThisSignIn(false);
+                return null;
+            }
+            if ($name !== 'admin') {
                 return null;
             }
             $services = $e->getApplication()->getServiceManager();
             if (!$services->get('Omeka\AuthenticationService')->hasIdentity()) {
                 return null;
             }
-            $home = $e->getRouter()->assemble([], ['name' => 'admin/visual-page-builder-home']);
+            // After sign-in the person is asked Simple or Expert once; then they land on Home.
+            $target = \VisualPageBuilder\Mode::chosenThisSignIn()
+                ? 'admin/visual-page-builder-home'
+                : 'admin/visual-page-builder-choose-mode';
+            $home = $e->getRouter()->assemble([], ['name' => $target]);
             $response = $e->getResponse() ?: new \Laminas\Http\PhpEnvironment\Response();
             $response->getHeaders()->addHeaderLine('Location', $home);
             $response->setStatusCode(302);

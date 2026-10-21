@@ -1,0 +1,40 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Asked after sign-in: Simple or Expert. The answer is kept until the person changes it.
+ *
+ * @var string $current  the mode saved for this person (simple or expert)
+ * @var string $csrf
+ * @var string $csrfName
+ */
+$escape = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+$this->headStyle()->appendStyle('
+.vpb-choose{max-width:46rem}
+.vpb-choose-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(16rem,1fr));gap:1rem;margin:1.2rem 0}
+.vpb-choose-card{border:1px solid #dfdfdf;border-radius:6px;background:#fff;padding:1rem 1.1rem}
+.vpb-choose-card h3{margin:0 0 .3rem;font-size:1.1rem}
+.vpb-choose-card p{margin:0 0 .8rem;color:#444}
+.vpb-choose-card button{width:100%}
+.vpb-choose-now{font-size:.9rem;color:#676767}
+');
+echo $this->pageTitle($translate('Choose how to work'), 1, $translate('Visual Builder'));
+?>
+<div class="vpb-choose">
+    <p><?php echo $escape($translate('Pick the way you want to work today. Your choice is kept until you change it from the sidebar.')); ?></p>
+    <p class="vpb-choose-now"><?php echo $escape(sprintf($translate('You are now in %s mode.'), $current === 'expert' ? $translate('Expert') : $translate('Simple'))); ?></p>
+
+    <form method="post" class="vpb-choose-options">
+        <input type="hidden" name="<?php echo $escape($csrfName); ?>" value="<?php echo $escape($csrf); ?>">
+        <div class="vpb-choose-card">
+            <h3><?php echo $escape($translate('Simple')); ?></h3>
+            <p><?php echo $escape($translate('Plain words and the steps you need. Everything you need to run the site is here.')); ?></p>
+            <button type="submit" name="mode" value="simple" class="button"><?php echo $escape($translate('Work in Simple')); ?></button>
+        </div>
+        <div class="vpb-choose-card">
+            <h3><?php echo $escape($translate('Expert')); ?></h3>
+            <p><?php echo $escape($translate('Adds the Omeka screens to the sidebar, the Omeka ID and the field codes beside each question, and a link to the standard Omeka form.')); ?></p>
+            <button type="submit" name="mode" value="expert" class="button"><?php echo $escape($translate('Work in Expert')); ?></button>
+        </div>
+    </form>
+</div>

@@ -134,6 +134,18 @@ return [
                             ],
                         ],
                     ],
+                    // The choice shown after sign-in: Simple or Expert (Phase 9).
+                    'visual-page-builder-choose-mode' => [
+                        'type' => \Laminas\Router\Http\Literal::class,
+                        'options' => [
+                            'route' => '/vpb-choose-mode',
+                            'defaults' => [
+                                '__NAMESPACE__' => 'VisualPageBuilder\\Controller\\Admin',
+                                'controller' => 'Home',
+                                'action' => 'chooseMode',
+                            ],
+                        ],
+                    ],
                     // Simple or Expert mode (Phase 9): /vpb-mode?to=simple or expert.
                     'visual-page-builder-mode' => [
                         'type' => \Laminas\Router\Http\Literal::class,
