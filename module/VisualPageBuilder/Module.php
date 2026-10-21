@@ -31,6 +31,7 @@ class Module extends AbstractModule
         $acl->allow(null, 'VisualPageBuilder\Controller\Admin\Diagnostics', 'mcp');
         $this->landOnHome($event);
         $this->useFriendlyLayout($event);
+        $this->setTemplateContext($event);
     }
 
     /** The Phase 6 screens use the friendly admin layout: a VPB sidebar in place of Omeka's. */
@@ -112,6 +113,103 @@ class Module extends AbstractModule
             $response->setStatusCode(302);
             return $response;
         }, -10); // after the route is matched
+    }
+
+    /**
+     * On public (site) routes, build the request context for the
+     * LocationResolver (Blueprint-style template resolution) and make it
+     * available to the Companion Theme's layout as the $vpbContext variable.
+     *
+     * Like Blueprint's Theme_Builder::resolve() reading WordPress's query
+     * state on template_redirect, this reads Omeka's route match and the
+     * record being shown, and puts the context on the layout view model.
+     */
+    private function setTemplateContext(MvcEvent $event): void
+    {
+        $event->getApplication()->getEventManager()->attach(MvcEvent::EVENT_DISPATCH, function (MvcEvent $e) {
+            $match = $e->getRouteMatch();
+            if (!$match) {
+                return;
+            }
+            $name = (string) $match->getMatchedRouteName();
+            // Only on public site routes (the Companion Theme's layout).
+            if (strpos($name, 'site') !== 0 && $name !== 'site') {
+                return;
+            }
+            $services = $e->getApplication()->getServiceManager();
+            $params = $match->getParams();
+            // Map the route to a screen.
+            $screen = '';
+            $record = [];
+            $pageId = null;
+            $isHome = false;
+            $action = $params['action'] ?? 'index';
+            $controller = $params['controller'] ?? '';
+            // Item show.
+            if (strpos($controller, 'Item') !== false && $action === 'show' && !empty($params['id'])) {
+                $screen = 'item';
+                try {
+                    $item = $services->get('Omeka\ApiManager')->read('items', $params['id'])->getContent();
+                    $record = [
+                        'id' => $item->id(),
+                        'resource_template' => ($rt = $item->resourceTemplate()) ? $rt->id() : null,
+                        'class' => ($rc = $item->resourceClass()) ? $rc->id() : null,
+                        'item_sets' => array_map(function ($s) { return $s->id(); }, $item->itemSets()),
+                    ];
+                } catch (\Exception $ex) {
+                    // Record not found; screen still 'item' but no record context.
+                }
+            }
+            // Item browse.
+            if (strpos($controller, 'Item') !== false && $action === 'browse') {
+                $screen = 'browse-items';
+            }
+            // Item set show.
+            if (strpos($controller, 'ItemSet') !== false && $action === 'show') {
+                $screen = 'item-set';
+            }
+            // Item set browse.
+            if (strpos($controller, 'ItemSet') !== false && $action === 'browse') {
+                $screen = 'browse-item-sets';
+            }
+            // Media show.
+            if (strpos($controller, 'Media') !== false && $action === 'show') {
+                $screen = 'media';
+            }
+            // Page.
+            if (strpos($controller, 'Page') !== false && $action === 'show') {
+                $slug = $params['page-slug'] ?? '';
+                // Look up the page id.
+                try {
+                    $siteSlug = $params['site-slug'] ?? '';
+                    $conn = $services->get('Omeka\Connection');
+                    $siteId = $conn->fetchOne('SELECT id FROM site WHERE slug = ?', [$siteSlug]);
+                    if ($siteId) {
+                        $pid = $conn->fetchOne('SELECT id FROM site_page WHERE site_id = ? AND slug = ?', [(int) $siteId, $slug]);
+                        if ($pid) {
+                            $pageId = (int) $pid;
+                        }
+                    }
+                } catch (\Exception $ex) {
+                    // ignore
+                }
+            }
+            // Home page (landing page, no action, no specific controller).
+            if ($name === 'site' && ($action === 'index' || $action === 'show') && empty($params['id'])) {
+                $isHome = !isset($params['page-slug']) || $params['page-slug'] === '';
+            }
+
+            $context = [
+                'screen' => $screen,
+                'record' => $record,
+                'page_id' => $pageId,
+                'is_home' => $isHome,
+            ];
+            $viewModel = $e->getViewModel();
+            if ($viewModel) {
+                $viewModel->setVariable('vpbContext', $context);
+            }
+        }, -900); // after the controller dispatches, before the view renders
     }
 
     /**

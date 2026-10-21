@@ -53,8 +53,21 @@ $this->headScript()->appendFile($this->assetUrl('js/theme.js'), 'text/javascript
 $this->htmlElement('body')->appendAttribute('class', 'pb-menu-' . $menuStyle);
 // A header or footer built in the module's visual editor (Header & footer)
 // replaces the built-in one below. Empty if not built, or without the module.
+//
+// Blueprint-style template resolution: if the vpbLocation helper exists, it
+// picks the best-matching header/footer template for this request using display
+// conditions. Otherwise it falls back to the single site-region header/footer.
 $builtHeader = $builtFooter = '';
-if ($this->getHelperPluginManager()->has('vpbSiteRegion')) {
+if ($this->getHelperPluginManager()->has('vpbLocation')) {
+    // Blueprint-style template resolution: the Module's setTemplateContext()
+    // listener builds the request context (screen, record, page_id, is_home)
+    // on MvcEvent::EVENT_DISPATCH and puts it on the layout view model as
+    // $vpbContext. If it's not set (e.g. error page), fall back to empty.
+    $vpbContext = $this->layout()->getVariable('vpbContext') ?? [];
+    $builtHeader = $this->vpbLocation($site, 'header', $vpbContext) ?? '';
+    $builtFooter = $this->vpbLocation($site, 'footer', $vpbContext) ?? '';
+} elseif ($this->getHelperPluginManager()->has('vpbSiteRegion')) {
+    // Fallback: the original single site-region header/footer.
     $builtHeader = $this->vpbSiteRegion($site, 'header');
     $builtFooter = $this->vpbSiteRegion($site, 'footer');
 }

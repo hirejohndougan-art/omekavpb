@@ -32,6 +32,13 @@ $this->headStyle()->appendStyle('
 .vpb-theme-form label{display:block;font-size:.9rem;margin-bottom:.2rem}
 .vpb-theme-form input[type=text],.vpb-theme-form input[type=number],.vpb-theme-form select{width:100%}
 .vpb-theme-note{font-size:.9rem;color:#676767;margin:.4rem 0 .8rem}
+.vpb-cond{margin:.5rem 0 0;padding:.6rem .8rem;background:#f8f8f8;border-radius:4px;font-size:.9rem}
+.vpb-cond summary{cursor:pointer;font-weight:600;font-size:.9rem}
+.vpb-cond-row{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin:.3rem 0}
+.vpb-cond-row select,.vpb-cond-row input{font-size:.85rem;padding:.2rem .3rem}
+.vpb-cond-tag{display:inline-flex;align-items:center;gap:.3rem;padding:.15rem .5rem;border-radius:3px;font-size:.82rem}
+.vpb-cond-tag.is-include{background:#dff1e3;color:#1d5a2a}
+.vpb-cond-tag.is-exclude{background:#f8ddd0;color:#8a3b12}
 .vpb-styles-layout{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(16rem,1fr);gap:1.2rem;align-items:start}
 @media (max-width:900px){.vpb-styles-layout{grid-template-columns:1fr}}
 .vpb-style-preview{background:var(--pb-bg,#fbf8f1);color:var(--pb-ink,#1f1b16);font-family:var(--pb-body-font);font-size:var(--pb-text-size,1.0625rem);line-height:1.6;border:1px solid #dfdfdf;border-radius:var(--pb-radius,6px);padding:1.1rem 1.2rem}
@@ -125,6 +132,58 @@ echo $this->pageTitle(sprintf($translate('Theme Builder: %s'), $site->title()), 
             <button type="submit" aria-label="<?php echo $escape(sprintf($translate('Move %s down'), $t['name'])); ?>">&darr;</button>
         </form>
         <?php endif; ?>
+        <?php // Display conditions (Blueprint-style). ?>
+        <details class="vpb-cond">
+            <summary><?php echo $escape($translate('Display conditions')); ?>
+                <?php if ($t['conditions']): ?>
+                (<?php echo count($t['conditions']); ?>)
+                <?php endif; ?>
+            </summary>
+            <?php if ($t['conditions']): ?>
+            <div style="margin:.4rem 0">
+                <?php foreach ($t['conditions'] as $cond): ?>
+                <span class="vpb-cond-tag is-<?php echo $escape($cond['mode']); ?>">
+                    <?php echo $escape($cond['mode'] === 'exclude' ? '−' : '+'); ?>
+                    <?php echo $escape(\VisualPageBuilder\Templates\DisplayConditions::ruleLabel($cond['rule'])); ?>
+                    <?php if ($cond['value'] !== null): ?>(<?php echo $escape($cond['value']); ?>)<?php endif; ?>
+                </span>
+                <?php endforeach; ?>
+            </div>
+            <?php else: ?>
+            <p class="vpb-theme-note"><?php echo $escape($translate('No conditions: this template shows on the entire site (for its screen). Add conditions to control where it shows.')); ?></p>
+            <?php endif; ?>
+            <form method="post">
+                <input type="hidden" name="vpb_theme_csrf" value="<?php echo $escape($csrf); ?>">
+                <input type="hidden" name="vpb_action" value="conditions">
+                <input type="hidden" name="template_id" value="<?php echo (int) $t['id']; ?>">
+                <div class="vpb-cond-rows" data-template="<?php echo (int) $t['id']; ?>">
+                    <?php foreach ($t['conditions'] as $ci => $cond): ?>
+                    <div class="vpb-cond-row">
+                        <select name="condition_mode[<?php echo $ci; ?>]">
+                            <option value="include"<?php echo $cond['mode'] === 'include' ? ' selected' : ''; ?>><?php echo $escape($translate('Include')); ?></option>
+                            <option value="exclude"<?php echo $cond['mode'] === 'exclude' ? ' selected' : ''; ?>><?php echo $escape($translate('Exclude')); ?></option>
+                        </select>
+                        <select name="condition_rule[<?php echo $ci; ?>]">
+                            <option value="entire_site"<?php echo $cond['rule'] === 'entire_site' ? ' selected' : ''; ?>><?php echo $escape($translate('Entire site')); ?></option>
+                            <option value="home"<?php echo $cond['rule'] === 'home' ? ' selected' : ''; ?>><?php echo $escape($translate('Home page')); ?></option>
+                            <?php foreach (\VisualPageBuilder\Templates\Screens::keys() as $sk): ?>
+                            <option value="screen:<?php echo $escape($sk); ?>"<?php echo $cond['rule'] === 'screen:' . $sk ? ' selected' : ''; ?>><?php echo $escape(\VisualPageBuilder\Templates\Screens::label($sk)); ?> <?php echo $escape($translate('screen')); ?></option>
+                            <?php endforeach; ?>
+                            <option value="resource_template"<?php echo $cond['rule'] === 'resource_template' ? ' selected' : ''; ?>><?php echo $escape($translate('Resource template')); ?></option>
+                            <option value="item_set"<?php echo $cond['rule'] === 'item_set' ? ' selected' : ''; ?>><?php echo $escape($translate('Item set')); ?></option>
+                            <option value="resource_class"<?php echo $cond['rule'] === 'resource_class' ? ' selected' : ''; ?>><?php echo $escape($translate('Resource class')); ?></option>
+                        </select>
+                        <input type="text" name="condition_value[<?php echo $ci; ?>]" value="<?php echo $escape($cond['value'] ?? ''); ?>" placeholder="<?php echo $escape($translate('id (if needed)')); ?>" size="8">
+                        <button type="button" class="vpb-cond-remove" aria-label="<?php echo $escape($translate('Remove condition')); ?>">&times;</button>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <div style="margin:.4rem 0">
+                    <button type="button" class="vpb-cond-add" data-template="<?php echo (int) $t['id']; ?>"><?php echo $escape($translate('+ Add condition')); ?></button>
+                    <button type="submit"><?php echo $escape($translate('Save conditions')); ?></button>
+                </div>
+            </form>
+        </details>
     </div>
     <?php endforeach; ?>
 </section>
@@ -219,6 +278,40 @@ echo $this->pageTitle(sprintf($translate('Theme Builder: %s'), $site->title()), 
     }
     form.addEventListener('input', update);
     form.addEventListener('change', update);
+})();
+// Display conditions: add/remove rows.
+(function () {
+    var screenOptions = <?php echo json_encode(array_map(function ($sk) use ($translate) {
+        return ['value' => 'screen:' . $sk, 'label' => \VisualPageBuilder\Templates\Screens::label($sk) . ' screen'];
+    }, \VisualPageBuilder\Templates\Screens::keys())); ?>;
+    function newRow(container) {
+        var idx = container.querySelectorAll('.vpb-cond-row').length;
+        var row = document.createElement('div');
+        row.className = 'vpb-cond-row';
+        var opts = '<option value="entire_site"><?php echo addslashes($translate('Entire site')); ?></option>'
+            + '<option value="home"><?php echo addslashes($translate('Home page')); ?></option>';
+        screenOptions.forEach(function (s) {
+            opts += '<option value="' + s.value + '">' + s.label + '</option>';
+        });
+        opts += '<option value="resource_template"><?php echo addslashes($translate('Resource template')); ?></option>'
+            + '<option value="item_set"><?php echo addslashes($translate('Item set')); ?></option>'
+            + '<option value="resource_class"><?php echo addslashes($translate('Resource class')); ?></option>';
+        row.innerHTML = '<select name="condition_mode[' + idx + ']"><option value="include"><?php echo addslashes($translate('Include')); ?></option><option value="exclude"><?php echo addslashes($translate('Exclude')); ?></option></select>'
+            + ' <select name="condition_rule[' + idx + ']">' + opts + '</select>'
+            + ' <input type="text" name="condition_value[' + idx + ']" placeholder="<?php echo addslashes($translate('id (if needed)')); ?>" size="8">'
+            + ' <button type="button" class="vpb-cond-remove" aria-label="<?php echo addslashes($translate('Remove condition')); ?>">&times;</button>';
+        container.appendChild(row);
+    }
+    document.addEventListener('click', function (e) {
+        if (e.target.classList.contains('vpb-cond-add')) {
+            var tid = e.target.dataset.template;
+            var container = document.querySelector('.vpb-cond-rows[data-template="' + tid + '"]');
+            if (container) { newRow(container); }
+        }
+        if (e.target.classList.contains('vpb-cond-remove')) {
+            e.target.closest('.vpb-cond-row').remove();
+        }
+    });
 })();
 </script>
 </div>

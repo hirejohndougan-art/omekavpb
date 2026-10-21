@@ -7,6 +7,7 @@ use Laminas\Validator\Csrf;
 use Laminas\View\Model\ViewModel;
 use Omeka\Mvc\Exception\NotFoundException;
 use Omeka\Mvc\Exception\PermissionDeniedException;
+use VisualPageBuilder\Templates\DisplayConditions;
 use VisualPageBuilder\Templates\GlobalStyles;
 use VisualPageBuilder\Templates\Resolver;
 use VisualPageBuilder\Templates\Screens;
@@ -143,6 +144,8 @@ class ThemeController extends AbstractActionController
                     return $this->saveGlobals($site, $post);
                 case 'add':
                     return $this->addTemplate($site, $post);
+                case 'conditions':
+                    return $this->saveConditions($site, $post);
                 case 'duplicate':
                 case 'status':
                 case 'move':
@@ -165,6 +168,29 @@ class ThemeController extends AbstractActionController
         $saved = is_array($saved) ? $saved : [];
         $this->siteSettings()->set($key, array_merge($saved, GlobalStyles::clean($post['style'] ?? [])), $site->id());
         $this->messenger()->addSuccess($this->translate('Global styles saved.')); // @translate
+        return $this->back($site);
+    }
+
+    protected function saveConditions($site, array $post)
+    {
+        $id = (int) ($post['template_id'] ?? 0);
+        $template = $this->templateOf($site, $id);
+        $conditions = [];
+        $rules = $post['condition_rule'] ?? [];
+        $modes = $post['condition_mode'] ?? [];
+        $values = $post['condition_value'] ?? [];
+        foreach ($rules as $i => $rule) {
+            if (trim((string) $rule) === '') {
+                continue;
+            }
+            $conditions[] = [
+                'mode' => ($modes[$i] ?? '') === 'exclude' ? 'exclude' : 'include',
+                'rule' => (string) $rule,
+                'value' => isset($values[$i]) && $values[$i] !== '' ? (string) $values[$i] : null,
+            ];
+        }
+        Store::setConditions($this->manager(), $template['page'], $conditions);
+        $this->messenger()->addSuccess(sprintf($this->translate('Display conditions saved for "%s".'), $template['page']->title())); // @translate
         return $this->back($site);
     }
 

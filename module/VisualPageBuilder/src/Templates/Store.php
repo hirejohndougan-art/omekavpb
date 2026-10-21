@@ -68,6 +68,7 @@ class Store
             'value' => $meta['value'] ?? null,
             'status' => ($meta['status'] ?? 'draft') === 'live' ? 'live' : 'draft',
             'order' => (int) ($meta['order'] ?? 0),
+            'conditions' => DisplayConditions::sanitize($meta['conditions'] ?? []),
             'missing' => Required::missing($screen, self::blockTypes($page)),
         ];
     }
@@ -177,6 +178,14 @@ class Store
             $conn->executeStatement('UPDATE site_page_block SET position = ? WHERE id = ?', [$position + 1, $blockId]);
         }
         return $missing;
+    }
+
+    /** Save display conditions on a template. */
+    public static function setConditions(ApiManager $api, SitePageRepresentation $page, array $conditions): void
+    {
+        $meta = self::meta($page);
+        $meta['conditions'] = DisplayConditions::sanitize($conditions);
+        self::saveMeta($api, $page, $meta);
     }
 
     /** Position in the list (a Theme Builder reorder); other templates keep their order. */
