@@ -12,7 +12,7 @@ const H = require('../lib/harness');
   const layouts = [...src.slice(src.indexOf('const LAYOUTS'), src.indexOf('];', src.indexOf('const LAYOUTS'))).matchAll(/'(special\w+)'\s*=>/g)].map(m => m[1]);
   const groupsSrc = src.slice(src.indexOf('const GROUPS'), src.indexOf('];', src.indexOf('const GROUPS')));
   const grouped = [...groupsSrc.matchAll(/'(special\w+)'/g)].map(m => m[1]);
-  t.ok(layouts.length === 48 && grouped.length === 48 && new Set(grouped).size === 48 && layouts.every(l => grouped.includes(l)), 'all 48 Special Blocks are in exactly one group');
+  t.ok(layouts.length === 49 && grouped.length === 49 && new Set(grouped).size === 49 && layouts.every(l => grouped.includes(l)), 'all 49 Special Blocks are in exactly one group');
 
   const pageId = await H.createPage('Palette groups', [{ 'o:layout': 'html', 'o:data': { html: '<p>x</p>' } }]);
   const ed = await H.openEditor(pageId);

@@ -255,6 +255,9 @@ class Module extends AbstractModule
         // The module's classes aren't autoloaded until it's active.
         require_once __DIR__ . '/src/PageHistory.php';
         require_once __DIR__ . '/src/Search/Index.php';
+        require_once __DIR__ . '/src/ItemHistory.php';
+        require_once __DIR__ . '/src/Drafts.php';
+        require_once __DIR__ . '/src/SearchLog.php';
         PageHistory::createTable($services->get('Omeka\Connection'));
         Search\Index::createTables($services->get('Omeka\Connection'));
         ItemHistory::createTable($services->get('Omeka\Connection'));

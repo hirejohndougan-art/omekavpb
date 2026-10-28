@@ -56,6 +56,7 @@ function run() {
     if (b.layout === 'specialTableLink' && !String(d.name || '').trim()) out.push({ level: 'fix', text: 'A Table link has no name, so it isn\u2019t listed in the Table of contents.', target: tgt });
     if (b.layout === 'specialMap' && Array.isArray(d.places) && d.places.some(function (p) { return isNaN(parseFloat(p.lat)) || isNaN(parseFloat(p.lng)); })) out.push({ level: 'fix', text: 'A place on a map has no position, so it won\u2019t show.', target: tgt });
     if (b.layout === 'specialStoryMap' && Array.isArray(d.stops) && d.stops.some(function (s) { return !String(s.date || '').match(/\d{4}/) && !s.item_id; })) out.push({ level: 'fix', text: 'A story map stop has no date (or linked item with one), so it won\u2019t show.', target: tgt });
+    if (b.layout === 'specialStoryTimeline' && Array.isArray(d.events) && d.events.some(function (e) { return !String(e.date || '').match(/\d/) && !e.item_id; })) out.push({ level: 'fix', text: 'A story timeline event has no date (or linked item with one), so it won\u2019t show.', target: tgt });
     if (b.layout === 'specialArchiveQuiz' && Array.isArray(d.questions) && d.questions.some(function (q) { return String(q.choices || '').split('\n').filter(function (c) { return c.trim(); }).length < 2; })) out.push({ level: 'fix', text: 'A quiz question has fewer than two choices, so it won\u2019t show.', target: tgt });
   });
   if (hasFootList && !footnotes) out.push({ level: 'tip', text: 'There\u2019s a Footnotes block but no footnotes yet (formatting bar \u203A footnote button).', target: null });

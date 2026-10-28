@@ -93,6 +93,8 @@ class SpecialBlocks
         'sort' => Site\BlockLayout\BrowseSort::class,
         // The media file on a Media template (Theme Builder).
         'media-viewer' => Site\BlockLayout\MediaViewer::class,
+        // Added in v2.12.0: slides over a zoomable time bar, like TimelineJS.
+        'specialStoryTimeline' => Site\BlockLayout\StoryTimeline::class,
     ];
 
     /**
@@ -102,7 +104,7 @@ class SpecialBlocks
      */
     const GROUPS = [
         'From your collection' => ['specialRandomItems', 'specialRecentItems', 'specialItemSpotlight', 'specialOnThisDay', 'specialGallery', 'specialItemTable', 'specialCollectionCards', 'specialCollectionCounts', 'specialBrowseByDecade', 'specialSubjectsList', 'specialTopicTiles'], // @translate
-        'Telling history' => ['specialHeroBanner', 'specialThenAndNow', 'specialQuote', 'specialDidYouKnow', 'specialMilestones', 'specialTimeline', 'specialPhotoHotspots', 'specialSlideshow', 'specialAccordion'], // @translate
+        'Telling history' => ['specialHeroBanner', 'specialThenAndNow', 'specialQuote', 'specialDidYouKnow', 'specialMilestones', 'specialTimeline', 'specialStoryTimeline', 'specialPhotoHotspots', 'specialSlideshow', 'specialAccordion'], // @translate
         'Maps' => ['specialMap', 'specialStoryMap'], // @translate
         'Recordings and documents' => ['specialOralHistory', 'specialDocumentTranscription', 'specialEmbed'], // @translate
         'Visiting and events' => ['specialVisitInfo', 'specialOpenNow', 'specialUpcomingEvents', 'specialAnnouncement'], // @translate
@@ -125,6 +127,7 @@ class SpecialBlocks
         'specialFootnotes' => 'The footnote button in Text formatting, and Table of contents on long pages.', // @translate
         'specialTimeline' => 'Story map, which plays the same kind of dated stops on a map.', // @translate
         'specialStoryMap' => 'Timeline and Map of places.', // @translate
+        'specialStoryTimeline' => 'Timeline (a quick card view of the same kind of dated events) and Story map (the same idea on a map).', // @translate
         'specialMap' => 'Story map (the same places, played in date order).', // @translate
         'specialVisitInfo' => 'Open now and Upcoming events.', // @translate
         'specialOpenNow' => 'Visit info (it reads the same hours).', // @translate

@@ -1,0 +1,155 @@
+<?php
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * Story timeline (in the manner of TimelineJS): the slides, the Previous and
+ * Next arrows, and the time bar. special-blocks/js/story-timeline.js shows one
+ * slide at a time and runs the time bar. Without it, every slide shows in date
+ * order. In the editor's preview (no scripts) the first slide and the time bar
+ * are drawn as they first appear.
+ *
+ * @var array $data
+ * @var array $slides in date order: pos, end, year, when, title, text, media, group, bg, url, itemTitle, anchor
+ * @var array|null $intro title, text, media, bg
+ * @var array|null $axis StoryTimeline::layout()
+ * @var string $storyId
+ * @var bool $isPreview
+ */
+$escape = $this->plugin('escapeHtml');
+$attr = $this->plugin('escapeHtmlAttr');
+if (!$slides) {
+    if ($isPreview) {
+        echo '<p class="special-blocks-note">' . $escape($this->translate('Story timeline: add events in the sidebar, each with a date (or link items that have one).')) . '</p>';
+    }
+    return;
+}
+if (!$isPreview) {
+    $this->headScript()->appendFile($this->assetUrl('special-blocks/js/story-timeline.js', 'VisualPageBuilder'), 'text/javascript', ['defer' => 'defer']);
+}
+$count = count($slides);
+$offset = $intro ? 1 : 0;
+$first = $data['start_at'] === 'last' ? $count - 1 + $offset : 0;
+$labelOf = function ($s) {
+    return $s['when'] . ': ' . $s['title'];
+};
+
+/** A slide's picture, video, recording, or embed. */
+$mediaHtml = function (?array $m, string $title) use ($escape, $attr) {
+    if (!$m) {
+        return '';
+    }
+    $out = '<figure class="stl-media stl-media-' . $attr($m['kind']) . '">';
+    if ($m['kind'] === 'image') {
+        $out .= '<img src="' . $attr($m['src']) . '" alt="' . $attr($m['alt']) . '" loading="lazy" decoding="async">';
+    } elseif ($m['kind'] === 'video') {
+        $out .= '<video controls preload="none"' . ($m['poster'] ? ' poster="' . $attr($m['poster']) . '"' : '') . ' src="' . $attr($m['src']) . '"></video>';
+    } elseif ($m['kind'] === 'audio') {
+        if (!empty($m['poster'])) {
+            $out .= '<img src="' . $attr($m['poster']) . '" alt="" loading="lazy" decoding="async">';
+        }
+        $out .= '<audio controls preload="none" src="' . $attr($m['src']) . '"></audio>';
+    } else {
+        $out .= '<div class="stl-embed"><iframe data-src="' . $attr($m['src']) . '" title="' . $attr($m['site'] . ': ' . $title) . '" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>'
+            . '<a class="stl-embed-link" href="' . $attr($m['link']) . '">' . $escape(sprintf($this->translate('Open on %s'), $m['site'])) . '</a>';
+    }
+    if ($m['caption'] !== '' || $m['credit'] !== '') {
+        $out .= '<figcaption>';
+        if ($m['credit'] !== '') {
+            $out .= '<span class="stl-credit">' . $escape($m['credit']) . '</span>';
+        }
+        if ($m['caption'] !== '') {
+            $out .= '<span class="stl-caption">' . $escape($m['caption']) . '</span>';
+        }
+        $out .= '</figcaption>';
+    }
+    return $out . '</figure>';
+};
+
+/** The classes and style for a slide's background. */
+$bgAttrs = function (?array $bg) use ($attr) {
+    if (!$bg) {
+        return ['', ''];
+    }
+    $style = $bg['src'] ? ' style="--stl-photo: url(&quot;' . $attr($bg['src']) . '&quot;)"' : '';
+    return [' stl-bg-' . $bg['kind'] . (in_array($bg['kind'], ['dark', 'accent', 'photo'], true) ? ' stl-on-dark' : ''), $style];
+};
+
+$classes = 'special-blocks special-blocks-stl stl-h-' . $data['height'] . ' stl-media-' . $data['media_side'] . ' stl-nav-' . $data['nav_position'] . ($isPreview ? ' is-preview' : '');
+$peek = function (int $i) use ($slides, $intro, $offset, $escape) {
+    if ($i < 0) {
+        return '';
+    }
+    if ($i === 0 && $intro) {
+        return '<span class="stl-peek-title">' . $escape($intro['title'] ?: '') . '</span>';
+    }
+    $s = $slides[$i - $offset] ?? null;
+    return $s ? '<span class="stl-peek-date">' . $escape($s['when']) . '</span><span class="stl-peek-title">' . $escape($s['title']) . '</span>' : '';
+};
+?>
+<section class="<?php echo $attr($classes); ?>" id="<?php echo $attr($storyId); ?>"
+    data-start="<?php echo $first; ?>" data-zoom="<?php echo $attr((string) $axis['zoom']); ?>" data-links="<?php echo $data['links'] ? '1' : '0'; ?>"
+    data-min="<?php echo $attr((string) $axis['min']); ?>" data-max="<?php echo $attr((string) $axis['max']); ?>"
+    aria-label="<?php echo $attr($data['heading'] ?: ($intro['title'] ?? '') ?: $this->translate('Timeline')); ?>">
+<?php echo $this->partial('common/special-blocks/heading', ['heading' => $data['heading']]); ?>
+<div class="stl-frame">
+<div class="stl-stage" aria-roledescription="<?php echo $attr($this->translate('slide show')); ?>">
+    <div class="stl-slides" aria-live="polite">
+        <?php if ($intro): [$bgClass, $bgStyle] = $bgAttrs($intro['bg']); ?>
+        <article class="stl-slide stl-intro<?php echo $intro['media'] ? ' has-media' : ''; ?><?php echo $bgClass; ?>" id="<?php echo $attr($storyId . '-start'); ?>" data-index="0"<?php echo $bgStyle; ?><?php echo ($isPreview && $first !== 0) ? ' hidden' : ''; ?>>
+            <?php echo $mediaHtml($intro['media'], (string) $intro['title']); ?>
+            <div class="stl-text">
+                <?php if ($intro['title'] !== ''): ?><h3 class="stl-headline stl-intro-headline"><?php echo $escape($intro['title']); ?></h3><?php endif; ?>
+                <?php if ($intro['text'] !== ''): ?><div class="stl-body"><?php echo $intro['text']; ?></div><?php endif; ?>
+                <p class="stl-begin-wrap"><button type="button" class="stl-begin" hidden><?php echo $escape($this->translate('Begin')); ?> <span aria-hidden="true">&rarr;</span></button></p>
+            </div>
+        </article>
+        <?php endif; ?>
+        <?php foreach ($slides as $i => $s): $n = $i + $offset; [$bgClass, $bgStyle] = $bgAttrs($s['bg']); ?>
+        <article class="stl-slide<?php echo $s['media'] ? ' has-media' : ''; ?><?php echo $bgClass; ?>" id="<?php echo $attr($s['anchor']); ?>" data-index="<?php echo $n; ?>"<?php echo $bgStyle; ?><?php echo ($isPreview && $n !== $first) ? ' hidden' : ''; ?>>
+            <?php echo $mediaHtml($s['media'], $s['title']); ?>
+            <div class="stl-text">
+                <p class="stl-date"><?php echo $escape($s['when']); ?><?php if ($s['group'] !== ''): ?> <span class="stl-group-name"><?php echo $escape($s['group']); ?></span><?php endif; ?></p>
+                <h3 class="stl-headline"><?php echo $escape($s['title']); ?></h3>
+                <?php if ($s['text'] !== ''): ?><div class="stl-body"><?php echo $s['text']; ?></div><?php endif; ?>
+                <?php if ($s['url']): ?><p class="stl-item-link"><a href="<?php echo $attr($s['url']); ?>"><?php echo $escape(sprintf($this->translate('View the item: %s'), $s['itemTitle'])); ?></a></p><?php endif; ?>
+                <p class="special-blocks-visually-hidden stl-position"><?php echo $escape(sprintf($this->translate('Event %1$s of %2$s'), $i + 1, $count)); ?></p>
+            </div>
+        </article>
+        <?php endforeach; ?>
+    </div>
+    <button type="button" class="stl-arrow stl-prev" aria-label="<?php echo $attr($this->translate('Previous')); ?>"<?php echo $isPreview && $first > 0 ? '' : ' hidden'; ?>>
+        <span class="stl-chev" aria-hidden="true">&lsaquo;</span><span class="stl-peek"><?php echo $isPreview ? $peek($first - 1) : ''; ?></span>
+    </button>
+    <button type="button" class="stl-arrow stl-next" aria-label="<?php echo $attr($this->translate('Next')); ?>"<?php echo $isPreview && $first < $count - 1 + $offset ? '' : ' hidden'; ?>>
+        <span class="stl-peek"><?php echo $isPreview ? $peek($first + 1) : ''; ?></span><span class="stl-chev" aria-hidden="true">&rsaquo;</span>
+    </button>
+</div>
+<div class="stl-nav"<?php echo $isPreview ? '' : ' hidden'; ?>>
+    <div class="stl-tools" role="group" aria-label="<?php echo $attr($this->translate('Time bar')); ?>">
+        <?php if ($intro): ?><button type="button" class="stl-home" title="<?php echo $attr($this->translate('Back to the title')); ?>" aria-label="<?php echo $attr($this->translate('Back to the title')); ?>"><span aria-hidden="true">&#8962;</span></button><?php endif; ?>
+        <button type="button" class="stl-zoom-in" title="<?php echo $attr($this->translate('Zoom in')); ?>" aria-label="<?php echo $attr($this->translate('Zoom in')); ?>"><span aria-hidden="true">+</span></button>
+        <button type="button" class="stl-zoom-out" title="<?php echo $attr($this->translate('Zoom out')); ?>" aria-label="<?php echo $attr($this->translate('Zoom out')); ?>"<?php echo $axis['zoom'] <= 1 ? ' disabled' : ''; ?>><span aria-hidden="true">&minus;</span></button>
+    </div>
+    <div class="stl-viewport">
+        <div class="stl-track<?php echo $axis['eras'] ? ' has-eras' : ''; ?>" style="width: <?php echo $attr((string) ($axis['zoom'] * 100)); ?>%; --stl-rows: <?php echo (int) $axis['rows']; ?>">
+            <?php foreach ($axis['eras'] as $k => $era): ?>
+            <div class="stl-era stl-era-<?php echo $k % 4; ?>" style="left: <?php echo $attr((string) $era['left']); ?>%; width: <?php echo $attr((string) $era['width']); ?>%"><span class="stl-era-label"><?php echo $escape($era['title']); ?></span></div>
+            <?php endforeach; ?>
+            <?php foreach ($axis['bands'] as $k => $band): ?>
+            <div class="stl-band stl-band-<?php echo $k % 2; ?>" data-band="<?php echo $k; ?>" style="--stl-top: <?php echo (int) $band['top']; ?>; --stl-band-rows: <?php echo (int) $band['rows']; ?>"><?php if ($band['name'] !== ''): ?><span class="stl-band-label"><?php echo $escape($band['name']); ?></span><?php endif; ?></div>
+            <?php endforeach; ?>
+            <?php foreach ($slides as $i => $s): $mk = $axis['markers'][$i]; $n = $i + $offset; ?>
+            <?php if ($s['end'] !== null): ?><span class="stl-spanbar" data-for="<?php echo $n; ?>" style="left: <?php echo $attr((string) $mk['left']); ?>%; width: <?php echo $attr((string) $mk['width']); ?>%; --stl-row: <?php echo (int) $mk['row']; ?>" aria-hidden="true"></span><?php endif; ?>
+            <button type="button" class="stl-marker<?php echo $s['end'] !== null ? ' has-span' : ''; ?><?php echo $mk['flip'] ? ' is-flipped' : ''; ?>" data-slide="<?php echo $n; ?>" data-band="<?php echo (int) $mk['group']; ?>" data-pos="<?php echo $attr((string) $s['pos']); ?>"<?php echo $s['end'] !== null ? ' data-end="' . $attr((string) $s['end']) . '"' : ''; ?>
+                style="left: <?php echo $attr((string) $mk['left']); ?>%; --stl-row: <?php echo (int) $mk['row']; ?>" aria-label="<?php echo $attr($labelOf($s)); ?>" aria-current="<?php echo $n === $first ? 'step' : 'false'; ?>">
+                <?php if ($s['media'] && $s['media']['kind'] === 'image'): ?><span class="stl-marker-thumb" style="background-image: url(&quot;<?php echo $attr($s['media']['src']); ?>&quot;)" aria-hidden="true"></span><?php endif; ?>
+                <span class="stl-marker-title" aria-hidden="true"><?php echo $escape($s['title']); ?></span>
+            </button>
+            <?php endforeach; ?>
+            <div class="stl-axis" aria-hidden="true">
+                <?php foreach ($axis['ticks'] as $t): ?><span class="stl-tick<?php echo $t['labeled'] ? ' is-labeled' : ''; ?>" data-step="<?php echo $attr((string) $t['step']); ?>" data-pos="<?php echo $attr((string) $t['pos']); ?>" style="left: <?php echo $attr((string) $t['left']); ?>%"><?php echo $escape($t['label']); ?></span><?php endforeach; ?>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+</section>

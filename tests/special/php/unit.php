@@ -31,6 +31,8 @@ use VisualPageBuilder\Site\BlockLayout\OpenNow;
 use VisualPageBuilder\Site\BlockLayout\OralHistory;
 use VisualPageBuilder\Site\BlockLayout\PlacesMap;
 use VisualPageBuilder\Site\BlockLayout\Timeline;
+use VisualPageBuilder\Site\BlockLayout\StoryTimeline;
+use VisualPageBuilder\Stdlib\TimelineDate;
 
 $pass = 0;
 $fail = 0;
@@ -206,6 +208,37 @@ check(OralHistory::cuesFromText("No times at all.\nJust text.") === [], 'oral hi
 $srt = OralHistory::cuesFromCaptions("1\n00:00:02,000 --> 00:00:03,000\nSRT line\n\n2\n00:00:04,000 --> 00:00:05,000\n<i>Second</i>\n");
 check(count($srt) === 2 && $srt[0]['start'] === 2.0 && $srt[1]['text'] === 'Second', 'oral history: SRT caption files');
 check(OralHistory::clock(3725) === '1:02:05' && OralHistory::clock(75.5) === '1:15', 'oral history: clock format');
+
+// ---- v2.12.0: Story timeline dates and time bar
+$td = function ($s) {
+    $p = TimelineDate::parse($s);
+    return $p ? TimelineDate::label($p) : null;
+};
+check($td('1900-09-08') === 'September 8, 1900' && $td('September 8, 1900') === 'September 8, 1900' && $td('8 Sept 1900') === 'September 8, 1900' && $td('9/8/1900') === 'September 8, 1900', 'story timeline date: full dates, written four ways');
+check($td('1911-06') === 'June 1911' && $td('June 1911') === 'June 1911' && $td('Sept. 1900') === 'September 1900' && $td('1911') === '1911', 'story timeline date: month and year');
+check($td('circa 1920') === 'c. 1920' && $td('ca. 1920') === 'c. 1920' && $td('about 1920') === 'c. 1920', 'story timeline date: approximate');
+check($td('1920s') === '1920s' && $td('early 1930s') === 'early 1930s' && $td('1912-1918') === '1912 – 1918' && $td('1912 to 1918') === '1912 – 1918', 'story timeline date: decades and spans');
+check($td('500 BC') === '500 BC' && $td('-500') === '500 BC' && TimelineDate::parse('500 BC')['pos'] < TimelineDate::parse('AD 79')['pos'], 'story timeline date: before the common era sorts first');
+check($td('') === null && $td('[year]') === null && $td('n.d.') === null && $td('1900-02-30') === null && $td('2/30/1900') === null, 'story timeline date: none or impossible');
+$spring = TimelineDate::parse('Spring 1925');
+check($spring && $spring['y'] === 1925 && !empty($spring['loose']), 'story timeline date: other text with a year is placed by its year and shown as written');
+$june = TimelineDate::parse('June 1911');
+check(abs($june['pos'] - 1911.41667) < 1e-4 && abs(TimelineDate::endPos($june) - 1911.5) < 1e-3 && TimelineDate::endPos(TimelineDate::parse('1911')) == 1912.0, 'story timeline date: places and ends on the line');
+check(strcmp(TimelineDate::sortKey(TimelineDate::parse('1900-09-08')), TimelineDate::sortKey(TimelineDate::parse('1900-10'))) < 0 && strcmp(TimelineDate::sortKey(TimelineDate::parse('-50')), TimelineDate::sortKey(TimelineDate::parse('50'))) < 0, 'story timeline date: sort keys keep date order');
+
+$sl = function ($pos, $group = '', $end = null) {
+    return ['pos' => $pos, 'end' => $end, 'group' => $group];
+};
+$lay = StoryTimeline::layout([$sl(1900.0), $sl(1900.5), $sl(1901.0), $sl(1950.0, 'Schools'), $sl(1905.0, '', 1915.0)], [['title' => 'Berry years', 'pos' => 1895.0, 'end' => 1925.0]]);
+check($lay['min'] < 1895 && $lay['max'] > 1950, 'story timeline bar: covers every event and era, with room');
+check($lay['markers'][0]['row'] !== $lay['markers'][1]['row'] && $lay['markers'][1]['row'] !== $lay['markers'][2]['row'], 'story timeline bar: close events stack in rows');
+check($lay['markers'][3]['group'] === 1 && $lay['bands'][0]['name'] === '' && $lay['bands'][1]['name'] === 'Schools' && $lay['markers'][3]['row'] >= $lay['bands'][1]['top'], 'story timeline bar: a named row comes after the unnamed one');
+check($lay['markers'][4]['width'] > 10 && $lay['markers'][0]['width'] == 0, 'story timeline bar: an event with an end date is a bar');
+check($lay['markers'][3]['flip'] === true && $lay['markers'][0]['flip'] === false, 'story timeline bar: a marker at the far right hangs left of its line');
+$labeled = array_values(array_filter($lay['ticks'], function ($t) { return $t['labeled']; }));
+check(count($labeled) >= 3 && array_reduce($labeled, function ($ok, $t) use ($lay) { return $ok && StoryTimeline::onStep($t['pos'], $lay['shownStep']); }, true), 'story timeline bar: year labels all fall on one step (no 1925 between 1920 and 1930)');
+check(count(StoryTimeline::layout(array_map(function ($y) use ($sl) { return $sl((float) $y); }, range(1800, 2000, 2)), [])['ticks']) <= 601, 'story timeline bar: tick count stays reasonable');
+check(StoryTimeline::shorten(str_repeat('word ', 200), 50) === rtrim(str_repeat('word ', 10)) . '…', 'story timeline: item descriptions are cut at a word');
 
 echo ($fail ? 'FAIL' : 'ok  ') . " special blocks: php unit: $pass passed, $fail failed\n";
 exit($fail ? 1 : 0);
